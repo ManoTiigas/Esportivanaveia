@@ -21,21 +21,29 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-function mountApiRoute(routePath, handlerPath) {
-  const router = require(handlerPath);
+function mountApiRoute(routePath, router) {
   app.use(`/api${routePath}`, router);
   app.use(routePath, router);
 }
 
 if (!firebaseBootstrapError) {
-  mountApiRoute('/auth', './routes/auth');
-  mountApiRoute('/phases', './routes/phases');
-  mountApiRoute('/modules', './routes/modules');
-  mountApiRoute('/quiz', './routes/quiz');
-  mountApiRoute('/simulators', './routes/simulators');
-  mountApiRoute('/ranking', './routes/ranking');
-  mountApiRoute('/admin', './routes/admin');
-  mountApiRoute('/upload', './routes/upload');
+  const authRoutes = require('./routes/auth');
+  const phasesRoutes = require('./routes/phases');
+  const modulesRoutes = require('./routes/modules');
+  const quizRoutes = require('./routes/quiz');
+  const simulatorsRoutes = require('./routes/simulators');
+  const rankingRoutes = require('./routes/ranking');
+  const adminRoutes = require('./routes/admin');
+  const uploadRoutes = require('./routes/upload');
+
+  mountApiRoute('/auth', authRoutes);
+  mountApiRoute('/phases', phasesRoutes);
+  mountApiRoute('/modules', modulesRoutes);
+  mountApiRoute('/quiz', quizRoutes);
+  mountApiRoute('/simulators', simulatorsRoutes);
+  mountApiRoute('/ranking', rankingRoutes);
+  mountApiRoute('/admin', adminRoutes);
+  mountApiRoute('/upload', uploadRoutes);
 } else {
   app.use(['/api', '/auth', '/phases', '/modules', '/quiz', '/simulators', '/ranking', '/admin', '/upload'], (req, res) => {
     res.status(500).json({
