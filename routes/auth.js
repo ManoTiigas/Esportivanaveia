@@ -26,20 +26,27 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password)
-      return res.status(400).json({ success: false, message: 'E-mail e senha são obrigatórios' });
+      return res.status(400).json({ success: false, message: 'E-mail e senha sao obrigatorios' });
 
-    const user = await getUserByEmail(email);
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const user = await getUserByEmail(normalizedEmail);
 
-    if (!user || !(await bcrypt.compare(password, user.password)))
+    if (!user || typeof user.password !== 'string')
+      return res.status(401).json({ success: false, message: 'E-mail ou senha incorretos' });
+
+    if (!(await bcrypt.compare(password, user.password)))
       return res.status(401).json({ success: false, message: 'E-mail ou senha incorretos' });
 
     if (user.is_active === false)
-      return res.status(403).json({ success: false, message: 'UsuÃ¡rio desativado' });
+      return res.status(403).json({ success: false, message: 'Usuario desativado' });
+
+    if (!process.env.JWT_SECRET)
+      return res.status(500).json({ success: false, message: 'JWT_SECRET nao configurado no servidor' });
 
     const token = jwt.sign(
       { id: user.id, name: user.name, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: parseInt(process.env.JWT_EXPIRES_IN) || 7200 }
+      { expiresIn: parseInt(process.env.JWT_EXPIRES_IN, 10) || 7200 }
     );
 
     res.json({
@@ -59,7 +66,7 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Erro no login:', err);
+    console.error('Erro no login:', err && err.stack ? err.stack : err);
     res.status(500).json({ success: false, message: 'Erro interno no servidor' });
   }
 });
@@ -117,3 +124,4 @@ router.post('/change-password', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
