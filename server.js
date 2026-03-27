@@ -4,10 +4,16 @@ const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
 
-// Inicializa Firebase ao carregar db.js
-require('./db');
-
 const app = express();
+let firebaseBootstrapError = null;
+
+try {
+  // Inicializa Firebase apenas quando a configuracao estiver disponivel.
+  require('./db');
+} catch (err) {
+  firebaseBootstrapError = err;
+  console.error('Falha ao inicializar Firebase:', err.message);
+}
 
 // ============================
 // MIDDLEWARES
@@ -25,14 +31,24 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ============================
 // ROTAS DA API
 // ============================
-app.use('/api/auth',       require('./routes/auth'));
-app.use('/api/phases',     require('./routes/phases'));
-app.use('/api/modules',    require('./routes/modules'));
-app.use('/api/quiz',       require('./routes/quiz'));
-app.use('/api/simulators', require('./routes/simulators'));
-app.use('/api/ranking',    require('./routes/ranking'));
-app.use('/api/admin',      require('./routes/admin'));
-app.use('/api/upload',     require('./routes/upload'));
+if (!firebaseBootstrapError) {
+  app.use('/api/auth',       require('./routes/auth'));
+  app.use('/api/phases',     require('./routes/phases'));
+  app.use('/api/modules',    require('./routes/modules'));
+  app.use('/api/quiz',       require('./routes/quiz'));
+  app.use('/api/simulators', require('./routes/simulators'));
+  app.use('/api/ranking',    require('./routes/ranking'));
+  app.use('/api/admin',      require('./routes/admin'));
+  app.use('/api/upload',     require('./routes/upload'));
+} else {
+  app.use('/api', (req, res) => {
+    res.status(500).json({
+      success: false,
+      message: 'Firebase nao configurado. Defina FIREBASE_CREDENTIAL_PATH ou FIREBASE_CREDENTIAL_JSON.',
+      details: firebaseBootstrapError.message
+    });
+  });
+}
 
 // Qualquer rota não encontrada na API retorna 404
 app.use('/api/*', (req, res) => {
@@ -71,4 +87,5 @@ if (require.main === module) {
 }
 
 module.exports = app;
+
 
