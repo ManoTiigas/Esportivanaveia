@@ -3,3 +3,7 @@ node_modules/
 firebase-service-account.json
 public/uploads/*
 !public/uploads/.gitkeep
+.env.example
+serviceAccountKey.json
+serviceAccount*.json
+.gitignore
