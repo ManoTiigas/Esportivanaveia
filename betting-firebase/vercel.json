@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/", "destination": "/index.html" }
+  ],
+  "cleanUrls": true
+}

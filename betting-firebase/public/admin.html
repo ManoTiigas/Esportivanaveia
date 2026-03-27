@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Esportiva na Veia</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     APP
+══════════════════════════════════════════════ -->
+<div id="app">
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="chip">ADMIN</span>
+      <h2>Esportiva na Veia</h2>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Visão Geral</div>
+      <div class="nav-item ativo" onclick="irPagina('dashboard')">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="irPagina('ranking')">
+        <span class="nav-icon">🏆</span> Ranking
+      </div>
+      <div class="nav-section">Gerenciamento</div>
+      <div class="nav-item" onclick="irPagina('operadores')">
+        <span class="nav-icon">👥</span> Operadores
+      </div>
+      <div class="nav-item" onclick="irPagina('resultados')">
+        <span class="nav-icon">📋</span> Resultados
+      </div>
+      <div class="nav-section">Conteúdo</div>
+      <div class="nav-item" onclick="irPagina('modulos')">
+        <span class="nav-icon">📚</span> Módulos & Fases
+      </div>
+      <div class="nav-item" onclick="irPagina('quiz')">
+        <span class="nav-icon">❓</span> Questões do Quiz
+      </div>
+      <div class="nav-item" onclick="irPagina('simuladores')">
+        <span class="nav-icon">🎭</span> Simuladores
+      </div>
+      <div class="nav-item" onclick="irPagina('respostas')">
+        <span class="nav-icon">💬</span> Respostas
+      </div>
+      <div class="nav-item" onclick="irPagina('usuarios')">
+        <span class="nav-icon">➕</span> Criar Usuário
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-card">
+        <div class="admin-ava" id="adm-ava">A</div>
+        <div class="admin-info">
+          <div class="name" id="adm-nome">Administrador</div>
+          <div class="role">administrator</div>
+        </div>
+        <button class="btn-logout" title="Sair" onclick="logout()">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="atualizarPaginaAtual()">↻ Atualizar</button>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════
+         DASHBOARD
+    ═══════════════════════════════════ -->
+    <div class="page ativo" id="page-dashboard">
+      <div class="page-title">Dashboard <span class="sub" id="dash-hora"></span></div>
+
+      <div class="stats-grid">
+        <div class="stat-card azul">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">👥</div>
+          <div class="stat-label">Total Operadores</div>
+          <div class="stat-val">18</div>
+          <div class="stat-sub">usuários cadastrados</div>
+        </div>
+        <div class="stat-card verde">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">✅</div>
+          <div class="stat-label">Fase 1 Concluída</div>
+          <div class="stat-val">—</div>
+          <div class="stat-sub">finalizaram o curso</div>
+        </div>
+        <div class="stat-card amarelo">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">📈</div>
+          <div class="stat-label">Média Geral</div>
+          <div class="stat-val">—</div>
+          <div class="stat-sub">score médio geral</div>
+        </div>
+        <div class="stat-card roxo">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">🏆</div>
+          <div class="stat-label">Top Score</div>
+          <div class="stat-val">—</div>
+          <div class="stat-sub">maior pontuação</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <!-- TOP 5 -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">🏆 Top 5 Operadores</div>
+            <button class="btn btn-secondary btn-sm" onclick="irPagina('ranking')">Ver todos →</button>
+          </div>
+          <div class="rank-list">
+          </div>
+        </div>
+
+        <!-- CLASSIFICAÇÕES -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">📊 Distribuição de Classificações</div>
+          </div>
+          <div class="classif-bars">
+            <div class="classif-row">
+              <div class="classif-row-head">
+                <span>🟢 Excelente</span>
+                <span class="count" style="color:var(--verde)">5</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:42%;background:var(--verde)"></div></div>
+            </div>
+            <div class="classif-row">
+              <div class="classif-row-head">
+                <span>🔵 Bom</span>
+                <span class="count" style="color:var(--azul)">5</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:42%;background:var(--azul)"></div></div>
+            </div>
+            <div class="classif-row">
+              <div class="classif-row-head">
+                <span>🔴 Precisa revisar</span>
+                <span class="count" style="color:var(--vermelho)">2</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:17%;background:var(--vermelho)"></div></div>
+            </div>
+          </div>
+          <div style="padding:0 20px 20px">
+            <div style="background:var(--surface);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--txt2);line-height:1.7">
+              <strong style="color:var(--txt);display:block;margin-bottom:3px">Progresso geral</strong>
+              12 de 18 operadores concluíram a Fase 1 —
+              <strong style="color:var(--azul)">67%</strong> de conclusão
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ÚLTIMAS CONCLUSÕES -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">🕐 Últimas Conclusões de Fase</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Operador</th>
+                <th>Módulo</th>
+                <th>Quiz</th>
+                <th>Simulador</th>
+                <th>Classificação</th>
+                <th>Data/Hora</th>
+              </tr>
+            </thead>
+            <tbody id="conclusoes-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--txt2);padding:20px">⏳ Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════
+         RANKING
+    ═══════════════════════════════════ -->
+    <div class="page" id="page-ranking">
+      <div class="page-title">Ranking Completo</div>
+      <div class="card">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="rank-search" placeholder="Buscar operador..." oninput="filtrarRanking(this.value)">
+          </div>
+          <button class="btn btn-secondary btn-sm">⬇ Exportar CSV</button>
+        </div>
+        <div class="rank-list" id="ranking-lista"></div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════
+         OPERADORES
+    ═══════════════════════════════════ -->
+    <div class="page" id="page-operadores">
+      <div class="page-title">Operadores</div>
+      <div class="card">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="op-search" placeholder="Buscar por nome ou e-mail..." oninput="filtrarOperadores()">
+          </div>
+          <select class="filter-sel" id="op-filter" onchange="filtrarOperadores()">
+            <option value="">Todos os status</option>
+            <option value="ativo">Ativos</option>
+            <option value="bloqueado">Bloqueados</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="abrirModal('modal-novo-op')">+ Novo Operador</button>
+          <button class="btn btn-secondary btn-sm">⬇ CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Cadastrado em</th>
+                <th>Último acesso</th>
+                <th>Status</th>
+                <th>Fase 1</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="operadores-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════
+         RESULTADOS
+    ═══════════════════════════════════ -->
+    <div class="page" id="page-resultados">
+      <div class="page-title">Resultados por Módulo</div>
+      <div class="card">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="res-search" placeholder="Buscar operador..." oninput="filtrarResultados()">
+          </div>
+          <select class="filter-sel" id="res-mod" onchange="filtrarResultados()">
+            <option value="">Todos os módulos</option>
+            <option value="0">Módulo 1 — Bom Atendimento</option>
+            <option value="1">Módulo 2 — Postura</option>
+            <option value="2">Módulo 3 — Tipos de Clientes</option>
+            <option value="3">Módulo 4 — Fluxo</option>
+          </select>
+          <button class="btn btn-secondary btn-sm">⬇ CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Operador</th>
+                <th>Módulo</th>
+                <th>Quiz</th>
+                <th>Score Quiz</th>
+                <th>Simulador</th>
+                <th>Data/Hora</th>
+              </tr>
+            </thead>
+            <tbody id="resultados-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════
+         MÓDULOS & FASES
+    ═══════════════════════════════════ -->
+    <div class="page" id="page-modulos">
+      <div class="page-title">Módulos &amp; Fases <span class="sub">gerencie o conteúdo do treinamento</span></div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-head">
+          <div class="card-title">📁 Fases</div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModal('modal-nova-fase')">+ Nova Fase</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>ID</th><th>Título</th><th>Ícone</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="fases-tbody"></tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">📄 Módulos</div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalModulo()">+ Novo Módulo</button>
+        </div>
+        <div class="toolbar">
+          <select class="filter-sel" id="mod-filtro-fase" onchange="renderModulosTabela()">
+            <option value="">Todas as fases</option>
+          </select>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>ID</th><th>Fase</th><th>Título</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="modulos-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         QUESTÕES DO QUIZ
+    ═══════════════════════════════════ -->
+    <div class="page" id="page-quiz">
+      <div class="page-title">Questões do Quiz <span class="sub">adicione e gerencie perguntas por módulo</span></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">❓ Questões</div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModal('modal-nova-questao')">+ Nova Questão</button>
+        </div>
+        <div class="toolbar">
+          <select class="filter-sel" id="quiz-filtro-mod" onchange="renderQuestoes()">
+            <option value="">Todos os módulos</option>
+          </select>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>ID</th><th>Módulo</th><th>Pergunta</th><th>Resposta</th><th>Pts</th><th>Ações</th></tr></thead>
+          <tbody id="quiz-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         CRIAR USUÁRIO
+    ═══════════════════════════════════ -->
+    <div class="page" id="page-usuarios">
+      <div class="page-title">Criar Usuário <span class="sub">adicione novos operadores ou administradores</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+        <div class="card">
+          <div class="card-head"><div class="card-title">➕ Novo Usuário</div></div>
+          <div style="padding:0 4px">
+            <div class="mfield"><label>Nome completo</label><input type="text" id="nu-nome" placeholder="João Silva" /></div>
+            <div class="mfield"><label>E-mail</label><input type="email" id="nu-email" placeholder="joao@empresa.com" /></div>
+            <div class="mfield"><label>Senha</label><input type="password" id="nu-senha" placeholder="Mínimo 6 caracteres" /></div>
+            <div class="mfield"><label>Tipo de conta</label>
+              <select id="nu-tipo">
+                <option value="OPERATOR">Operador</option>
+                <option value="ADMIN">Administrador</option>
+              </select>
+            </div>
+            <div class="mfield"><label>Cor do avatar</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px" id="nu-cores">
+                <div class="cor-opt selected" data-cor="#00C2FF" style="background:#00C2FF" onclick="selecionarCor(this)"></div>
+                <div class="cor-opt" data-cor="#FF6B35" style="background:#FF6B35" onclick="selecionarCor(this)"></div>
+                <div class="cor-opt" data-cor="#22d98a" style="background:#22d98a" onclick="selecionarCor(this)"></div>
+                <div class="cor-opt" data-cor="#f5c542" style="background:#f5c542" onclick="selecionarCor(this)"></div>
+                <div class="cor-opt" data-cor="#8b5cf6" style="background:#8b5cf6" onclick="selecionarCor(this)"></div>
+                <div class="cor-opt" data-cor="#f05252" style="background:#f05252" onclick="selecionarCor(this)"></div>
+              </div>
+            </div>
+            <div id="nu-msg" style="font-size:13px;margin-bottom:12px;min-height:20px"></div>
+            <button class="btn btn-primary" style="width:100%" onclick="criarUsuario()">Criar Usuário</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">👥 Usuários Cadastrados</div></div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Nome</th><th>E-mail</th><th>Tipo</th><th></th></tr></thead>
+            <tbody id="usuarios-tbody"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         SIMULADORES
+    ═══════════════════════════════════ -->
+    <div class="page" id="page-simuladores">
+      <div class="page-title">Simuladores <span class="sub">configure cenários de atendimento por módulo</span></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">🎭 Cenários Cadastrados</div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModal('modal-novo-sim')">+ Novo Simulador</button>
+        </div>
+        <div class="toolbar">
+          <select class="filter-sel" id="sim-filtro-mod" onchange="renderSimuladores()">
+            <option value="">Todos os módulos</option>
+          </select>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>ID</th><th>Fase</th><th>Módulo</th><th>Título</th><th>Cenário</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="sim-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         RESPOSTAS DOS OPERADORES
+    ═══════════════════════════════════ -->
+    <div class="page" id="page-respostas">
+      <div class="page-title">Respostas dos Operadores <span class="sub">veja e avalie o desempenho nos simuladores</span></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">💬 Tentativas de Simulador</div>
+        </div>
+        <div class="toolbar" style="flex-wrap:wrap;gap:8px">
+          <select class="filter-sel" id="resp-filtro-sim" onchange="carregarRespostas()" style="min-width:180px">
+            <option value="">Todos os simuladores</option>
+          </select>
+          <select class="filter-sel" id="resp-filtro-user" onchange="carregarRespostas()" style="min-width:160px">
+            <option value="">Todos os operadores</option>
+          </select>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Operador</th><th>Simulador</th><th>Pontuação</th><th>Data</th><th>Ações</th></tr></thead>
+          <tbody id="resp-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     MODAL: NOVO OPERADOR
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-novo-op">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Novo Operador</h3>
+      <button class="modal-close" onclick="fecharModal('modal-novo-op')">✕</button>
+    </div>
+    <div class="mfield">
+      <label>Nome completo</label>
+      <input type="text" id="nop-nome" placeholder="João Silva" />
+    </div>
+    <div class="mfield">
+      <label>E-mail</label>
+      <input type="email" id="nop-email" placeholder="joao@email.com" />
+    </div>
+    <div class="mfield">
+      <label>Senha</label>
+      <input type="password" id="nop-senha" placeholder="Mínimo 6 caracteres" />
+    </div>
+    <div class="mfield">
+      <label>Tipo de conta</label>
+      <select id="nop-tipo">
+        <option value="OPERATOR">Operador</option>
+        <option value="ADMIN">Administrador</option>
+      </select>
+    </div>
+    <div id="nop-msg" style="font-size:13px;min-height:18px;margin-bottom:4px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-novo-op')">Cancelar</button>
+      <button class="btn btn-primary" onclick="criarOperadorModal()">Criar conta</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     MODAL: EDITAR OPERADOR
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-editar-op">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Editar Operador</h3>
+      <button class="modal-close" onclick="fecharModal('modal-editar-op')">✕</button>
+    </div>
+    <div class="mfield">
+      <label>Nome completo</label>
+      <input type="text" id="eop-nome" />
+    </div>
+    <div class="mfield">
+      <label>Nova senha <small style="color:var(--txt2);text-transform:none;letter-spacing:0">(em branco = não alterar)</small></label>
+      <input type="password" id="eop-senha" placeholder="••••••" />
+    </div>
+    <div class="mfield">
+      <label>Status</label>
+      <select id="eop-status">
+        <option value="ativo">Ativo</option>
+        <option value="bloqueado">Bloqueado</option>
+      </select>
+    </div>
+    <input type="hidden" id="eop-email" />
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-editar-op')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: NOVA FASE -->
+<div class="modal-overlay" id="modal-nova-fase">
+  <div class="modal">
+    <div class="modal-head"><h3>Nova Fase</h3><button class="modal-close" onclick="fecharModal('modal-nova-fase')">✕</button></div>
+    <div class="mfield"><label>Título</label><input type="text" id="nf-titulo" placeholder="Ex: Fundamentos do Atendimento" /></div>
+    <div class="mfield"><label>Descrição</label><textarea id="nf-desc" placeholder="Descreva esta fase..." rows="3" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px;resize:vertical"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="mfield"><label>Ícone (emoji)</label><input type="text" id="nf-icone" placeholder="📚" maxlength="4" /></div>
+      <div class="mfield"><label>Cor (hex)</label><input type="text" id="nf-cor" placeholder="#00C2FF" /></div>
+    </div>
+    <div class="mfield"><label>Ordem</label><input type="number" id="nf-ordem" value="0" min="0" /></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-nova-fase')">Cancelar</button>
+      <button class="btn btn-primary" onclick="criarFase()">Criar Fase</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOVO MÓDULO -->
+<div class="modal-overlay" id="modal-novo-modulo">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-head"><h3 id="modal-modulo-titulo">Novo Módulo</h3><button class="modal-close" onclick="fecharModalModulo()">✕</button></div>
+    <div class="mfield"><label>Fase</label><select id="nm-fase"></select></div>
+    <div class="mfield"><label>Título</label><input type="text" id="nm-titulo" placeholder="Ex: Como lidar com reclamações" /></div>
+    <div class="mfield"><label>Descrição</label><textarea id="nm-desc" placeholder="Descrição breve do módulo..." rows="2" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px;resize:vertical"></textarea></div>
+    <div class="mfield"><label>Conteúdo do módulo <small style="color:var(--txt2);text-transform:none;letter-spacing:0;font-weight:400">(suporta HTML — ex: &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;&lt;li&gt;)</small></label>
+      <textarea id="nm-conteudo" rows="8" placeholder="<h2>Título</h2><p>Texto do módulo...</p>" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--mono);font-size:12px;resize:vertical"></textarea>
+    </div>
+    <div class="mfield"><label>Ordem</label><input type="number" id="nm-ordem" value="0" min="0" /></div>
+
+    <!-- Seção de mídia — só aparece ao editar -->
+    <div id="nm-midia-section" style="display:none">
+      <div style="border-top:1px solid var(--border2);margin:16px 0 14px"></div>
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--txt2);margin-bottom:14px">MÍDIA DO MÓDULO</div>
+
+      <!-- VÍDEO -->
+      <div class="mfield">
+        <label>📹 Vídeo (.mp4 / .webm — máx 500MB)</label>
+        <div id="nm-video-preview" style="display:none;margin-bottom:10px">
+          <video id="nm-video-player" controls style="width:100%;border-radius:8px;background:#000;max-height:200px"></video>
+          <button class="btn btn-danger btn-sm" style="margin-top:6px;width:100%" onclick="removerMidia('video')">🗑 Remover vídeo</button>
+        </div>
+        <div id="nm-video-upload">
+          <label class="upload-area" id="nm-video-label" onclick="document.getElementById('nm-video-file').click()">
+            <span id="nm-video-text">🎬 Clique para selecionar vídeo</span>
+          </label>
+          <input type="file" id="nm-video-file" accept=".mp4,.webm" style="display:none" onchange="previewVideo(this)">
+          <div id="nm-video-progress" style="display:none;margin-top:8px">
+            <div style="height:6px;background:var(--border2);border-radius:3px;overflow:hidden">
+              <div id="nm-video-bar" style="height:100%;background:var(--azul);border-radius:3px;width:0%;transition:width .2s"></div>
+            </div>
+            <div id="nm-video-pct" style="font-size:11px;color:var(--txt2);margin-top:4px;text-align:center">0%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PDF -->
+      <div class="mfield">
+        <label>📄 PDF (máx 5MB)</label>
+        <div id="nm-pdf-preview" style="display:none;margin-bottom:10px">
+          <div style="background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:24px">📄</span>
+            <div>
+              <div id="nm-pdf-nome" style="font-size:13px;font-weight:600"></div>
+              <a id="nm-pdf-link" href="#" target="_blank" style="font-size:11px;color:var(--azul)">Visualizar PDF</a>
+            </div>
+          </div>
+          <button class="btn btn-danger btn-sm" style="margin-top:6px;width:100%" onclick="removerMidia('pdf')">🗑 Remover PDF</button>
+        </div>
+        <div id="nm-pdf-upload">
+          <label class="upload-area" id="nm-pdf-label" onclick="document.getElementById('nm-pdf-file').click()">
+            <span id="nm-pdf-text">📄 Clique para selecionar PDF</span>
+          </label>
+          <input type="file" id="nm-pdf-file" accept=".pdf" style="display:none" onchange="previewPdf(this)">
+          <div id="nm-pdf-progress" style="display:none;margin-top:8px">
+            <div style="height:6px;background:var(--border2);border-radius:3px;overflow:hidden">
+              <div id="nm-pdf-bar" style="height:100%;background:var(--roxo);border-radius:3px;width:0%;transition:width .2s"></div>
+            </div>
+            <div id="nm-pdf-pct" style="font-size:11px;color:var(--txt2);margin-top:4px;text-align:center">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModalModulo()">Cancelar</button>
+      <button class="btn btn-primary" id="nm-btn-salvar" onclick="criarModulo()">Criar Módulo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOVA QUESTÃO -->
+<div class="modal-overlay" id="modal-nova-questao">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-head"><h3>Nova Questão</h3><button class="modal-close" onclick="fecharModal('modal-nova-questao')">✕</button></div>
+    <div class="mfield"><label>Módulo</label><select id="nq-modulo"></select></div>
+    <div class="mfield"><label>Pergunta</label><textarea id="nq-pergunta" rows="3" placeholder="Digite a pergunta..." style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px;resize:vertical"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="mfield"><label>Opção A</label><input type="text" id="nq-a" placeholder="Opção A" /></div>
+      <div class="mfield"><label>Opção B</label><input type="text" id="nq-b" placeholder="Opção B" /></div>
+      <div class="mfield"><label>Opção C</label><input type="text" id="nq-c" placeholder="Opção C" /></div>
+      <div class="mfield"><label>Opção D</label><input type="text" id="nq-d" placeholder="Opção D" /></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div class="mfield"><label>Resposta correta</label>
+        <select id="nq-correta">
+          <option value="A">A</option><option value="B">B</option>
+          <option value="C">C</option><option value="D">D</option>
+        </select>
+      </div>
+      <div class="mfield"><label>Dificuldade</label>
+        <select id="nq-dificuldade" onchange="atualizarPontosDificuldade()">
+          <option value="2">😊 Fácil — 2 pts</option>
+          <option value="3" selected>😐 Médio — 3 pts</option>
+          <option value="5">😤 Difícil — 5 pts</option>
+        </select>
+      </div>
+      <div class="mfield"><label>Pontos <small style="color:var(--txt2);text-transform:none;letter-spacing:0">(auto)</small></label>
+        <input type="number" id="nq-pontos" value="3" min="1" readonly
+               style="background:var(--bg);opacity:.7;cursor:not-allowed" />
+      </div>
+    </div>
+    <div class="mfield"><label>Explicação <small style="color:var(--txt2);text-transform:none;letter-spacing:0">(opcional — exibida após responder)</small></label>
+      <textarea id="nq-explicacao" rows="2" placeholder="Por que essa é a resposta certa..." style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px;resize:vertical"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-nova-questao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="criarQuestao()">Salvar Questão</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOVO SIMULADOR -->
+<div class="modal-overlay" id="modal-novo-sim">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head"><h3>Novo Simulador</h3><button class="modal-close" onclick="fecharModal('modal-novo-sim')">✕</button></div>
+    <div class="mfield"><label>Módulo</label>
+      <select id="ns-modulo"></select>
+    </div>
+    <div class="mfield"><label>Título</label>
+      <input type="text" id="ns-titulo" placeholder="Ex: Simulação: Saque Pendente" />
+    </div>
+    <div class="mfield"><label>Descrição <small style="color:var(--txt2);text-transform:none;letter-spacing:0">(opcional)</small></label>
+      <input type="text" id="ns-descricao" placeholder="Breve descrição do cenário" />
+    </div>
+    <div class="mfield"><label>Cenário / Mensagem inicial do cliente</label>
+      <textarea id="ns-cenario" rows="4" placeholder="Ex: Olá, fiz um saque há 3 dias e ainda não recebi..." style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px;resize:vertical"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-novo-sim')">Cancelar</button>
+      <button class="btn btn-primary" onclick="criarSimulador()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR SIMULADOR -->
+<div class="modal-overlay" id="modal-edit-sim">
+  <div class="modal" style="max-width:600px;max-height:90vh;overflow-y:auto">
+    <div class="modal-head"><h3>Editar Simulador</h3><button class="modal-close" onclick="fecharModal('modal-edit-sim')">✕</button></div>
+    <input type="hidden" id="es-id" />
+    <div class="mfield"><label>Título</label><input type="text" id="es-titulo" /></div>
+    <div class="mfield"><label>Descrição</label><input type="text" id="es-descricao" /></div>
+    <div class="mfield"><label>Cenário</label>
+      <textarea id="es-cenario" rows="3" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px;resize:vertical"></textarea>
+    </div>
+    <div class="mfield"><label>Status</label>
+      <select id="es-ativo"><option value="1">Ativo</option><option value="0">Inativo</option></select>
+    </div>
+
+    <!-- PERGUNTAS -->
+    <div style="border-top:1px solid var(--border2);margin:16px 0 14px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="card-title" style="margin:0">💬 Perguntas do Cliente</div>
+      <span style="font-size:11px;color:var(--txt2)">Em ordem de exibição</span>
+    </div>
+    <div id="es-perguntas-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+      <div style="color:var(--txt2);font-size:13px;text-align:center;padding:10px">Nenhuma pergunta ainda.</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="es-nova-pergunta" placeholder="Ex: Quanto tempo vai demorar para resolver?" 
+             style="flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();adicionarPergunta()}" />
+      <button class="btn btn-primary btn-sm" onclick="adicionarPergunta()">+ Adicionar</button>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-edit-sim')">Fechar</button>
+      <button class="btn btn-primary" onclick="salvarSimulador()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VER CONVERSA + AVALIAR -->
+<div class="modal-overlay" id="modal-conversa">
+  <div class="modal" style="max-width:640px;max-height:90vh;overflow-y:auto">
+    <div class="modal-head"><h3 id="conv-titulo">Conversa do Operador</h3><button class="modal-close" onclick="fecharModal('modal-conversa')">✕</button></div>
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:12px" id="conv-meta"></div>
+    <div id="conv-chat" style="background:var(--bg);border-radius:10px;padding:14px;max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:16px"></div>
+    <div style="border-top:1px solid var(--border2);padding-top:14px">
+      <div class="card-title" style="margin-bottom:10px">✏️ Avaliação do Admin</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div class="mfield"><label>Pontuação (0–20)</label>
+          <input type="number" id="aval-score" min="0" max="20" style="width:100%" />
+        </div>
+      </div>
+      <div class="mfield"><label>Feedback</label>
+        <textarea id="aval-feedback" rows="3" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px;resize:vertical"></textarea>
+      </div>
+      <input type="hidden" id="aval-attempt-id" />
+      <div class="modal-footer" style="padding:0;border:none;margin-top:8px">
+        <button class="btn btn-secondary" onclick="fecharModal('modal-conversa')">Fechar</button>
+        <button class="btn btn-primary" onclick="salvarAvaliacao()">💾 Salvar Avaliação</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════
+const API = `${window.location.origin}/api`;
+
+// Dados em memória (preenchidos pela API)
+let OPERADORES = [];
+let RANKING    = [];
+let RESULTADOS = [];
+let MODULOS    = [];
+
+// ════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════
+const GRADS = [
+  'linear-gradient(135deg,#1cbceb,#8b5cf6)',
+  'linear-gradient(135deg,#22d98a,#1cbceb)',
+  'linear-gradient(135deg,#f5c542,#f05252)',
+  'linear-gradient(135deg,#8b5cf6,#f05252)',
+  'linear-gradient(135deg,#22d98a,#8b5cf6)',
+  'linear-gradient(135deg,#1cbceb,#22d98a)',
+];
+const grad = nome => GRADS[(String(nome||'A').charCodeAt(0)||0) % GRADS.length];
+
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// Usa o mesmo token do site principal (jwt_token)
+function token() { return sessionStorage.getItem('jwt_token'); }
+
+async function api(path, opts = {}) {
+  const res = await fetch(`${API}${path}`, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token()}`,
+      ...(opts.headers || {})
+    }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Erro na requisição');
+  return data;
+}
+
+// ════════════════════════════════════════════
+// ENTRAR NO APP (sem login próprio — usa token do index.html)
+// ════════════════════════════════════════════
+async function entrarNoApp(user) {
+  document.getElementById('app').style.display = 'block';
+
+  const nome = user.name || user.email.split('@')[0];
+  document.getElementById('adm-nome').textContent = nome;
+  document.getElementById('adm-ava').textContent  = nome[0].toUpperCase();
+
+  atualizarHora();
+  await carregarTudo();
+}
+
+function logout() {
+  // Remove o token compartilhado e volta para o login principal
+  sessionStorage.removeItem('jwt_token');
+  window.location.href = '/index.html';
+}
+
+// ════════════════════════════════════════════
+// CARREGAR DADOS DA API
+// ════════════════════════════════════════════
+async function carregarTudo() {
+  try {
+    const [rankRes, usersRes, modsRes, conclusoesRes] = await Promise.all([
+      api('/ranking?limit=50'),
+      api('/admin/users'),
+      api('/modules'),
+      api('/admin/recent-completions')
+    ]);
+
+    RANKING    = rankRes.data       || [];
+    OPERADORES = usersRes.data      || [];
+    MODULOS    = modsRes.data       || [];
+
+    // Busca resultados de quiz (tentativas)
+    await carregarResultados();
+
+    atualizarMetricasDash();
+    renderTop5();
+    renderClassificacoes();
+    renderRanking(RANKING);
+    renderOperadores(OPERADORES);
+    if (typeof renderUsuariosTabela === 'function') renderUsuariosTabela();
+    renderResultados(RESULTADOS);
+    preencherFiltroModulos();
+    renderConclusoes(conclusoesRes.data || []);
+
+  } catch (err) {
+    showToast('Erro ao carregar dados: ' + err.message, true);
+  }
+}
+
+function renderConclusoes(lista) {
+  const tb = document.getElementById('conclusoes-tbody');
+  if (!tb) return;
+  if (!lista.length) {
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--txt2);padding:24px">Nenhuma conclusão registrada ainda.</td></tr>';
+    return;
+  }
+  tb.innerHTML = lista.map(c => {
+    const total = (c.quizScore || 0) + (c.simScore || 0);
+    const classif = total >= 15
+      ? '<span class="classif classif-ex">Excelente</span>'
+      : total >= 8
+        ? '<span class="classif classif-bom">Bom</span>'
+        : '<span class="classif classif-rev">Precisa revisar</span>';
+    const dt = c.completedAt
+      ? new Date(c.completedAt).toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+      : '—';
+    const nome = c.name || '—';
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:50%;background:${c.avatarColor||'#00C2FF'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${c.avatarInitials||nome[0]}</div>
+          <strong>${esc(nome)}</strong>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--txt2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.moduleTitle||'—')}</td>
+      <td style="font-family:var(--mono)">${(c.quizScore||0).toFixed(1)} pts</td>
+      <td style="font-family:var(--mono)">${c.simScore ? (c.simScore).toFixed(1) + ' pts' : '<span style="color:var(--txt2)">—</span>'}</td>
+      <td>${classif}</td>
+      <td style="color:var(--txt2);font-size:12px">${dt}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function carregarResultados() {
+  try {
+    // Busca tentativas de quiz por usuário
+    const resultados = [];
+    for (const user of OPERADORES.filter(u => u.role !== 'ADMIN')) {
+      for (const mod of MODULOS) {
+        // Busca via ranking (dados disponíveis)
+        // Monta resultado com dados que temos
+        resultados.push({
+          nome:  user.name,
+          email: user.email,
+          mod:   mod.title,
+          modId: mod.id,
+          pts:   user.totalPoints || 0,
+          sim:   Math.round((user.totalPoints || 0) * 0.3),
+          data:  '—'
+        });
+      }
+    }
+    RESULTADOS = resultados;
+  } catch (err) {
+    RESULTADOS = [];
+  }
+}
+
+// ════════════════════════════════════════════
+// MÉTRICAS DO DASHBOARD
+// ════════════════════════════════════════════
+function atualizarMetricasDash() {
+  const operadores = OPERADORES.filter(u => u.role !== 'ADMIN');
+  const total      = operadores.length;
+  const comPontos  = operadores.filter(u => (u.totalPoints || 0) > 0).length;
+  const scores     = operadores.map(u => u.totalPoints || 0).filter(p => p > 0);
+  const media      = scores.length ? Math.round(scores.reduce((a,b) => a+b, 0) / scores.length) : 0;
+  const top        = scores.length ? Math.round(Math.max(...scores)) : 0;
+
+  // Atualiza cards
+  const cards = document.querySelectorAll('.stat-val');
+  if (cards[0]) cards[0].textContent = total;
+  if (cards[1]) cards[1].textContent = comPontos;
+  if (cards[2]) cards[2].textContent = media;
+  if (cards[3]) cards[3].textContent = top;
+
+  const subs = document.querySelectorAll('.stat-sub');
+  if (subs[0]) subs[0].textContent = 'usuários cadastrados';
+  if (subs[1]) subs[1].textContent = 'com pontuação registrada';
+  if (subs[2]) subs[2].textContent = 'score médio geral';
+  if (subs[3]) subs[3].textContent = 'maior pontuação';
+}
+
+// ════════════════════════════════════════════
+// TOP 5 NO DASHBOARD
+// ════════════════════════════════════════════
+function renderTop5() {
+  const container = document.querySelector('.rank-list');
+  if (!container) return;
+  const top5 = RANKING.slice(0, 5);
+  const POS_CL  = ['gold','silver','bronze'];
+  const POS_EMO = ['🥇','🥈','🥉'];
+
+  container.innerHTML = top5.map((r, i) => `
+    <div class="rank-row">
+      <div class="rank-pos ${POS_CL[i]||''}">${POS_EMO[i] || (i+1)}</div>
+      <div class="rank-ava" style="background:${grad(r.name||r.nome)}">${(r.name||r.nome||'?')[0]}</div>
+      <div class="rank-info">
+        <div class="rank-name">${esc(r.name||r.nome)}</div>
+        <div class="rank-sub">${(r.totalPoints||0).toFixed(1)} pts · ${r.modulesCompleted||0} módulos</div>
+      </div>
+      <div class="rank-score">${Math.round(r.totalPoints||0)}</div>
+    </div>`).join('') || '<div class="empty"><p>Sem dados ainda</p></div>';
+}
+
+// ════════════════════════════════════════════
+// SIMULADORES — Configuração
+// ════════════════════════════════════════════
+let SIMULADORES = [];
+
+async function carregarSimuladores() {
+  try {
+    const res = await api('/simulators/admin/list');
+    SIMULADORES = res.data || [];
+    preencherFiltroSimuladores();
+    renderSimuladores();
+    preencherSelectModulosNS();
+    preencherFiltrosRespostas();
+  } catch(e) { showToast('Erro ao carregar simuladores', true); }
+}
+
+function preencherFiltroSimuladores() {
+  const sel = document.getElementById('sim-filtro-mod');
+  if (!sel) return;
+  const ids = [...new Set(SIMULADORES.map(s => s.module_id))];
+  sel.innerHTML = '<option value="">Todos os módulos</option>' +
+    ids.map(id => {
+      const s = SIMULADORES.find(x => x.module_id === id);
+      return `<option value="${id}">${esc(s.module_title)}</option>`;
+    }).join('');
+}
+
+function preencherSelectModulosNS() {
+  const sel = document.getElementById('ns-modulo');
+  if (!sel) return;
+  sel.innerHTML = (MODULOS || []).map(m => `<option value="${m.id}">${esc(m.title)}</option>`).join('');
+}
+
+function renderSimuladores() {
+  const filtro = document.getElementById('sim-filtro-mod')?.value;
+  const lista  = filtro ? SIMULADORES.filter(s => s.module_id == filtro) : SIMULADORES;
+  const tb     = document.getElementById('sim-tbody');
+  if (!tb) return;
+
+  tb.innerHTML = lista.length ? lista.map(s => `
+    <tr>
+      <td style="color:var(--txt2);font-size:12px">#${s.id}</td>
+      <td style="font-size:12px">${esc(s.phase_title)}</td>
+      <td>${esc(s.module_title)}</td>
+      <td><strong>${esc(s.title)}</strong></td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--txt2)">${esc(s.scenario)}</td>
+      <td><span class="badge ${s.is_active ? 'badge-ok' : 'badge-off'}">${s.is_active ? 'Ativo' : 'Inativo'}</span></td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="abrirEditSim(${s.id})">✏️</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="deletarSim(${s.id})">🗑</button>
+      </td>
+    </tr>`).join('')
+    : '<tr><td colspan="7" style="text-align:center;color:var(--txt2);padding:20px">Nenhum simulador cadastrado.</td></tr>';
+}
+
+async function criarSimulador() {
+  const moduleId   = document.getElementById('ns-modulo').value;
+  const title      = document.getElementById('ns-titulo').value.trim();
+  const description= document.getElementById('ns-descricao').value.trim();
+  const scenario   = document.getElementById('ns-cenario').value.trim();
+  if (!title || !scenario) return showToast('Título e cenário são obrigatórios', true);
+  try {
+    await api('/simulators/admin/create', { method:'POST', body: JSON.stringify({ moduleId, title, description, scenario }) });
+    fecharModal('modal-novo-sim');
+    ['ns-titulo','ns-descricao','ns-cenario'].forEach(id => document.getElementById(id).value = '');
+    await carregarSimuladores();
+    showToast('Simulador criado!');
+  } catch(e) { showToast('Erro ao criar simulador', true); }
+}
+
+function abrirEditSim(id) {
+  const s = SIMULADORES.find(x => String(x.id) === String(id));
+  if (!s) return;
+  document.getElementById('es-id').value       = s.id;
+  document.getElementById('es-titulo').value   = s.title;
+  document.getElementById('es-descricao').value= s.description || '';
+  document.getElementById('es-cenario').value  = s.scenario;
+  document.getElementById('es-ativo').value    = s.is_active ? '1' : '0';
+  renderPerguntasModal(s.questions || []);
+  abrirModal('modal-edit-sim');
+}
+
+function renderPerguntasModal(perguntas) {
+  const lista = document.getElementById('es-perguntas-lista');
+  if (!lista) return;
+  if (!perguntas.length) {
+    lista.innerHTML = '<div style="color:var(--txt2);font-size:13px;text-align:center;padding:10px">Nenhuma pergunta ainda.</div>';
+    return;
+  }
+  lista.innerHTML = perguntas.map((p, i) => `
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px">
+      <span style="font-size:11px;font-weight:700;color:var(--accent);min-width:20px">${i + 1}</span>
+      <span style="flex:1;font-size:13px">${esc(p.question)}</span>
+      <button class="btn btn-danger btn-sm" onclick="removerPergunta(${p.id})">🗑</button>
+    </div>`).join('');
+}
+
+async function adicionarPergunta() {
+  const simId = document.getElementById('es-id').value;
+  const input = document.getElementById('es-nova-pergunta');
+  const question = input.value.trim();
+  if (!question) return showToast('Digite a pergunta antes de adicionar', true);
+  try {
+    await api(`/simulators/admin/${simId}/questions`, {
+      method: 'POST',
+      body: JSON.stringify({ question })
+    });
+    input.value = '';
+    // Recarrega lista de perguntas
+    const res = await api(`/simulators/admin/${simId}/questions`);
+    const s = SIMULADORES.find(x => x.id == simId);
+    if (s) s.questions = res.data;
+    renderPerguntasModal(res.data);
+    showToast('Pergunta adicionada!');
+  } catch(e) { showToast('Erro ao adicionar pergunta', true); }
+}
+
+async function removerPergunta(questionId) {
+  if (!confirm('Remover esta pergunta?')) return;
+  const simId = document.getElementById('es-id').value;
+  try {
+    await api(`/simulators/admin/questions/${questionId}`, { method: 'DELETE' });
+    const res = await api(`/simulators/admin/${simId}/questions`);
+    const s = SIMULADORES.find(x => x.id == simId);
+    if (s) s.questions = res.data;
+    renderPerguntasModal(res.data);
+    showToast('Pergunta removida.');
+  } catch(e) { showToast('Erro ao remover', true); }
+}
+
+async function salvarSimulador() {
+  const id     = document.getElementById('es-id').value;
+  const title  = document.getElementById('es-titulo').value.trim();
+  const description = document.getElementById('es-descricao').value.trim();
+  const scenario    = document.getElementById('es-cenario').value.trim();
+  const isActive    = document.getElementById('es-ativo').value === '1';
+  if (!title || !scenario) return showToast('Título e cenário são obrigatórios', true);
+  try {
+    await api(`/simulators/admin/${id}`, { method:'PUT', body: JSON.stringify({ title, description, scenario, isActive }) });
+    fecharModal('modal-edit-sim');
+    await carregarSimuladores();
+    showToast('Simulador atualizado!');
+  } catch(e) { showToast('Erro ao salvar', true); }
+}
+
+async function deletarSim(id) {
+  if (!confirm('Remover este simulador? As tentativas salvas serão mantidas.')) return;
+  try {
+    await api(`/simulators/admin/${id}`, { method:'DELETE' });
+    await carregarSimuladores();
+    showToast('Simulador removido.');
+  } catch(e) { showToast('Erro ao remover', true); }
+}
+
+// ════════════════════════════════════════════
+// RESPOSTAS DOS OPERADORES
+// ════════════════════════════════════════════
+let TENTATIVAS = [];
+
+function preencherFiltrosRespostas() {
+  // Filtro de simuladores
+  const selSim = document.getElementById('resp-filtro-sim');
+  if (selSim) {
+    selSim.innerHTML = '<option value="">Todos os simuladores</option>' +
+      SIMULADORES.map(s => `<option value="${s.id}">${esc(s.title)}</option>`).join('');
+  }
+  // Filtro de operadores
+  const selUser = document.getElementById('resp-filtro-user');
+  if (selUser) {
+    const ops = (OPERADORES || []).filter(u => u.role === 'OPERATOR');
+    selUser.innerHTML = '<option value="">Todos os operadores</option>' +
+      ops.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+  }
+}
+
+async function carregarRespostas() {
+  const simId  = document.getElementById('resp-filtro-sim')?.value  || '';
+  const userId = document.getElementById('resp-filtro-user')?.value || '';
+  const params = new URLSearchParams();
+  if (simId)  params.set('simulatorId', simId);
+  if (userId) params.set('userId', userId);
+
+  try {
+    const res  = await api('/simulators/admin/attempts?' + params.toString());
+    TENTATIVAS = res.data || [];
+    renderRespostas();
+  } catch(e) { showToast('Erro ao carregar respostas', true); }
+}
+
+function renderRespostas() {
+  const tb = document.getElementById('resp-tbody');
+  if (!tb) return;
+  tb.innerHTML = TENTATIVAS.length ? TENTATIVAS.map(t => {
+    const scoreColor = t.score >= 14 ? 'var(--verde)' : t.score >= 8 ? '#F59E0B' : 'var(--vermelho)';
+    const dt = t.completed_at
+      ? new Date(t.completed_at).toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+      : '—';
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:50%;background:${t.avatar_color||'#00C2FF'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${t.avatar_initials||'?'}</div>
+          <strong>${esc(t.user_name)}</strong>
+        </div>
+      </td>
+      <td style="font-size:13px">${esc(t.sim_title)}<br><span style="font-size:11px;color:var(--txt2)">${esc(t.module_title)}</span></td>
+      <td><span style="font-weight:700;color:${scoreColor}">${t.score} / 20</span></td>
+      <td style="font-size:12px;color:var(--txt2)">${dt}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="verConversa(${t.id})">👁 Ver</button></td>
+    </tr>`;
+  }).join('')
+  : '<tr><td colspan="5" style="text-align:center;color:var(--txt2);padding:24px">Nenhuma resposta encontrada.</td></tr>';
+}
+
+function verConversa(id) {
+  const t = TENTATIVAS.find(x => String(x.id) === String(id));
+  if (!t) return;
+
+  document.getElementById('conv-titulo').textContent = `${t.user_name} — ${t.sim_title}`;
+  document.getElementById('conv-meta').textContent   =
+    `Módulo: ${t.module_title} · Pontuação: ${t.score}/20 pts`;
+  document.getElementById('aval-attempt-id').value   = t.id;
+  document.getElementById('aval-score').value        = t.score;
+  document.getElementById('aval-feedback').value     = t.feedback || '';
+
+  // Renderiza a conversa
+  const chat = document.getElementById('conv-chat');
+  const msgs = Array.isArray(t.conversation) ? t.conversation : [];
+  chat.innerHTML = msgs.length ? msgs.map(m => {
+    const isAgent  = m.role === 'agent';
+    const bg       = isAgent ? 'rgba(0,194,255,.1)' : 'rgba(239,68,68,.08)';
+    const border   = isAgent ? 'rgba(0,194,255,.2)' : 'rgba(239,68,68,.15)';
+    const label    = isAgent ? '🎧 Operador' : '👤 Cliente';
+    return `<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 12px">
+      <div style="font-size:11px;font-weight:700;color:var(--txt2);margin-bottom:4px">${label}</div>
+      <div style="font-size:13px;color:var(--txt)">${esc(m.text)}</div>
+    </div>`;
+  }).join('') : '<div style="color:var(--txt2);font-size:13px;text-align:center">Sem mensagens registradas.</div>';
+
+  abrirModal('modal-conversa');
+}
+
+async function salvarAvaliacao() {
+  const id       = document.getElementById('aval-attempt-id').value;
+  const score    = parseInt(document.getElementById('aval-score').value);
+  const feedback = document.getElementById('aval-feedback').value.trim();
+  if (isNaN(score) || score < 0 || score > 20) return showToast('Pontuação deve ser entre 0 e 20', true);
+  try {
+    await api(`/simulators/admin/evaluate/${id}`, { method:'POST', body: JSON.stringify({ score, feedback }) });
+    fecharModal('modal-conversa');
+    await carregarRespostas();
+    showToast('Avaliação salva!');
+  } catch(e) { showToast('Erro ao salvar avaliação', true); }
+}
+
+// títulos já definidos no irPagina principal
+function renderClassificacoes() {
+  const scores = RANKING.map(r => r.totalPoints || 0);
+  const ex  = scores.filter(s => s >= 80).length;
+  const bom = scores.filter(s => s >= 50 && s < 80).length;
+  const rev = scores.filter(s => s > 0 && s < 50).length;
+  const total = scores.length || 1;
+
+  const rows = document.querySelectorAll('.classif-row');
+  if (rows[0]) {
+    rows[0].querySelector('.count').textContent = ex;
+    rows[0].querySelector('.bar-fill').style.width = Math.round((ex/total)*100) + '%';
+  }
+  if (rows[1]) {
+    rows[1].querySelector('.count').textContent = bom;
+    rows[1].querySelector('.bar-fill').style.width = Math.round((bom/total)*100) + '%';
+  }
+  if (rows[2]) {
+    rows[2].querySelector('.count').textContent = rev;
+    rows[2].querySelector('.bar-fill').style.width = Math.round((rev/total)*100) + '%';
+  }
+}
+
+// ════════════════════════════════════════════
+// HORA
+// ════════════════════════════════════════════
+function atualizarHora() {
+  const h = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('dash-hora').textContent = `Atualizado às ${h}`;
+}
+
+// ════════════════════════════════════════════
+// NAVEGAÇÃO
+// ════════════════════════════════════════════
+const TITULOS = {
+  dashboard:   'Dashboard',
+  ranking:     'Ranking Completo',
+  operadores:  'Operadores',
+  resultados:  'Resultados por Módulo',
+  modulos:     'Módulos & Fases',
+  quiz:        'Questões do Quiz',
+  usuarios:    'Criar Usuário',
+  simuladores: 'Simuladores',
+  respostas:   'Respostas dos Operadores'
+};
+
+function irPagina(pag) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('ativo'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativo'));
+  const pg = document.getElementById('page-' + pag);
+  if (pg) pg.classList.add('ativo');
+  document.getElementById('topbar-title').textContent = TITULOS[pag] || pag;
+
+  // Marca nav item ativo pelo onclick
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(`'${pag}'`)) {
+      n.classList.add('ativo');
+    }
+  });
+
+  if (pag === 'dashboard')   atualizarHora();
+  if (pag === 'simuladores') carregarSimuladores();
+  if (pag === 'respostas')   carregarSimuladores().then(() => carregarRespostas());
+  if (pag === 'modulos')     { carregarFases().then(() => { renderFasesTabela(); renderModulosTabela(); }); }
+  if (pag === 'quiz') {
+    // Popula filtro de módulos antes de renderizar
+    const selFiltro = document.getElementById('quiz-filtro-mod');
+    if (selFiltro) {
+      selFiltro.innerHTML = '<option value="">Todos os módulos</option>' +
+        MODULOS.map(m => `<option value="${m.id}">${esc(m.title)}</option>`).join('');
+    }
+    if (typeof renderQuestoes === 'function') renderQuestoes();
+  }
+  if (pag === 'usuarios')    { if (typeof renderUsuariosTabela === 'function') renderUsuariosTabela(); }
+}
+
+// ════════════════════════════════════════════
+// RANKING
+// ════════════════════════════════════════════
+const POS_CL  = ['gold','silver','bronze'];
+const POS_EMO = ['🥇','🥈','🥉'];
+const CL_MAP  = { 'Excelente':'classif-ex', 'Bom':'classif-bom', 'Precisa revisar':'classif-rev' };
+
+function classifLabel(pts) {
+  if (pts >= 80) return 'Excelente';
+  if (pts >= 50) return 'Bom';
+  if (pts > 0)   return 'Precisa revisar';
+  return 'Sem dados';
+}
+
+function renderRanking(lista) {
+  const el = document.getElementById('ranking-lista');
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty"><div class="ico">🏆</div><p>Nenhum resultado ainda</p></div>';
+    return;
+  }
+  el.innerHTML = lista.map((r, i) => {
+    const nome   = r.name || r.nome || '?';
+    const pts    = Math.round(r.totalPoints || r.score || 0);
+    const classif = classifLabel(pts);
+    const qPts   = (r.quizPoints || 0).toFixed(1);
+    const sPts   = (r.simulatorPoints || 0).toFixed(1);
+    return `
+    <div class="rank-row">
+      <div class="rank-pos ${POS_CL[i]||''}">${POS_EMO[i]||(i+1)}</div>
+      <div class="rank-ava" style="background:${grad(nome)}">${nome[0]}</div>
+      <div class="rank-info">
+        <div class="rank-name">${esc(nome)}</div>
+        <div class="rank-sub">Quiz ${qPts}pts · Sim ${sPts}pts · <span class="classif ${CL_MAP[classif]||'classif-bom'}">${classif}</span></div>
+      </div>
+      <div class="rank-score">${pts} pts</div>
+    </div>`;
+  }).join('');
+}
+
+function filtrarRanking(q = '') {
+  q = q.toLowerCase();
+  renderRanking(RANKING.filter(r => (r.name||r.nome||'').toLowerCase().includes(q)));
+}
+
+// ════════════════════════════════════════════
+// OPERADORES
+// ════════════════════════════════════════════
+let _editandoId = null;
+
+function renderOperadores(lista) {
+  const tbody = document.getElementById('operadores-tbody');
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>Nenhum operador encontrado</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(op => {
+    const nome   = op.name || op.nome || '?';
+    const isAdmin = op.role === 'ADMIN';
+    const isActive = op.isActive !== false;
+    const status  = isActive ? 'ativo' : 'bloqueado';
+    const statusClass = isActive ? 'badge-ativo' : 'badge-inativo';
+    const criado  = op.createdAt ? new Date(op.createdAt).toLocaleDateString('pt-BR') : '—';
+    return `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="ava" style="background:${grad(nome)}">${nome[0]}</div>
+          <div>
+            <strong>${esc(nome)}</strong>
+            ${isAdmin ? ' <span class="badge badge-admin">ADMIN</span>' : ''}
+          </div>
+        </div>
+      </td>
+      <td style="color:var(--txt2);font-size:12px">${esc(op.email)}</td>
+      <td style="color:var(--txt2);font-size:12px">${criado}</td>
+      <td style="color:var(--txt2);font-size:12px">—</td>
+      <td><span class="badge ${statusClass}">${status}</span></td>
+      <td>${(op.totalPoints||0) > 0
+        ? '<span class="badge badge-ativo">✓ Com pontuação</span>'
+        : '<span class="badge badge-pendente">Em andamento</span>'}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm btn-icon" title="Editar"
+            onclick="abrirEditar(${op.id})">✏️</button>
+          ${!isAdmin ? `<button class="btn btn-danger btn-sm btn-icon" title="Remover"
+            onclick="removerOperador(${op.id},'${esc(nome)}')">🗑️</button>` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filtrarOperadores() {
+  const q      = document.getElementById('op-search').value.toLowerCase();
+  const filtro = document.getElementById('op-filter').value;
+  renderOperadores(OPERADORES.filter(op => {
+    const nome = (op.name||op.nome||'').toLowerCase();
+    const email = (op.email||'').toLowerCase();
+    return (nome.includes(q) || email.includes(q)) &&
+           (!filtro || filtro === (op.isActive === false ? 'bloqueado' : 'ativo'));
+  }));
+}
+
+function abrirEditar(id) {
+  const op = OPERADORES.find(user => String(user.id) === String(id));
+  if (!op) {
+    showToast('Usu�rio n�o encontrado', true);
+    return;
+  }
+
+  _editandoId = op.id;
+  document.getElementById('eop-nome').value   = op.name || op.nome || '';
+  document.getElementById('eop-email').value  = op.email || '';
+  document.getElementById('eop-senha').value  = '';
+  document.getElementById('eop-status').value = op.isActive === false ? 'bloqueado' : 'ativo';
+  abrirModal('modal-editar-op');
+}
+
+async function salvarEdicao() {
+  const nome  = document.getElementById('eop-nome').value.trim();
+  const senha = document.getElementById('eop-senha').value;
+  const status = document.getElementById('eop-status').value;
+
+  if (!_editandoId) return showToast('Nenhum usu�rio selecionado', true);
+  if (!nome) return showToast('Informe o nome do usu�rio', true);
+
+  try {
+    await api(`/admin/users/${_editandoId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name: nome, password: senha || undefined, status, isActive: status !== 'bloqueado' })
+    });
+    fecharModal('modal-editar-op');
+    await carregarTudo();
+    showToast('Dados salvos!');
+  } catch (err) {
+    showToast('Erro: ' + err.message, true);
+  }
+}
+
+async function removerOperador(id, nome) {
+  if (!confirm(`Remover o operador "${nome}"? Esta ação não pode ser desfeita.`)) return;
+  try {
+    await api(`/admin/users/${id}`, { method: 'DELETE' });
+    showToast(`Operador ${nome} removido`);
+    await carregarTudo();
+  } catch (err) {
+    showToast('Erro ao remover: ' + err.message, true);
+  }
+}
+
+// ════════════════════════════════════════════
+// RESULTADOS
+// ════════════════════════════════════════════
+function preencherFiltroModulos() {
+  const sel = document.getElementById('res-mod');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Todos os módulos</option>' +
+    MODULOS.map(m => `<option value="${m.id}">${esc(m.title)}</option>`).join('');
+}
+
+function renderResultados(lista) {
+  const tbody = document.getElementById('resultados-tbody');
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><p>Nenhum resultado encontrado</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(r => {
+    const pts = r.pts || 0;
+    const sim = r.sim || 0;
+    const cor = pts >= 80 ? 'var(--verde)' : pts >= 50 ? 'var(--azul)' : 'var(--vermelho)';
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:9px">
+          <div class="ava" style="background:${grad(r.nome)};width:28px;height:28px;font-size:11px">${(r.nome||'?')[0]}</div>
+          <div><strong>${esc(r.nome)}</strong><div style="font-size:11px;color:var(--txt2)">${esc(r.email)}</div></div>
+        </div>
+      </td>
+      <td style="font-size:12px">${esc(r.mod)}</td>
+      <td style="font-family:var(--mono)">${pts.toFixed(1)} pts</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="height:6px;width:72px;background:var(--border2);border-radius:3px;overflow:hidden;flex-shrink:0">
+            <div style="height:100%;width:${Math.min(pts,100)}%;background:${cor};border-radius:3px"></div>
+          </div>
+          <span style="font-family:var(--mono);font-size:11px;color:${cor}">${pts.toFixed(0)}pts</span>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="height:6px;width:72px;background:var(--border2);border-radius:3px;overflow:hidden;flex-shrink:0">
+            <div style="height:100%;width:${Math.min(sim,100)}%;background:var(--roxo);border-radius:3px"></div>
+          </div>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--roxo)">${sim}</span>
+        </div>
+      </td>
+      <td style="color:var(--txt2);font-size:12px">${esc(r.data||'—')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filtrarResultados() {
+  const q   = document.getElementById('res-search').value.toLowerCase();
+  const mod = document.getElementById('res-mod').value;
+  renderResultados(RESULTADOS.filter(r =>
+    ((r.nome||'').toLowerCase().includes(q) || (r.email||'').toLowerCase().includes(q)) &&
+    (!mod || String(r.modId) === mod)
+  ));
+}
+
+// ════════════════════════════════════════════
+// MODAIS
+// ════════════════════════════════════════════
+function syncModalModuleOptions() {
+  const questionSelect = document.getElementById('nq-modulo');
+  const simulatorSelect = document.getElementById('ns-modulo');
+
+  if (questionSelect) {
+    questionSelect.innerHTML = MODULOS.map(m => `<option value="${m.id}">${esc(m.title)}</option>`).join('');
+  }
+
+  if (simulatorSelect) {
+    simulatorSelect.innerHTML = MODULOS.map(m => `<option value="${m.id}">${esc(m.title)}</option>`).join('');
+  }
+}
+
+function resetNovoOperadorModal() {
+  ['nop-nome', 'nop-email', 'nop-senha'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const tipo = document.getElementById('nop-tipo');
+  if (tipo) tipo.value = 'OPERATOR';
+  const msg = document.getElementById('nop-msg');
+  if (msg) msg.textContent = '';
+}
+
+function resetEditarOperadorModal() {
+  _editandoId = null;
+  ['eop-nome', 'eop-email', 'eop-senha'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const status = document.getElementById('eop-status');
+  if (status) status.value = 'ativo';
+}
+
+function resetNovaFaseModal() {
+  const defaults = {
+    'nf-titulo': '',
+    'nf-desc': '',
+    'nf-icone': '',
+    'nf-cor': '#00C2FF',
+    'nf-ordem': '0'
+  };
+
+  Object.entries(defaults).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+  });
+}
+
+function resetNovoModuloModal() {
+  _editandoModuloId = null;
+  _videoPendente = null;
+  _pdfPendente = null;
+
+  const title = document.getElementById('modal-modulo-titulo');
+  const saveButton = document.getElementById('nm-btn-salvar');
+  const mediaSection = document.getElementById('nm-midia-section');
+  const phaseSelect = document.getElementById('nm-fase');
+
+  if (title) title.textContent = 'Novo Modulo';
+  if (saveButton) {
+    saveButton.textContent = 'Criar Modulo';
+    saveButton.onclick = () => criarModulo();
+  }
+  if (mediaSection) mediaSection.style.display = 'none';
+  if (phaseSelect) {
+    if (!phaseSelect.options.length && FASES.length) {
+      phaseSelect.innerHTML = FASES.map(f => `<option value="${f.id}">${esc(f.title)}</option>`).join('');
+    }
+    if (FASES.length) phaseSelect.value = String(FASES[0].id);
+  }
+
+  ['nm-titulo', 'nm-desc', 'nm-conteudo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const orderInput = document.getElementById('nm-ordem');
+  if (orderInput) orderInput.value = '0';
+
+  const videoFile = document.getElementById('nm-video-file');
+  const pdfFile = document.getElementById('nm-pdf-file');
+  if (videoFile) videoFile.value = '';
+  if (pdfFile) pdfFile.value = '';
+
+  document.getElementById('nm-video-preview').style.display = 'none';
+  document.getElementById('nm-video-upload').style.display = 'block';
+  document.getElementById('nm-video-player').removeAttribute('src');
+  document.getElementById('nm-video-text').textContent = 'Clique para selecionar video';
+  document.getElementById('nm-video-label').classList.remove('has-file');
+  document.getElementById('nm-video-progress').style.display = 'none';
+  document.getElementById('nm-video-bar').style.width = '0%';
+  document.getElementById('nm-video-pct').textContent = '0%';
+
+  document.getElementById('nm-pdf-preview').style.display = 'none';
+  document.getElementById('nm-pdf-upload').style.display = 'block';
+  document.getElementById('nm-pdf-nome').textContent = '';
+  document.getElementById('nm-pdf-link').href = '#';
+  document.getElementById('nm-pdf-text').textContent = 'Clique para selecionar PDF';
+  document.getElementById('nm-pdf-label').classList.remove('has-file');
+  document.getElementById('nm-pdf-progress').style.display = 'none';
+  document.getElementById('nm-pdf-bar').style.width = '0%';
+  document.getElementById('nm-pdf-pct').textContent = '0%';
+}
+function resetNovaQuestaoModal() {
+  syncModalModuleOptions();
+  ['nq-pergunta', 'nq-a', 'nq-b', 'nq-c', 'nq-d', 'nq-explicacao'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const correct = document.getElementById('nq-correta');
+  const difficulty = document.getElementById('nq-dificuldade');
+  if (correct) correct.value = 'A';
+  if (difficulty) difficulty.value = '3';
+  atualizarPontosDificuldade();
+}
+
+function resetNovoSimModal() {
+  syncModalModuleOptions();
+  ['ns-titulo', 'ns-descricao', 'ns-cenario'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+function resetConversaModal() {
+  document.getElementById('conv-titulo').textContent = 'Conversa do Operador';
+  document.getElementById('conv-meta').textContent = '';
+  document.getElementById('conv-chat').innerHTML = '';
+  document.getElementById('aval-score').value = '';
+  document.getElementById('aval-feedback').value = '';
+  document.getElementById('aval-attempt-id').value = '';
+}
+
+function prepareModal(id) {
+  if (id === 'modal-novo-op') resetNovoOperadorModal();
+  if (id === 'modal-nova-fase') resetNovaFaseModal();
+  if (id === 'modal-nova-questao') resetNovaQuestaoModal();
+  if (id === 'modal-novo-sim') resetNovoSimModal();
+}
+
+function cleanupModal(id) {
+  if (id === 'modal-novo-op') resetNovoOperadorModal();
+  if (id === 'modal-editar-op') resetEditarOperadorModal();
+  if (id === 'modal-nova-fase') resetNovaFaseModal();
+  if (id === 'modal-novo-modulo') resetNovoModuloModal();
+  if (id === 'modal-nova-questao') resetNovaQuestaoModal();
+  if (id === 'modal-novo-sim') resetNovoSimModal();
+  if (id === 'modal-conversa') resetConversaModal();
+}
+
+function abrirModal(id)  {
+  prepareModal(id);
+  document.getElementById(id).classList.add('open');
+}
+function fecharModal(id) {
+  document.getElementById(id).classList.remove('open');
+  cleanupModal(id);
+}
+document.querySelectorAll('.modal-overlay').forEach(el =>
+  el.addEventListener('click', e => { if (e.target === el) fecharModal(el.id); })
+);
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const openModal = document.querySelector('.modal-overlay.open');
+  if (openModal) fecharModal(openModal.id);
+});
+
+// ════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════
+function showToast(msg, erro = false) {
+  const t = document.getElementById('toast');
+  t.textContent = (erro ? '⚠ ' : '✓ ') + msg;
+  t.className = 'toast' + (erro ? ' erro' : '') + ' show';
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ════════════════════════════════════════════
+// ATUALIZAR BOTÃO DO TOPBAR
+// ════════════════════════════════════════════
+document.querySelector('.topbar-actions .btn')?.addEventListener('click', async () => {
+  await carregarTudo();
+  showToast('Dados atualizados!');
+});
+
+// ════════════════════════════════════════════
+// INIT — valida token do site principal
+// Se não houver token ou não for ADMIN, volta para o login
+// ════════════════════════════════════════════
+(async () => {
+  const t = sessionStorage.getItem('jwt_token');
+  if (!t) {
+    window.location.href = '/index.html';
+    return;
+  }
+  try {
+    const data = await api('/auth/me');
+    if (data.data.role !== 'ADMIN') {
+      // Não é admin — volta pro site do operador
+      window.location.href = '/index.html';
+      return;
+    }
+    await entrarNoApp(data.data);
+  } catch (e) {
+    // Token inválido ou expirado — volta para o login
+    sessionStorage.removeItem('jwt_token');
+    window.location.href = '/index.html';
+  }
+})();
+
+
+// ════════════════════════════════════════════
+// ════════════════════════════════════════════
+// FASES
+// ════════════════════════════════════════════
+let FASES = [];
+
+async function carregarFases() {
+  try {
+    const res = await api('/phases');
+    FASES = res.data || [];
+    // Preenche selects de fase
+    const selMod  = document.getElementById('nm-fase');
+    const selFilt = document.getElementById('mod-filtro-fase');
+    if (selMod) selMod.innerHTML = FASES.map(f => `<option value="${f.id}">${f.title}</option>`).join('');
+    if (selFilt) {
+      selFilt.innerHTML = '<option value="">Todas as fases</option>' +
+        FASES.map(f => `<option value="${f.id}">${f.title}</option>`).join('');
+    }
+  } catch(e) { FASES = []; }
+}
+
+function renderFasesTabela() {
+  const tb = document.getElementById('fases-tbody');
+  if (!tb) return;
+  if (!FASES.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--txt2);padding:20px">Nenhuma fase cadastrada</td></tr>'; return; }
+  tb.innerHTML = FASES.map(f => `
+    <tr>
+      <td style="font-family:var(--mono);color:var(--txt2)">#${f.id}</td>
+      <td><strong>${esc(f.title)}</strong>${f.description ? `<div style="font-size:11px;color:var(--txt2);margin-top:2px">${esc(f.description)}</div>` : ''}</td>
+      <td style="font-size:20px">${f.icon || '📚'}</td>
+      <td><span class="badge ${f.isLocked ? 'badge-pendente' : 'badge-ativo'}">${f.isLocked ? '🔒 Bloqueada' : '✓ Aberta'}</span></td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="toggleFase(${f.id})">${f.isLocked ? '🔓 Desbloquear' : '🔒 Bloquear'}</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deletarFase(${f.id},'${esc(f.title)}')" title="Remover">🗑️</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function criarFase() {
+  const titulo = document.getElementById('nf-titulo').value.trim();
+  const desc   = document.getElementById('nf-desc').value.trim();
+  const icone  = document.getElementById('nf-icone').value.trim() || '📚';
+  const cor    = document.getElementById('nf-cor').value.trim() || '#00C2FF';
+  const ordem  = parseInt(document.getElementById('nf-ordem').value) || 0;
+  if (!titulo) { showToast('Informe o título da fase', true); return; }
+  try {
+    await api('/phases', {
+      method: 'POST',
+      body: JSON.stringify({ title: titulo, description: desc, icon: icone, color: cor, orderIndex: ordem })
+    });
+    fecharModal('modal-nova-fase');
+    document.getElementById('nf-titulo').value = '';
+    document.getElementById('nf-desc').value   = '';
+    await carregarFases();
+    renderFasesTabela();
+    renderModulosTabela();
+    showToast('Fase criada com sucesso!');
+  } catch(e) { showToast('Erro: ' + e.message, true); }
+}
+
+async function toggleFase(id) {
+  try {
+    await api(`/phases/${id}/toggle`, { method: 'POST' });
+    showToast('Status da fase atualizado!');
+    await carregarFases();
+    renderFasesTabela();
+  } catch(e) { showToast('Erro: ' + e.message, true); }
+}
+
+async function deletarFase(id, nome) {
+  if (!confirm(`Remover a fase "${nome}"? Isso também remove todos os módulos e questões vinculados!`)) return;
+  try {
+    await api(`/phases/${id}`, { method: 'DELETE' });
+    showToast(`Fase "${nome}" removida`);
+    await carregarFases();
+    const modsRes = await api('/modules');
+    MODULOS = modsRes.data || [];
+    renderFasesTabela();
+    renderModulosTabela();
+    preencherFiltroModulos();
+  } catch(e) { showToast('Erro: ' + e.message, true); }
+}
+
+// ════════════════════════════════════════════
+// MÓDULOS
+// ════════════════════════════════════════════
+function renderModulosTabela() {
+  const tb   = document.getElementById('modulos-tbody');
+  const fase = document.getElementById('mod-filtro-fase')?.value;
+  if (!tb) return;
+  const lista = fase ? MODULOS.filter(m => String(m.phaseId) === fase) : MODULOS;
+  if (!lista.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--txt2);padding:20px">Nenhum módulo encontrado</td></tr>'; return; }
+  tb.innerHTML = lista.map(m => `
+    <tr>
+      <td style="font-family:var(--mono);color:var(--txt2)">#${m.id}</td>
+      <td style="color:var(--txt2);font-size:12px">${esc(m.phaseTitle || '—')}</td>
+      <td><strong>${esc(m.title)}</strong>${m.description ? `<div style="font-size:11px;color:var(--txt2);margin-top:2px">${esc(m.description)}</div>` : ''}</td>
+      <td><span class="badge ${m.isActive ? 'badge-ativo' : 'badge-inativo'}">${m.isActive ? '✓ Ativo' : '✗ Inativo'}</span></td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="abrirModalModulo(MODULOS.find(x => String(x.id) === String(${m.id})))" title="Editar / Mídia">✏️</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleModulo(${m.id})">${m.isActive ? '🔴 Desativar' : '🟢 Ativar'}</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deletarModulo(${m.id},'${esc(m.title)}')" title="Remover">🗑️</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function criarModulo() {
+  const faseId   = document.getElementById('nm-fase').value;
+  const titulo   = document.getElementById('nm-titulo').value.trim();
+  const desc     = document.getElementById('nm-desc').value.trim();
+  const conteudo = document.getElementById('nm-conteudo').value.trim();
+  const ordem    = parseInt(document.getElementById('nm-ordem').value) || 0;
+  if (!titulo || !faseId) { showToast('Informe a fase e o título', true); return; }
+  try {
+    await api('/modules', {
+      method: 'POST',
+      body: JSON.stringify({ phaseId: parseInt(faseId), title: titulo, description: desc, content: conteudo, orderIndex: ordem })
+    });
+    fecharModalModulo();
+    document.getElementById('nm-titulo').value = '';
+    document.getElementById('nm-desc').value   = '';
+    document.getElementById('nm-conteudo').value = '';
+    const modsRes = await api('/modules');
+    MODULOS = modsRes.data || [];
+    renderModulosTabela();
+    preencherFiltroModulos();
+    showToast('Módulo criado com sucesso!');
+  } catch(e) { showToast('Erro: ' + e.message, true); }
+}
+
+async function toggleModulo(id) {
+  try {
+    await api(`/modules/${id}/toggle`, { method: 'POST' });
+    showToast('Módulo atualizado!');
+    const modsRes = await api('/modules');
+    MODULOS = modsRes.data || [];
+    renderModulosTabela();
+  } catch(e) { showToast('Erro: ' + e.message, true); }
+}
+
+async function deletarModulo(id, nome) {
+  if (!confirm(`Remover o módulo "${nome}"? Isso também remove as questões do quiz.`)) return;
+  try {
+    await api(`/modules/${id}`, { method: 'DELETE' });
+    showToast(`Módulo "${nome}" removido`);
+    const modsRes = await api('/modules');
+    MODULOS = modsRes.data || [];
+    renderModulosTabela();
+    preencherFiltroModulos();
+  } catch(e) { showToast('Erro: ' + e.message, true); }
+}
+
+// ════════════════════════════════════════════
+// QUESTÕES DO QUIZ
+// ════════════════════════════════════════════
+let QUESTOES = [];
+
+async function carregarQuestoes(moduleId) {
+  if (!moduleId) { QUESTOES = []; return; }
+  try {
+    const res = await api(`/quiz/questions?moduleId=${moduleId}`);
+    QUESTOES = res.data || [];
+  } catch(e) { QUESTOES = []; }
+}
+
+function renderQuestoes() {
+  const tb    = document.getElementById('quiz-tbody');
+  const modId = document.getElementById('quiz-filtro-mod')?.value;
+  if (!tb) return;
+
+  // Preenche select de módulos no filtro e no modal
+  const selFiltro = document.getElementById('quiz-filtro-mod');
+  const selMod    = document.getElementById('nq-modulo');
+  if (selFiltro && selFiltro.children.length <= 1) {
+    selFiltro.innerHTML = '<option value="">Todos os módulos</option>' +
+      MODULOS.map(m => `<option value="${m.id}">${esc(m.title)}</option>`).join('');
+  }
+  if (selMod && selMod.children.length <= 1) {
+    selMod.innerHTML = MODULOS.map(m => `<option value="${m.id}">${esc(m.title)}</option>`).join('');
+  }
+
+  if (!modId) {
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--txt2);padding:20px">Selecione um módulo para ver as questões</td></tr>';
+    return;
+  }
+  carregarQuestoes(modId).then(() => {
+    if (!QUESTOES.length) {
+      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--txt2);padding:20px">Nenhuma questão neste módulo</td></tr>';
+      return;
+    }
+    tb.innerHTML = QUESTOES.map(q => `
+      <tr>
+        <td style="font-family:var(--mono);color:var(--txt2)">#${q.id}</td>
+        <td style="font-size:12px;color:var(--txt2)">${esc(MODULOS.find(m=>m.id===q.moduleId)?.title||'—')}</td>
+        <td style="max-width:260px">${esc(q.question)}</td>
+        <td><span class="badge badge-ativo" style="font-family:var(--mono)">Opção ${q.correctOption||'?'}</span></td>
+        <td style="font-family:var(--mono)">${q.points||10}</td>
+        <td><button class="btn btn-danger btn-sm btn-icon" onclick="deletarQuestao(${q.id})" title="Remover">🗑️</button></td>
+      </tr>`).join('');
+  });
+}
+
+function atualizarPontosDificuldade() {
+  const pts = document.getElementById('nq-dificuldade').value;
+  document.getElementById('nq-pontos').value = pts;
+}
+
+async function criarQuestao() {
+  const modId = document.getElementById('nq-modulo').value;
+  const perg  = document.getElementById('nq-pergunta').value.trim();
+  const a     = document.getElementById('nq-a').value.trim();
+  const b     = document.getElementById('nq-b').value.trim();
+  const c     = document.getElementById('nq-c').value.trim();
+  const d     = document.getElementById('nq-d').value.trim();
+  const corr  = document.getElementById('nq-correta').value;
+  const pts   = parseFloat(document.getElementById('nq-pontos').value) || 10;
+  const expl  = document.getElementById('nq-explicacao').value.trim();
+
+  if (!modId || !perg || !a || !b || !c || !d) {
+    showToast('Preencha todos os campos obrigatórios', true); return;
+  }
+  try {
+    await api('/quiz/questions', {
+      method: 'POST',
+      body: JSON.stringify({
+        moduleId: parseInt(modId),
+        question: perg,
+        optionA: a, optionB: b, optionC: c, optionD: d,
+        correctOption: corr,
+        points: pts,
+        explanation: expl
+      })
+    });
+    showToast('Questão criada com sucesso!');
+    fecharModal('modal-nova-questao');
+    ['nq-pergunta','nq-a','nq-b','nq-c','nq-d','nq-explicacao'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('nq-pontos').value = '3';
+    document.getElementById('nq-dificuldade').value = '3';
+    // Garante que o filtro tem o módulo e seleciona ele
+    const filtroSel = document.getElementById('quiz-filtro-mod');
+    if (filtroSel) {
+      // Popula o filtro caso esteja vazio
+      if (!filtroSel.querySelector(`option[value="${modId}"]`)) {
+        filtroSel.innerHTML = '<option value="">Todos os módulos</option>' +
+          MODULOS.map(m => `<option value="${m.id}">${esc(m.title)}</option>`).join('');
+      }
+      filtroSel.value = modId;
+    }
+    await carregarQuestoes(modId);
+    renderQuestoes();
+  } catch(e) { showToast('Erro: ' + e.message, true); }
+}
+
+async function deletarQuestao(id) {
+  if (!confirm('Remover esta questão?')) return;
+  try {
+    await api(`/quiz/questions/${id}`, { method: 'DELETE' });
+    showToast('Questão removida');
+    renderQuestoes();
+  } catch(e) { showToast('Erro: ' + e.message, true); }
+}
+
+// ════════════════════════════════════════════
+// CRIAR USUÁRIO
+// ════════════════════════════════════════════
+function selecionarCor(el) {
+  document.querySelectorAll('.cor-opt').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function renderUsuariosTabela() {
+  const tb = document.getElementById('usuarios-tbody');
+  if (!tb) return;
+  if (!OPERADORES.length) { tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--txt2);padding:16px">Nenhum usuário</td></tr>'; return; }
+  tb.innerHTML = OPERADORES.map(u => {
+    const nome = u.name || u.email;
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:50%;background:${u.avatarColor||grad(nome)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">${(u.avatarInitials||nome[0]).toUpperCase()}</div>
+          <span style="font-size:13px">${esc(nome)}</span>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--txt2)">${esc(u.email)}</td>
+      <td><span class="badge ${u.role==='ADMIN'?'badge-admin':(u.isActive === false ? 'badge-inativo' : 'badge-ativo')}">${u.role==='ADMIN'?'ADMIN':(u.isActive === false ? 'Bloqueado' : 'Operador')}</span></td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="removerOperador(${u.id},'${esc(nome)}')" title="Remover">🗑️</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function criarOperadorModal() {
+  const nome  = document.getElementById('nop-nome').value.trim();
+  const email = document.getElementById('nop-email').value.trim();
+  const senha = document.getElementById('nop-senha').value;
+  const tipo  = document.getElementById('nop-tipo').value;
+  const msg   = document.getElementById('nop-msg');
+
+  msg.style.color = 'var(--vermelho)';
+  if (!nome)  { msg.textContent = '⚠ Informe o nome'; return; }
+  if (!email) { msg.textContent = '⚠ Informe o e-mail'; return; }
+  if (!senha || senha.length < 6) { msg.textContent = '⚠ Senha mínimo 6 caracteres'; return; }
+  msg.textContent = '';
+
+  try {
+    await api('/admin/users', {
+      method: 'POST',
+      body: JSON.stringify({ name: nome, email, password: senha, role: tipo })
+    });
+    fecharModal('modal-novo-op');
+    document.getElementById('nop-nome').value  = '';
+    document.getElementById('nop-email').value = '';
+    document.getElementById('nop-senha').value = '';
+    const usersRes = await api('/admin/users');
+    OPERADORES = usersRes.data || [];
+    renderOperadores(OPERADORES);
+    renderUsuariosTabela();
+    showToast('Operador criado com sucesso!');
+  } catch(e) {
+    msg.style.color = 'var(--vermelho)';
+    msg.textContent = '⚠ ' + e.message;
+  }
+}
+
+async function criarUsuario() {
+  const nome  = document.getElementById('nu-nome').value.trim();
+  const email = document.getElementById('nu-email').value.trim();
+  const senha = document.getElementById('nu-senha').value;
+  const tipo  = document.getElementById('nu-tipo').value;
+  const cor   = document.querySelector('.cor-opt.selected')?.dataset.cor || '#00C2FF';
+  const msg   = document.getElementById('nu-msg');
+
+  msg.style.color = 'var(--vermelho)';
+  if (!nome)  { msg.textContent = '⚠ Informe o nome'; return; }
+  if (!email) { msg.textContent = '⚠ Informe o e-mail'; return; }
+  if (!senha || senha.length < 6) { msg.textContent = '⚠ Senha deve ter ao menos 6 caracteres'; return; }
+  msg.textContent = '';
+
+  try {
+    await api('/admin/users', {
+      method: 'POST',
+      body: JSON.stringify({ name: nome, email, password: senha, role: tipo, avatarColor: cor })
+    });
+    msg.style.color = 'var(--verde)';
+    msg.textContent = '✓ Usuário criado com sucesso!';
+    document.getElementById('nu-nome').value  = '';
+    document.getElementById('nu-email').value = '';
+    document.getElementById('nu-senha').value = '';
+    document.getElementById('nu-tipo').value  = 'OPERATOR';
+    const usersRes = await api('/admin/users');
+    OPERADORES = usersRes.data || [];
+    renderUsuariosTabela();
+    renderOperadores(OPERADORES);
+  } catch(e) {
+    msg.style.color = 'var(--vermelho)';
+    msg.textContent = '⚠ ' + e.message;
+  }
+}
+
+// ════════════════════════════════════════════
+// EXPORTAR CSV
+// ════════════════════════════════════════════
+function exportarCSV() {
+  const rows = [['Nome','E-mail','Tipo','Pontos Quiz','Pontos Sim','Total','Posição']];
+  RANKING.forEach((r,i) => {
+    rows.push([
+      r.name || r.nome,
+      OPERADORES.find(o => (o.name||o.nome) === (r.name||r.nome))?.email || '—',
+      'Operador',
+      (r.quizPoints||0).toFixed(1),
+      (r.simulatorPoints||0).toFixed(1),
+      (r.totalPoints||0).toFixed(1),
+      i+1
+    ]);
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `ranking-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('CSV exportado!');
+}
+
+// Adiciona botão de exportar ao topbar quando estiver na página de resultados
+document.querySelector('.topbar-actions').insertAdjacentHTML('beforeend',
+  '<button class="btn btn-secondary btn-sm" id="btn-export" style="display:none" onclick="exportarCSV()">⬇ Exportar CSV</button>'
+);
+
+// Mostra/oculta botão exportar conforme a página
+const _irPagOrig = irPagina;
+irPagina = function(pag) {
+  _irPagOrig(pag);
+  const btn = document.getElementById('btn-export');
+  if (btn) btn.style.display = (pag === 'resultados' || pag === 'ranking') ? 'inline-flex' : 'none';
+};
+
+// ════════════════════════════════════════════
+// carregarTudo — atualizado para incluir fases
+// ════════════════════════════════════════════
+const _carregarTudoOrig = carregarTudo;
+carregarTudo = async function() {
+  await _carregarTudoOrig();
+  await carregarFases();
+  renderFasesTabela();
+  renderModulosTabela();
+  // Popula select de módulos nas questões
+  const selQ = document.getElementById('quiz-filtro-mod');
+  if (selQ) {
+    selQ.innerHTML = '<option value="">Todos os módulos</option>' +
+      MODULOS.map(m => `<option value="${m.id}">${esc(m.title)}</option>`).join('');
+  }
+};
+
+function atualizarPaginaAtual() {
+  const pag = document.querySelector('.page.ativo')?.id?.replace('page-', '');
+  if (!pag) return;
+  if (pag === 'modulos') {
+    carregarFases().then(() => { renderFasesTabela(); renderModulosTabela(); });
+  } else if (pag === 'quiz') {
+    renderQuestoes();
+  } else if (pag === 'ranking') {
+    carregarTudo().then(() => renderRanking(RANKING));
+  } else if (pag === 'operadores') {
+    carregarTudo().then(() => renderOperadores(OPERADORES));
+  } else if (pag === 'simuladores') {
+    carregarSimuladores();
+  } else if (pag === 'respostas') {
+    carregarRespostas();
+  } else {
+    carregarTudo();
+  }
+  showToast('Dados atualizados!');
+}
+
+
+// ════════════════════════════════════════════
+// UPLOAD DE MÍDIA
+// ════════════════════════════════════════════
+let _editandoModuloId = null;
+let _videoPendente    = null;
+let _pdfPendente      = null;
+
+function abrirModalModulo(mod = null) {
+  resetNovoModuloModal();
+  _editandoModuloId = mod ? mod.id : null;
+
+  const titulo = document.getElementById('modal-modulo-titulo');
+  const btnSalvar = document.getElementById('nm-btn-salvar');
+  const midia = document.getElementById('nm-midia-section');
+
+  if (mod) {
+    titulo.textContent = 'Editar Modulo';
+    btnSalvar.textContent = 'Salvar Alteracoes';
+    btnSalvar.onclick = () => salvarEdicaoModulo();
+    midia.style.display = 'block';
+
+    if (mod.phaseId != null) {
+      document.getElementById('nm-fase').value = String(mod.phaseId);
+    }
+    document.getElementById('nm-titulo').value = mod.title || '';
+    document.getElementById('nm-desc').value = mod.description || '';
+    document.getElementById('nm-conteudo').value = mod.content || '';
+    document.getElementById('nm-ordem').value = mod.orderIndex || 0;
+
+    if (mod.videoUrl) {
+      document.getElementById('nm-video-player').src = mod.videoUrl;
+      document.getElementById('nm-video-preview').style.display = 'block';
+      document.getElementById('nm-video-upload').style.display = 'none';
+    }
+
+    if (mod.pdfUrl) {
+      document.getElementById('nm-pdf-nome').textContent = mod.pdfUrl.split('/').pop();
+      document.getElementById('nm-pdf-link').href = mod.pdfUrl;
+      document.getElementById('nm-pdf-preview').style.display = 'block';
+      document.getElementById('nm-pdf-upload').style.display = 'none';
+    }
+  }
+
+  abrirModal('modal-novo-modulo');
+}
+function fecharModalModulo() {
+  fecharModal('modal-novo-modulo');
+  _editandoModuloId = null;
+  _videoPendente    = null;
+  _pdfPendente      = null;
+}
+
+function previewVideo(input) {
+  if (!input.files[0]) return;
+  _videoPendente = input.files[0];
+  const label = document.getElementById('nm-video-label');
+  label.classList.add('has-file');
+  document.getElementById('nm-video-text').textContent = '✓ ' + input.files[0].name;
+}
+
+function previewPdf(input) {
+  if (!input.files[0]) return;
+  _pdfPendente = input.files[0];
+  const label = document.getElementById('nm-pdf-label');
+  label.classList.add('has-file');
+  document.getElementById('nm-pdf-text').textContent = '✓ ' + input.files[0].name;
+}
+
+async function removerMidia(tipo) {
+  if (!_editandoModuloId) return;
+  if (!confirm(`Remover o ${tipo === 'video' ? 'video' : 'PDF'} deste modulo?`)) return;
+  try {
+    await api(`/upload/${tipo}/${_editandoModuloId}`, { method: 'DELETE' });
+    showToast(`${tipo === 'video' ? 'Video' : 'PDF'} removido!`);
+    if (tipo === 'video') {
+      document.getElementById('nm-video-preview').style.display = 'none';
+      document.getElementById('nm-video-upload').style.display = 'block';
+      document.getElementById('nm-video-text').textContent = 'Clique para selecionar video';
+      document.getElementById('nm-video-label').classList.remove('has-file');
+      document.getElementById('nm-video-file').value = '';
+      document.getElementById('nm-video-player').removeAttribute('src');
+      _videoPendente = null;
+    } else {
+      document.getElementById('nm-pdf-preview').style.display = 'none';
+      document.getElementById('nm-pdf-upload').style.display = 'block';
+      document.getElementById('nm-pdf-text').textContent = 'Clique para selecionar PDF';
+      document.getElementById('nm-pdf-label').classList.remove('has-file');
+      document.getElementById('nm-pdf-file').value = '';
+      document.getElementById('nm-pdf-nome').textContent = '';
+      document.getElementById('nm-pdf-link').href = '#';
+      _pdfPendente = null;
+    }
+    const modsRes = await api('/modules');
+    MODULOS = modsRes.data || [];
+    renderModulosTabela();
+  } catch(e) { showToast('Erro: ' + e.message, true); }
+}
+async function uploadComProgresso(file, url, barId, pctId, progressId) {
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    const campo = url.includes('/video/') ? 'video' : 'pdf';
+    form.append(campo, file);
+
+    const xhr = new XMLHttpRequest();
+    document.getElementById(progressId).style.display = 'block';
+
+    xhr.upload.addEventListener('progress', e => {
+      if (e.lengthComputable) {
+        const pct = Math.round((e.loaded / e.total) * 100);
+        document.getElementById(barId).style.width = pct + '%';
+        document.getElementById(pctId).textContent = pct + '%';
+      }
+    });
+
+    xhr.addEventListener('load', () => {
+      document.getElementById(progressId).style.display = 'none';
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(JSON.parse(xhr.responseText));
+      } else {
+        try { reject(new Error(JSON.parse(xhr.responseText).message)); }
+        catch { reject(new Error('Erro no upload')); }
+      }
+    });
+
+    xhr.addEventListener('error', () => {
+      document.getElementById(progressId).style.display = 'none';
+      reject(new Error('Falha na conexão durante o upload'));
+    });
+
+    xhr.open('POST', API.replace('/api','') + url);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + token());
+    xhr.send(form);
+  });
+}
+
+async function salvarEdicaoModulo() {
+  if (!_editandoModuloId) return;
+  const faseId = document.getElementById('nm-fase').value;
+  const titulo = document.getElementById('nm-titulo').value.trim();
+  const desc = document.getElementById('nm-desc').value.trim();
+  const conteudo = document.getElementById('nm-conteudo').value.trim();
+  const ordem = parseInt(document.getElementById('nm-ordem').value) || 0;
+
+  if (!titulo) { showToast('Informe o titulo', true); return; }
+  if (!faseId) { showToast('Selecione a fase', true); return; }
+
+  try {
+    await api(`/modules/${_editandoModuloId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        phaseId: parseInt(faseId) || faseId,
+        title: titulo,
+        description: desc,
+        content: conteudo,
+        orderIndex: ordem
+      })
+    });
+
+    if (_videoPendente) {
+      showToast('Enviando video...');
+      await uploadComProgresso(
+        _videoPendente,
+        `/api/upload/video/${_editandoModuloId}`,
+        'nm-video-bar', 'nm-video-pct', 'nm-video-progress'
+      );
+      _videoPendente = null;
+    }
+
+    if (_pdfPendente) {
+      showToast('Enviando PDF...');
+      await uploadComProgresso(
+        _pdfPendente,
+        `/api/upload/pdf/${_editandoModuloId}`,
+        'nm-pdf-bar', 'nm-pdf-pct', 'nm-pdf-progress'
+      );
+      _pdfPendente = null;
+    }
+
+    showToast('Modulo salvo com sucesso!');
+    fecharModalModulo();
+    const modsRes = await api('/modules');
+    MODULOS = modsRes.data || [];
+    renderModulosTabela();
+    preencherFiltroModulos();
+  } catch(e) { showToast('Erro: ' + e.message, true); }
+}
+
+</script>
+<div id="toast"></div>
+</body>
+</html>
+
+
+

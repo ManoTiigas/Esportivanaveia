@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esportiva na Veia — Treinamento de Atendimento</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <img class="login-logo-image" src="assets/logo-esportiva-horizontal.svg" alt="Esportiva na Veia">
+    </div>
+    <h1 class="login-title">Bem-vindo de volta</h1>
+    <p class="login-sub">Acesse sua plataforma de treinamento</p>
+    <div class="form-group">
+      <label class="form-label">E-mail</label>
+      <input type="email" class="form-input" id="login-email" placeholder="seu@email.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Senha</label>
+      <input type="password" class="form-input" id="login-pwd" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Entrar na Plataforma →</button>
+    <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--text3)">Use as credenciais cadastradas no sistema</p>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <div class="topnav-logo" onclick="showView('dashboard')" style="cursor:pointer">
+      <img class="topnav-logo-image" src="assets/logo-esportiva-horizontal.svg" alt="Esportiva na Veia">
+    </div>
+    <div class="topnav-right">
+      <div class="badge-company" id="company-badge">Esportiva na Veia</div>
+      <div class="profile-btn" id="profile-btn" onclick="toggleProfileMenu()">
+        <div class="avatar" id="nav-avatar" style="background:#9B59B6">DA</div>
+        <span class="profile-name" id="nav-name">da</span>
+        <span class="profile-caret">▼</span>
+        <div class="profile-menu" id="profile-menu">
+          <div class="profile-menu-header">
+            <div class="profile-menu-name" id="menu-name">da</div>
+            <div class="profile-menu-role" id="menu-role">Fase 1 — Operador</div>
+          </div>
+          <div class="menu-item" onclick="showView('profile');closeProfileMenu()">
+            <span class="menu-icon">👤</span> Perfil
+          </div>
+          <div class="menu-item" onclick="showView('overview');closeProfileMenu()">
+            <span class="menu-icon">📊</span> Visão Geral
+          </div>
+          <div class="menu-item" onclick="showView('ranking-full');closeProfileMenu()">
+            <span class="menu-icon">🏆</span> Ranking
+          </div>
+          <div class="menu-item" onclick="showView('change-password');closeProfileMenu()">
+            <span class="menu-icon">🔑</span> Alterar Senha
+          </div>
+          <div class="menu-item danger" onclick="doLogout()">
+            <span class="menu-icon">🚪</span> Sair
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dashboard" class="view active">
+      <div class="dashboard">
+        <div class="dash-header">
+          <div>
+            <div class="dash-greeting">Olá, <span id="dash-name">da</span>! 👋</div>
+            <div class="dash-sub">Escolha uma fase para começar ou continuar seu treinamento.</div>
+          </div>
+        </div>
+
+        <!-- RANKING TOP 3 -->
+        <div class="ranking-section">
+          <div class="ranking-header">
+            <div class="ranking-title">🏆 Ranking — Top 3</div>
+            <button class="btn-link" onclick="showView('ranking-full')">Ver ranking completo →</button>
+          </div>
+          <div class="ranking-podium" id="podium-area">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- TRAINING TRAIL -->
+        <div class="section-title">📚 Trilha de Treinamento</div>
+        <div class="phases-grid" id="phases-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE VIEW -->
+    <div id="view-module" class="view">
+      <div class="module-page active" id="module-page">
+        <div class="module-sidebar">
+          <div class="module-sidebar-header">
+            <button class="btn-back" onclick="showView('dashboard')">← Voltar às fases</button>
+            <div class="sidebar-phase-label" id="sidebar-phase-label">FASE 1 — MÓDULOS</div>
+            <div class="sidebar-phase-title" id="sidebar-phase-title">Complete em ordem sequencial</div>
+          </div>
+          <div class="module-list" id="module-list"></div>
+        </div>
+        <div class="module-main">
+          <div class="module-tabs">
+            <button class="tab-btn active" onclick="switchTab('content', this)" data-tab="content">📖 Conteúdo</button>
+            <button class="tab-btn" onclick="switchTab('quiz', this)" data-tab="quiz">❓ Quiz</button>
+            <button class="tab-btn" onclick="switchTab('simulator', this)" data-tab="simulator">🤖 Simulador</button>
+          </div>
+          <div class="tab-content">
+            <!-- CONTENT TAB -->
+            <div class="tab-panel active" id="tab-content">
+              <div class="content-header">
+                <div class="content-title" id="content-title">O que é Bom Atendimento</div>
+                <div class="content-subtitle" id="content-subtitle">Fundamentos e pilares do atendimento de qualidade</div>
+              </div>
+              <div class="content-body" id="content-body"></div>
+              <div class="btn-next-section">
+                <button class="btn-accent" onclick="switchTab('quiz', document.querySelector('[data-tab=quiz]'))">
+                  Ir para o Quiz →
+                </button>
+              </div>
+            </div>
+            <!-- QUIZ TAB -->
+            <div class="tab-panel" id="tab-quiz">
+              <div id="quiz-area"></div>
+            </div>
+            <!-- SIMULATOR TAB -->
+            <div class="tab-panel" id="tab-simulator">
+              <div id="sim-area"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE VIEW -->
+    <div id="view-profile" class="view">
+      <div class="profile-page">
+        <div class="profile-title">👤 Perfil</div>
+        <div class="profile-grid">
+          <div class="profile-card">
+            <div class="profile-card-title">Informações</div>
+            <div class="profile-avatar-large" id="profile-avatar-large" style="background:#9B59B6">DA</div>
+            <div class="profile-user-name" id="profile-user-name">da</div>
+            <div class="profile-user-role" id="profile-user-role">Operador · Fase 1</div>
+            <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:10px;background:var(--bg2);border-radius:8px">
+                <span style="color:var(--text2)">E-mail</span>
+                <span id="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fd999cbd9c8d928e899c8ed39e9290">[email&#160;protected]</a></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:10px;background:var(--bg2);border-radius:8px">
+                <span style="color:var(--text2)">Função</span>
+                <span id="profile-role-display">Operador</span>
+              </div>
+            </div>
+          </div>
+          <div class="profile-card">
+            <div class="profile-card-title">Sua Posição</div>
+            <div style="text-align:center;padding:20px 0">
+              <div style="font-size:64px;font-weight:800;font-family:'Syne',sans-serif;color:var(--bronze)" id="profile-rank-pos">3°</div>
+              <div style="font-size:14px;color:var(--text2);margin-bottom:16px">no ranking geral</div>
+              <div style="font-size:40px;font-weight:700;color:var(--accent)" id="profile-points">82.3</div>
+              <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em">pontos totais</div>
+            </div>
+          </div>
+          <div class="profile-card wide">
+            <div class="profile-card-title">Desempenho por Categoria</div>
+            <div class="perf-list" id="performance-list">
+              <div style="padding:16px 0;color:var(--text3);font-size:14px">
+                Nenhum desempenho registrado ainda.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OVERVIEW VIEW -->
+    <div id="view-overview" class="view">
+      <div class="profile-page">
+        <div class="profile-title">📊 Visão Geral</div>
+        <div class="profile-card" style="margin-bottom:20px">
+          <div class="profile-card-title">Resumo de Desempenho</div>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-num" style="color:var(--accent)" id="stat-modules">0</div>
+              <div class="stat-label">Módulos Concluídos</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-num" style="color:var(--gold)" id="stat-points">0.0</div>
+              <div class="stat-label">Pontos Totais</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-num" style="color:var(--green)" id="stat-avg">0%</div>
+              <div class="stat-label">Média nos Quizzes</div>
+            </div>
+          </div>
+        </div>
+        <div class="profile-card">
+          <div class="profile-card-title">Histórico de Atividades</div>
+          <div style="display:flex;flex-direction:column;gap:12px" id="activity-list">
+            <div style="padding:16px 0;color:var(--text3);font-size:14px">
+              Nenhuma atividade registrada ainda.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHANGE PASSWORD VIEW -->
+    <div id="view-change-password" class="view">
+      <div class="profile-page">
+        <div class="profile-title">🔑 Alterar Senha</div>
+        <div class="profile-card" style="max-width:480px">
+          <div class="profile-card-title">Nova Senha</div>
+          <div class="pwd-form">
+            <div>
+              <label class="admin-label">Senha Atual</label>
+              <input type="password" class="form-input" placeholder="••••••••" id="pwd-current">
+            </div>
+            <div>
+              <label class="admin-label">Nova Senha</label>
+              <input type="password" class="form-input" placeholder="••••••••" id="pwd-new">
+            </div>
+            <div>
+              <label class="admin-label">Confirmar Nova Senha</label>
+              <input type="password" class="form-input" placeholder="••••••••" id="pwd-confirm">
+            </div>
+            <button class="btn-accent" style="width:fit-content;margin-top:8px" onclick="changePassword()">Salvar Nova Senha</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RANKING FULL VIEW -->
+    <div id="view-ranking-full" class="view">
+      <div class="ranking-page">
+        <div class="profile-title">🏆 Ranking Completo</div>
+        <div class="profile-card">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Operador</th>
+                <th>Pontos</th>
+                <th>Módulos</th>
+              </tr>
+            </thead>
+            <tbody id="ranking-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div id="view-admin" class="view">
+      <div class="admin-page">
+        <div class="admin-title">⚙️ Painel Administrativo</div>
+        <div class="admin-tabs">
+          <button class="admin-tab active" onclick="switchAdminTab('phases', this)">Fases e Módulos</button>
+          <button class="admin-tab" onclick="switchAdminTab('quiz', this)">Questões Quiz</button>
+          <button class="admin-tab" onclick="switchAdminTab('users', this)">Usuários</button>
+        </div>
+
+        <!-- PHASES/MODULES PANEL -->
+        <div class="admin-panel active" id="admin-phases">
+          <div class="admin-card">
+            <div class="admin-card-title">
+              Criar Nova Fase/Módulo
+              <button class="btn-sm btn-primary-sm" onclick="createModule()">+ Novo Módulo</button>
+            </div>
+            <div class="admin-form">
+              <div class="admin-form-row">
+                <div>
+                  <label class="admin-label">Fase</label>
+                  <select class="admin-select" id="admin-phase-select">
+                    <option value="1">Fase 1 — Base para um Bom Atendimento</option>
+                    <option value="2">Fase 2 — Comunicação com o Cliente</option>
+                    <option value="3">Fase 3 — Segurança e Confiança</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="admin-label">Título do Módulo</label>
+                  <input type="text" class="admin-input" id="admin-mod-title" placeholder="Ex: Técnicas de Empatia">
+                </div>
+              </div>
+              <div>
+                <label class="admin-label">Descrição</label>
+                <input type="text" class="admin-input" id="admin-mod-desc" placeholder="Breve descrição do módulo">
+              </div>
+              <div>
+                <label class="admin-label">Conteúdo (HTML)</label>
+                <textarea class="admin-textarea" id="admin-mod-content" placeholder="<h2>Título</h2><p>Conteúdo...</p>" style="min-height:150px"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="admin-card">
+            <div class="admin-card-title">Módulos Ativos</div>
+            <div class="modules-list" id="admin-modules-list"></div>
+          </div>
+        </div>
+
+        <!-- QUIZ QUESTIONS PANEL -->
+        <div class="admin-panel" id="admin-quiz">
+          <div class="admin-card">
+            <div class="admin-card-title">
+              Adicionar Questão
+              <button class="btn-sm btn-primary-sm" onclick="createQuestion()">+ Questão</button>
+            </div>
+            <div class="admin-form">
+              <div>
+                <label class="admin-label">Módulo</label>
+                <select class="admin-select" id="admin-q-module">
+                  <option value="1">Módulo 1 — O que é Bom Atendimento</option>
+                  <option value="2">Módulo 2 — Postura e Comportamento</option>
+                  <option value="3">Módulo 3 — Tipos de Clientes</option>
+                </select>
+              </div>
+              <div>
+                <label class="admin-label">Pergunta</label>
+                <textarea class="admin-textarea" id="admin-q-question" placeholder="Digite a pergunta..." style="min-height:80px"></textarea>
+              </div>
+              <div class="admin-form-row">
+                <div>
+                  <label class="admin-label">Opção A</label>
+                  <input type="text" class="admin-input" id="admin-q-a" placeholder="Alternativa A">
+                </div>
+                <div>
+                  <label class="admin-label">Opção B</label>
+                  <input type="text" class="admin-input" id="admin-q-b" placeholder="Alternativa B">
+                </div>
+              </div>
+              <div class="admin-form-row">
+                <div>
+                  <label class="admin-label">Opção C</label>
+                  <input type="text" class="admin-input" id="admin-q-c" placeholder="Alternativa C">
+                </div>
+                <div>
+                  <label class="admin-label">Opção D</label>
+                  <input type="text" class="admin-input" id="admin-q-d" placeholder="Alternativa D">
+                </div>
+              </div>
+              <div class="admin-form-row">
+                <div>
+                  <label class="admin-label">Resposta Correta</label>
+                  <select class="admin-select" id="admin-q-correct">
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="admin-label">Pontos</label>
+                  <input type="number" class="admin-input" id="admin-q-points" value="10">
+                </div>
+              </div>
+              <div>
+                <label class="admin-label">Explicação (após responder)</label>
+                <input type="text" class="admin-input" id="admin-q-explanation" placeholder="Por que esta é a resposta correta?">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- USERS PANEL -->
+        <div class="admin-panel" id="admin-users">
+          <div class="admin-card">
+            <div class="admin-card-title">Gerenciar Usuários</div>
+            <div id="admin-users-list" style="display:flex;flex-direction:column;gap:10px"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ============================
+// APP STATE
+// ============================
+const APP = {
+  currentUser: null,
+  currentPhase: null,
+  currentModule: null,
+  currentTab: 'content',
+  quizState: {
+    questions: [],
+    current: 0,
+    selected: null,
+    answered: false,
+    score: 0,
+    correct: 0,
+    answers: {}   // questionId -> selectedLetter (for API submit)
+  },
+  simState: {
+    messages: [],
+    scenario: null,
+    finished: false
+  }
+};
+
+// ============================
+// API CONFIG
+// ============================
+const API_BASE = `${window.location.origin}/api`; // Altere para seu domínio em produção
+
+async function apiFetch(path, options = {}) {
+  const token = sessionStorage.getItem('jwt_token');
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+
+  if (res.status === 401) {
+    sessionStorage.removeItem('jwt_token');
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-page').style.display = 'flex';
+    showNotif('Sessão expirada. Faça login novamente.', 'error');
+    throw new Error('Unauthorized');
+  }
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Erro na requisição');
+  return data;
+}
+
+// ============================
+// LOGIN
+// ============================
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pwd   = document.getElementById('login-pwd').value;
+
+  if (!email || !pwd) { showNotif('Preencha todos os campos', 'error'); return; }
+
+  const btn = document.querySelector('.btn-primary');
+  btn.textContent = 'Entrando…';
+  btn.disabled = true;
+
+  try {
+    const data = await apiFetch('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password: pwd })
+    });
+
+    sessionStorage.setItem('jwt_token', data.data.token);
+    APP.currentUser = data.data.user;
+
+    // Admin vai para o painel administrativo
+    if (data.data.user.role === 'ADMIN') {
+      window.location.href = '/admin.html';
+      return;
+    }
+
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    updateUserUI();
+    if (APP.currentUser.role === 'ADMIN') addAdminMenuItem();
+
+    await renderDashboard();
+    showView('dashboard');
+
+  } catch (err) {
+    showNotif(err.message || 'E-mail ou senha incorretos', 'error');
+  } finally {
+    btn.textContent = 'Entrar na Plataforma →';
+    btn.disabled = false;
+  }
+}
+
+async function doLogout() {
+  sessionStorage.removeItem('jwt_token');
+  APP.currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-page').style.display = 'flex';
+}
+
+function addAdminMenuItem() {
+  const menu = document.getElementById('profile-menu');
+  if (menu.querySelector('.admin-menu-item')) return;
+  const item = document.createElement('div');
+  item.className = 'menu-item admin-menu-item';
+  item.innerHTML = '<span class="menu-icon">⚙️</span> Admin';
+  item.onclick = () => { showView('admin'); closeProfileMenu(); renderAdmin(); };
+  const sairItem = menu.querySelector('.danger');
+  menu.insertBefore(item, sairItem);
+}
+
+function updateUserUI() {
+  const u = APP.currentUser;
+  const firstName = u.name.split(' ')[0];
+  const initials  = u.avatarInitials || u.name.slice(0,2).toUpperCase();
+  const color     = u.avatarColor || '#00C2FF';
+
+  document.getElementById('nav-avatar').textContent         = initials;
+  document.getElementById('nav-avatar').style.background    = color;
+  document.getElementById('nav-name').textContent           = firstName;
+  document.getElementById('dash-name').textContent          = firstName;
+  document.getElementById('menu-name').textContent          = u.name;
+  document.getElementById('menu-role').textContent          = u.role === 'ADMIN' ? 'Administrador' : 'Fase 1 — Operador';
+  document.getElementById('profile-avatar-large').textContent        = initials;
+  document.getElementById('profile-avatar-large').style.background   = color;
+  document.getElementById('profile-user-name').textContent   = u.name;
+  document.getElementById('profile-user-role').textContent   = u.role === 'ADMIN' ? 'Administrador' : 'Operador · Fase 1';
+  document.getElementById('profile-role-display').textContent = u.role === 'ADMIN' ? 'Administrador' : 'Operador';
+  document.getElementById('profile-email').textContent       = u.email;
+  document.getElementById('stat-points').textContent         = (u.totalPoints ?? 0).toFixed(1);
+}
+
+// ============================
+// VIEWS
+// ============================
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-' + name);
+  if (el) el.classList.add('active');
+  if (name === 'ranking-full') renderRankingFull();
+  if (name === 'overview')     renderOverview();
+  if (name === 'profile')      renderProfile();
+  if (name === 'admin')        renderAdmin();
+  closeProfileMenu();
+}
+
+// ============================
+// DASHBOARD
+// ============================
+async function renderDashboard() {
+  showLoading('podium-area');
+  showLoading('phases-grid');
+  await Promise.all([renderPodium(), renderPhases()]);
+}
+
+function showLoading(id) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);width:100%">
+    <div style="font-size:28px;margin-bottom:8px">⏳</div>Carregando...</div>`;
+}
+
+async function renderPodium() {
+  try {
+    const data = await apiFetch('/ranking?limit=3');
+    const top3 = data.data;
+    const podium = document.getElementById('podium-area');
+
+    if (!top3 || !top3.length) {
+      podium.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);width:100%">Nenhum dado de ranking ainda.</div>`;
+      return;
+    }
+
+    const colors  = ['var(--gold)', 'var(--silver)', 'var(--bronze)'];
+    const bgAlpha = ['rgba(245,158,11,0.2)', 'rgba(148,163,184,0.12)', 'rgba(205,127,50,0.12)'];
+    const heights = [80, 60, 40];
+    const medals  = ['👑', '', ''];
+
+    // Podium order: 2nd left, 1st center, 3rd right
+    const podiumOrder = top3.length >= 3
+      ? [{ u: top3[1], cls: 'second' }, { u: top3[0], cls: 'first' }, { u: top3[2], cls: 'third' }]
+      : [{ u: top3[0], cls: 'first' }];
+
+    podium.innerHTML = podiumOrder.map(({ u, cls }) => {
+      const pos     = (u.position || 1) - 1;
+      const isFirst = cls === 'first';
+      const sz      = isFirst ? 80 : 64;
+      const fs      = isFirst ? 24 : 20;
+      return `
+        <div class="podium-item ${cls}">
+          <div class="podium-avatar-wrap">
+            ${isFirst ? '<div class="podium-crown">👑</div>' : ''}
+            <div class="podium-avatar" style="background:${u.avatarColor||'#00C2FF'};width:${sz}px;height:${sz}px;font-size:${fs}px;border:3px solid ${colors[pos]};${isFirst?'box-shadow:0 0 24px rgba(245,158,11,0.4)':''}">
+              ${u.avatarInitials || '??'}
+            </div>
+            <div class="podium-rank-badge" style="background:${colors[pos]}">${u.position}</div>
+          </div>
+          <div class="podium-name">${u.name.split(' ')[0]}</div>
+          <div class="podium-points" style="color:${colors[pos]};font-size:${isFirst?26:20}px">${(u.totalPoints||0).toFixed(1)}</div>
+          <div class="podium-pts-label">pts</div>
+          <div class="podium-base" style="height:${heights[pos]}px;background:${bgAlpha[pos]}">${u.position}</div>
+        </div>`;
+    }).join('');
+  } catch (err) {
+    document.getElementById('podium-area').innerHTML =
+      `<div style="padding:40px;text-align:center;color:var(--red);width:100%">Erro ao carregar ranking.<br><small>Verifique se o backend está em ${API_BASE}</small></div>`;
+  }
+}
+
+async function renderPhases() {
+  try {
+    const data   = await apiFetch('/phases');
+    const phases = data.data;
+    const grid   = document.getElementById('phases-grid');
+
+    grid.innerHTML = phases.map(p => `
+      <div class="phase-card ${p.isLocked ? 'locked' : ''}" style="--phase-color:${p.color}"
+           onclick="${!p.isLocked ? `openPhase(${p.id})` : ''}">
+        <div class="phase-badge">FASE ${p.orderIndex}</div>
+        <div class="phase-icon">${p.icon}</div>
+        <div class="phase-title">${p.title}</div>
+        <div class="phase-desc">${p.description || ''}</div>
+        <div class="phase-progress-bar"><div class="phase-progress-fill" style="width:0%"></div></div>
+        <div class="phase-footer">
+          <div class="phase-status ${p.isLocked ? 'status-locked' : 'status-available'}">
+            ${p.isLocked ? '🔒 Bloqueada' : '● Disponível'}
+          </div>
+          ${!p.isLocked
+            ? `<button class="btn-start" onclick="openPhase(${p.id})">Iniciar →</button>`
+            : `<button class="btn-soon">Em breve</button>`}
+        </div>
+      </div>`).join('');
+  } catch (err) {
+    document.getElementById('phases-grid').innerHTML =
+      `<div style="padding:40px;text-align:center;color:var(--red)">Erro ao carregar fases.<br><small>Backend: ${API_BASE}</small></div>`;
+  }
+}
+
+// ============================
+// MODULE PAGE
+// ============================
+async function openPhase(phaseId) {
+  APP.currentPhase = { id: phaseId };
+  document.getElementById('sidebar-phase-label').textContent  = `FASE ${phaseId} — MÓDULOS`;
+  document.getElementById('sidebar-phase-title').textContent  = 'Complete em ordem sequencial';
+  document.getElementById('module-list').innerHTML =
+    `<div style="padding:20px;text-align:center;color:var(--text3)">⏳ Carregando...</div>`;
+
+  showView('module');
+
+  try {
+    const data = await apiFetch(`/modules?phaseId=${phaseId}`);
+    const mods = (data.data || []).filter(m => m.isActive);
+
+    if (!mods.length) {
+      document.getElementById('module-list').innerHTML =
+        `<div style="padding:20px;text-align:center;color:var(--text3)">Nenhum módulo ativo.</div>`;
+      return;
+    }
+
+    APP.currentModule   = mods[0];
+    APP._currentModules = mods;
+    renderModuleList(mods);
+    loadModule(mods[0]);
+  } catch (err) {
+    showNotif('Erro ao carregar módulos', 'error');
+  }
+}
+
+function renderModuleList(mods) {
+  document.getElementById('module-list').innerHTML = mods.map((m, i) => `
+    <div class="module-item ${m.id === APP.currentModule?.id ? 'active' : ''}"
+         onclick="selectModuleItem(${m.id})">
+      <div class="module-num">${i + 1}</div>
+      <div class="module-info">
+        <div class="module-item-title">${m.title}</div>
+        <div class="module-item-status">● Disponível</div>
+      </div>
+    </div>`).join('');
+}
+
+function selectModuleItem(id) {
+  const m = APP._currentModules?.find(x => x.id === id);
+  if (!m) return;
+  APP.currentModule = m;
+
+  document.querySelectorAll('.module-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  switchTab('content', document.querySelector('[data-tab=content]'));
+  loadModule(m);
+}
+
+function loadModule(m) {
+  document.getElementById('content-title').textContent    = m.title;
+  document.getElementById('content-subtitle').textContent = m.description || '';
+
+  // Monta HTML do conteúdo + vídeo + PDF
+  let html = '';
+
+  // Texto / conteúdo HTML (primeiro)
+  if (m.content) {
+    html += `<div class="content-body" id="content-body">${m.content}</div>`;
+  }
+
+  // Vídeo (depois do texto)
+  if (m.videoUrl) {
+    html += `
+    <div style="margin-top:28px;margin-bottom:28px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:1px;color:var(--accent);margin-bottom:10px;text-transform:uppercase">📹 Vídeo do Módulo</div>
+      <video controls style="width:100%;border-radius:12px;background:#000;max-height:400px;display:block">
+        <source src="${m.videoUrl}" type="video/mp4">
+        Seu navegador não suporta vídeo.
+      </video>
+    </div>`;
+  }
+
+  // PDF (por último)
+  if (m.pdfUrl) {
+    const pdfNome = m.pdfUrl.split('/').pop();
+    html += `
+    <div style="margin-top:28px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:1px;color:var(--accent);margin-bottom:12px;text-transform:uppercase">📄 Material em PDF</div>
+      <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden">
+        <iframe src="${m.pdfUrl}" style="width:100%;height:600px;border:none;display:block"></iframe>
+      </div>
+      <a href="${m.pdfUrl}" download="${pdfNome}"
+         style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:13px;color:var(--accent);text-decoration:none">
+        ⬇ Baixar PDF
+      </a>
+    </div>`;
+  }
+
+  if (!html) html = '<p style="color:var(--text3)">Conteúdo em breve.</p>';
+
+  document.getElementById('content-body').innerHTML = html;
+  loadQuiz(m.id);
+  loadSimulator(m.id);
+}
+
+// ============================
+// TABS
+// ============================
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  APP.currentTab = name;
+}
+
+// ============================
+// QUIZ
+// ============================
+async function loadQuiz(moduleId) {
+  APP.quizState = { questions: [], current: 0, selected: null, answered: false, score: 0, correct: 0, answers: {} };
+  const qa = document.getElementById('quiz-area');
+  qa.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3)">⏳ Carregando quiz...</div>`;
+
+  try {
+    const data = await apiFetch(`/quiz/questions?moduleId=${moduleId}`);
+    APP.quizState.questions = data.data || [];
+    renderQuiz();
+  } catch (err) {
+    qa.innerHTML = `<div style="padding:60px;text-align:center;color:var(--text2)">
+      <div style="font-size:48px;margin-bottom:16px">❌</div>Erro ao carregar questões.</div>`;
+  }
+}
+
+function renderQuiz() {
+  const qa  = document.getElementById('quiz-area');
+  const qs  = APP.quizState;
+  const m   = APP.currentModule;
+
+  if (!qs.questions.length) {
+    qa.innerHTML = `<div style="text-align:center;padding:60px;color:var(--text2)">
+      <div style="font-size:48px;margin-bottom:16px">🚧</div>
+      <div style="font-size:18px;font-weight:600">Quiz em desenvolvimento</div>
+      <div style="font-size:14px;margin-top:8px">As questões para este módulo serão adicionadas em breve.</div></div>`;
+    return;
+  }
+
+  const pct   = (qs.current / qs.questions.length) * 100;
+  const q     = qs.questions[qs.current];
+  const letters = ['A','B','C','D','E'];
+  const opts  = [q.optionA, q.optionB, q.optionC, q.optionD, q.optionE].filter(Boolean);
+
+  qa.innerHTML = `
+    <div class="quiz-header">
+      <div class="quiz-title">Quiz — ${m?.title || 'Módulo'}</div>
+      <div class="quiz-subtitle">${m?.description || ''}</div>
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
+      <div class="quiz-progress-text">Pergunta ${qs.current} de ${qs.questions.length}</div>
+    </div>
+    <div id="quiz-body">
+      <div class="question-num">PERGUNTA ${qs.current + 1} DE ${qs.questions.length}</div>
+      <div class="question-text">${q.question}</div>
+      <div class="options-list">
+        ${opts.map((opt, i) => `
+          <button class="option-btn" onclick="selectOption(${i}, '${letters[i]}')" id="opt-${i}">
+            <div class="option-letter">${letters[i]}</div>
+            <span>${opt}</span>
+          </button>`).join('')}
+      </div>
+      <div class="explanation-box" id="explanation-box">
+        <div class="explanation-label">💡 Explicação</div>
+        <span id="explanation-text"></span>
+      </div>
+      <div class="quiz-footer">
+        <span class="quiz-hint" id="quiz-hint">Selecione uma alternativa</span>
+        <button class="btn-accent" id="btn-next" onclick="nextQuestion()" style="display:none">
+          ${qs.current < qs.questions.length - 1 ? 'Próxima →' : 'Ver Resultado →'}
+        </button>
+      </div>
+    </div>
+    <div class="quiz-result" id="quiz-result"></div>`;
+}
+
+function selectOption(idx, letter) {
+  if (APP.quizState.answered) return;
+  const qs = APP.quizState;
+  const q  = qs.questions[qs.current];
+
+  qs.selected       = idx;
+  qs.answered       = true;
+  qs.answers[q.id]  = letter;
+
+  document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+  document.getElementById(`opt-${idx}`).classList.add('selected');
+  document.getElementById('quiz-hint').textContent    = '✅ Resposta registrada!';
+  document.getElementById('btn-next').style.display   = 'flex';
+}
+
+async function nextQuestion() {
+  const qs = APP.quizState;
+  qs.current++;
+  qs.answered = false;
+  qs.selected = null;
+
+  if (qs.current >= qs.questions.length) {
+    await submitQuiz();
+  } else {
+    renderQuiz();
+  }
+}
+
+async function submitQuiz() {
+  const qa = document.getElementById('quiz-area');
+  qa.innerHTML = `<div style="padding:60px;text-align:center;color:var(--text2)">⏳ Calculando resultado...</div>`;
+
+  try {
+    const data = await apiFetch('/quiz/submit', {
+      method: 'POST',
+      body: JSON.stringify({ moduleId: APP.currentModule.id, answers: APP.quizState.answers })
+    });
+    showQuizResult(data.data);
+
+    const me = await apiFetch('/auth/me');
+    APP.currentUser = me.data;
+    updateUserUI();
+  } catch (err) {
+    qa.innerHTML = `<div style="padding:60px;text-align:center;color:var(--red)">
+      <div style="font-size:48px;margin-bottom:16px">❌</div>Erro ao salvar resultado.</div>`;
+  }
+}
+
+function showQuizResult(res) {
+  const pct   = res.percentage ?? Math.round((res.correct / res.total) * 100);
+  const emoji = pct >= 80 ? '🏆' : pct >= 60 ? '😊' : '📚';
+  const msg   = pct >= 80 ? 'Excelente!' : pct >= 60 ? 'Bom trabalho!' : 'Continue praticando!';
+
+  document.getElementById('quiz-area').innerHTML = `
+    <div class="quiz-result show">
+      <div class="result-emoji">${emoji}</div>
+      <div class="result-title">${msg}</div>
+      <div class="result-score">${pct}%</div>
+      <div class="result-sub">${res.correct} de ${res.total} respostas corretas</div>
+      <div class="result-stats">
+        <div class="result-stat">
+          <div class="result-stat-num" style="color:var(--green)">${res.correct}</div>
+          <div class="result-stat-label">Corretas</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-num" style="color:var(--red)">${res.total - res.correct}</div>
+          <div class="result-stat-label">Incorretas</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-num" style="color:var(--accent)">+${(res.pointsEarned ?? res.score ?? 0).toFixed(0)}pts</div>
+          <div class="result-stat-label">Ganhos</div>
+        </div>
+      </div>
+      ${res.feedback?.length ? `
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:24px;text-align:left">
+          <div style="font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);margin-bottom:14px">📝 Gabarito</div>
+          ${res.feedback.map((fb, i) => `
+            <div style="margin-bottom:8px">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border-radius:8px;font-size:13px;border-left:3px solid ${fb.isCorrect?'var(--green)':'var(--red)'}">
+                <span>${fb.isCorrect ? '✅' : '❌'}</span>
+                <span>Q${i+1}: você marcou <strong>${fb.selected||'—'}</strong> · correto: <strong>${fb.correct}</strong></span>
+              </div>
+              ${!fb.isCorrect && fb.explanation ? `<div style="font-size:12px;color:var(--text2);padding:6px 14px 0 36px;line-height:1.5">${fb.explanation}</div>` : ''}
+            </div>`).join('')}
+        </div>` : ''}
+      <div style="display:flex;gap:12px;justify-content:center">
+        <button class="btn-accent" onclick="loadQuiz(${APP.currentModule.id})">Refazer Quiz</button>
+        <button class="btn-accent" style="background:linear-gradient(135deg,var(--accent2),#5B21B6)"
+          onclick="switchTab('simulator',document.querySelector('[data-tab=simulator]'))">Ir ao Simulador →</button>
+      </div>
+    </div>`;
+
+  showNotif(`Quiz concluído! +${(res.pointsEarned??0).toFixed(0)} pontos`, 'success');
+}
+
+// ============================
+// SIMULATOR
+// ============================
+// ════════════════════════════════════════════
+// SIMULATOR — Dificuldade por Fase (1=fácil → 5=difícil)
+// ════════════════════════════════════════════
+async function loadSimulator(moduleId) {
+  const area = document.getElementById('sim-area');
+  area.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3)">⏳ Carregando simulador...</div>`;
+
+  try {
+    const data = await apiFetch(`/simulators?moduleId=${moduleId}`);
+    const sims = data.data;
+
+    if (!sims?.length) {
+      area.innerHTML = `<div style="text-align:center;padding:60px;color:var(--text2)">
+        <div style="font-size:48px;margin-bottom:16px">🚧</div>
+        <div style="font-size:18px;font-weight:600">Simulador em desenvolvimento</div></div>`;
+      return;
+    }
+
+    if (data.completed) {
+      const score = data.bestScore || 0;
+      const hasScore = score > 0;
+      area.innerHTML = `
+        <div style="text-align:center;padding:60px 40px;max-width:480px;margin:0 auto">
+          <div style="font-size:56px;margin-bottom:16px">${hasScore ? (score >= 14 ? '🌟' : score >= 8 ? '👍' : '📚') : '⏳'}</div>
+          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:8px">Simulador Concluído</div>
+          <div style="font-size:14px;color:var(--text2);margin-bottom:24px">O admin irá avaliar sua performance em breve.</div>
+          <div style="background:var(--bg2);border-radius:14px;padding:20px;margin-bottom:24px">
+            <div style="font-size:12px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Sua pontuação</div>
+            <div style="font-size:36px;font-weight:700;color:var(--accent)">${hasScore ? score + ' / 20 pts' : 'Aguardando avaliação'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;justify-content:center;padding:14px 20px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;color:#EF4444;font-size:13px">
+            🔒 Este simulador não pode ser refeito
+          </div>
+        </div>`;
+      return;
+    }
+
+    const sim = sims[0];
+    const questions = sim.questions || [];
+
+    if (!questions.length) {
+      area.innerHTML = `<div style="text-align:center;padding:60px;color:var(--text2)">
+        <div style="font-size:48px;margin-bottom:16px">🚧</div>
+        <div style="font-size:18px;font-weight:600">Simulador sem perguntas</div>
+        <div style="font-size:14px;margin-top:8px;color:var(--text3)">O admin ainda não cadastrou as perguntas.</div>
+      </div>`;
+      return;
+    }
+
+    APP.simState = {
+      messages: [], scenario: sim, finished: false,
+      questionIdx: 0, questions, moduleId
+    };
+
+    area.innerHTML = `
+      <div class="sim-header">
+        <div class="sim-title">${sim.title}</div>
+        <div class="sim-sub">${sim.description || ''}</div>
+      </div>
+      <div class="sim-scenario">
+        <div class="sim-scenario-label">📋 Cenário</div>
+        <div class="sim-scenario-text">${sim.scenario}</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
+        <span style="font-size:12px;color:var(--text3);letter-spacing:1px;text-transform:uppercase">Conversa</span>
+        <span id="sim-progress" style="font-size:12px;color:var(--accent);font-weight:600">Pergunta 1 de ${questions.length}</span>
+      </div>
+      <div class="chat-area" id="chat-area"></div>
+      <div class="chat-input-wrap" id="chat-input-wrap">
+        <textarea class="chat-input" id="chat-input" placeholder="Digite sua resposta..."
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+        <button class="btn-send" onclick="sendMessage()">➤</button>
+      </div>
+      <div class="sim-score-box" id="sim-score-box"></div>`;
+
+    setTimeout(() => showNextQuestion(), 600);
+
+  } catch (err) {
+    area.innerHTML = `<div style="padding:60px;text-align:center;color:var(--red)">Erro ao carregar simulador.</div>`;
+  }
+}
+
+function showNextQuestion() {
+  const { questions, questionIdx } = APP.simState;
+  if (questionIdx >= questions.length) { endSimulator(); return; }
+  const q = questions[questionIdx];
+  addChatMessage('client', q.question, 'CL');
+  APP.simState.messages.push({ role: 'client', text: q.question });
+  const prog = document.getElementById('sim-progress');
+  if (prog) prog.textContent = `Pergunta ${questionIdx + 1} de ${questions.length}`;
+}
+
+function addChatMessage(type, text, initials) {
+  const chat = document.getElementById('chat-area');
+  if (!chat) return;
+  const div       = document.createElement('div');
+  div.className   = `chat-msg ${type}`;
+  const bg  = type === 'client' ? '#EF4444' : (APP.currentUser?.avatarColor || '#00C2FF');
+  const ini = type === 'client' ? initials  : (APP.currentUser?.avatarInitials || 'AG');
+  const clr = type === 'client' ? 'white' : '#000';
+  div.innerHTML = `
+    <div class="chat-avatar" style="background:${bg};color:${clr}">${ini}</div>
+    <div class="chat-bubble">${text}</div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function showTyping() {
+  const chat = document.getElementById('chat-area');
+  if (!chat) return;
+  const div = document.createElement('div');
+  div.className = 'chat-msg client';
+  div.id = 'typing-indicator';
+  div.innerHTML = `
+    <div class="chat-avatar" style="background:#EF4444;color:white">CL</div>
+    <div class="chat-typing">
+      <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+    </div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text  = input.value.trim();
+  if (!text || APP.simState.finished) return;
+
+  addChatMessage('agent', text);
+  APP.simState.messages.push({ role: 'agent', text });
+  input.value = '';
+
+  APP.simState.questionIdx++;
+
+  if (APP.simState.questionIdx < APP.simState.questions.length) {
+    showTyping();
+    setTimeout(() => { removeTyping(); showNextQuestion(); }, 1200);
+  } else {
+    setTimeout(() => endSimulator(), 1200);
+  }
+}
+
+async function endSimulator() {
+  APP.simState.finished = true;
+  const inp = document.getElementById('chat-input');
+  const btn = document.querySelector('.btn-send');
+  if (inp) { inp.disabled = true; inp.placeholder = 'Simulador concluído.'; }
+  if (btn) btn.disabled = true;
+
+  try {
+    await apiFetch('/simulators/submit', {
+      method: 'POST',
+      body: JSON.stringify({
+        simulatorId:  APP.simState.scenario.id,
+        moduleId:     APP.simState.moduleId,
+        score:        0,
+        feedback:     '',
+        conversation: APP.simState.messages
+      })
+    });
+    const me = await apiFetch('/auth/me');
+    APP.currentUser = me.data;
+    updateUserUI();
+  } catch (err) {
+    console.warn('Erro ao salvar simulador:', err.message);
+  }
+
+  const total = APP.simState.questions.length;
+  const box = document.getElementById('sim-score-box');
+  box.classList.add('show');
+  box.innerHTML = `
+    <div style="font-size:48px;margin-bottom:12px">✅</div>
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:8px">Simulação Concluída!</div>
+    <div style="font-size:14px;color:var(--text2);margin:12px 0 20px">
+      Você respondeu todas as ${total} perguntas.<br>
+      O admin irá avaliar seu desempenho em breve.
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;justify-content:center;padding:12px 16px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;color:#EF4444;font-size:13px">
+      🔒 Aguardando avaliação do admin
+    </div>`;
+
+  showNotif('Simulador concluído! Aguardando avaliação.', 'success');
+}
+
+// ============================
+// PROFILE MENU
+// ============================
+function toggleProfileMenu() {
+  document.getElementById('profile-btn').classList.toggle('open');
+  document.getElementById('profile-menu').classList.toggle('open');
+}
+
+function closeProfileMenu() {
+  document.getElementById('profile-btn').classList.remove('open');
+  document.getElementById('profile-menu').classList.remove('open');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#profile-btn')) closeProfileMenu();
+});
+
+// ============================
+// PROFILE & OVERVIEW
+// ============================
+async function renderProfile() {
+  try {
+    const [meRes, rankRes] = await Promise.all([apiFetch('/auth/me'), apiFetch('/ranking?limit=50')]);
+    const me      = meRes.data;
+    const myRank  = rankRes.data.find(r => r.name === me.name);
+
+    document.getElementById('profile-rank-pos').textContent   = myRank ? `${myRank.position}°` : '—';
+    document.getElementById('profile-rank-pos').style.color   =
+      myRank?.position === 1 ? 'var(--gold)' : myRank?.position === 2 ? 'var(--silver)' : 'var(--bronze)';
+    document.getElementById('profile-points').textContent     = (me.totalPoints ?? 0).toFixed(1);
+  } catch (err) { /* silent */ }
+}
+
+async function renderOverview() {
+  try {
+    const [rankRes, meRes] = await Promise.all([apiFetch('/ranking?limit=50'), apiFetch('/auth/me')]);
+    const me     = meRes.data;
+    const myRank = rankRes.data.find(r => r.name === me.name);
+    document.getElementById('stat-modules').textContent = '0';
+    document.getElementById('stat-points').textContent  = (me.totalPoints ?? 0).toFixed(1);
+    document.getElementById('stat-avg').textContent     = '0%';
+    if (myRank) {
+      document.getElementById('stat-modules').textContent = myRank.modulesCompleted ?? 0;
+      document.getElementById('stat-points').textContent  = (myRank.totalPoints ?? 0).toFixed(1);
+    }
+  } catch (err) { /* silent */ }
+}
+
+// ============================
+// RANKING FULL
+// ============================
+async function renderRankingFull() {
+  const tbody = document.getElementById('ranking-table-body');
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text3)">⏳ Carregando...</td></tr>`;
+
+  try {
+    const data  = await apiFetch('/ranking?limit=50');
+    const list  = data.data;
+    const icons = ['🥇','🥈','🥉'];
+    const cls   = ['gold','silver','bronze'];
+
+    tbody.innerHTML = list.map((u, i) => `
+      <tr class="${u.name === APP.currentUser?.name ? 'my-rank-row' : ''}">
+        <td><span class="rank-pos ${cls[i]||''}">${icons[i] || u.position}</span></td>
+        <td>
+          <div class="rank-user">
+            <div class="avatar" style="background:${u.avatarColor||'#00C2FF'};width:36px;height:36px;font-size:13px">
+              ${u.avatarInitials||'??'}
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:14px">${u.name} ${u.name===APP.currentUser?.name?'(você)':''}</div>
+              <div style="font-size:12px;color:var(--text3)">Operador</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="rank-points">${(u.totalPoints||0).toFixed(1)}</span></td>
+        <td><span class="rank-mods">${u.modulesCompleted||0} módulos</span></td>
+      </tr>`).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--red)">Erro ao carregar ranking.</td></tr>`;
+  }
+}
+
+// ============================
+// CHANGE PASSWORD
+// ============================
+async function changePassword() {
+  const current = document.getElementById('pwd-current').value;
+  const newPwd  = document.getElementById('pwd-new').value;
+  const confirm = document.getElementById('pwd-confirm').value;
+
+  if (!current || !newPwd || !confirm) { showNotif('Preencha todos os campos', 'error'); return; }
+  if (newPwd !== confirm)              { showNotif('As senhas não coincidem', 'error'); return; }
+  if (newPwd.length < 6)              { showNotif('Senha deve ter ao menos 6 caracteres', 'error'); return; }
+
+  try {
+    await apiFetch('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword: current, newPassword: newPwd, confirmPassword: confirm })
+    });
+    ['pwd-current','pwd-new','pwd-confirm'].forEach(id => document.getElementById(id).value = '');
+    showNotif('Senha alterada com sucesso!', 'success');
+  } catch (err) {
+    showNotif(err.message || 'Erro ao alterar senha', 'error');
+  }
+}
+
+// ============================
+// ADMIN
+// ============================
+function switchAdminTab(name, btn) {
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('admin-' + name).classList.add('active');
+  if (name === 'users') renderAdminUsers();
+}
+
+async function renderAdmin() {
+  await renderAdminModules();
+}
+
+async function renderAdminModules() {
+  const list = document.getElementById('admin-modules-list');
+  if (!list) return;
+  list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text3)">⏳ Carregando...</div>`;
+
+  try {
+    const [modsRes, phasesRes] = await Promise.all([apiFetch('/modules'), apiFetch('/phases')]);
+    const mods   = modsRes.data;
+    const phases = phasesRes.data;
+
+    const sel = document.getElementById('admin-phase-select');
+    if (sel) sel.innerHTML = phases.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+
+    const qSel = document.getElementById('admin-q-module');
+    if (qSel) qSel.innerHTML = mods.map(m => `<option value="${m.id}">${m.title}</option>`).join('');
+
+    list.innerHTML = mods.length
+      ? mods.map(m => `
+          <div class="module-admin-item">
+            <div class="module-admin-info">
+              <div class="module-admin-title">${m.title}</div>
+              <div class="module-admin-meta">${m.phaseTitle} · ${m.isActive ? 'Ativo' : 'Inativo'}</div>
+            </div>
+            <div class="module-admin-actions">
+              <div class="toggle-switch ${m.isActive ? 'on' : ''}" onclick="adminToggleModule(${m.id}, this)"></div>
+              <button class="btn-sm btn-danger" onclick="adminDeleteModule(${m.id})">Remover</button>
+            </div>
+          </div>`).join('')
+      : `<div style="color:var(--text3);text-align:center;padding:20px">Nenhum módulo cadastrado.</div>`;
+
+  } catch (err) {
+    list.innerHTML = `<div style="color:var(--red);text-align:center;padding:20px">Erro ao carregar módulos.</div>`;
+  }
+}
+
+async function renderAdminUsers() {
+  const ul = document.getElementById('admin-users-list');
+  if (!ul) return;
+  ul.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text3)">⏳ Carregando...</div>`;
+
+  try {
+    const data  = await apiFetch('/admin/users');
+    ul.innerHTML = data.data.map(u => `
+      <div class="module-admin-item">
+        <div class="avatar" style="background:${u.avatarColor||'#00C2FF'};width:38px;height:38px;font-size:13px;flex-shrink:0">
+          ${u.avatarInitials||'??'}
+        </div>
+        <div class="module-admin-info">
+          <div class="module-admin-title">${u.name}</div>
+          <div class="module-admin-meta">${u.email} · ${u.role==='ADMIN'?'Administrador':'Operador'} · ${(u.totalPoints??0).toFixed(1)} pts</div>
+        </div>
+        <div class="module-admin-actions">
+          ${u.id !== APP.currentUser?.id
+            ? `<button class="btn-sm btn-danger" onclick="adminDeleteUser(${u.id})">Remover</button>`
+            : '<span style="font-size:12px;color:var(--text3)">você</span>'}
+        </div>
+      </div>`).join('');
+  } catch (err) {
+    ul.innerHTML = `<div style="color:var(--red);text-align:center;padding:20px">Erro ao carregar usuários.</div>`;
+  }
+}
+
+async function adminToggleModule(id, el) {
+  try {
+    await apiFetch(`/modules/${id}/toggle`, { method: 'POST' });
+    el.classList.toggle('on');
+    showNotif('Módulo atualizado', 'success');
+  } catch (err) { showNotif('Erro ao atualizar módulo', 'error'); }
+}
+
+async function adminDeleteModule(id) {
+  if (!confirm('Remover este módulo? Esta ação não pode ser desfeita.')) return;
+  try {
+    await apiFetch(`/modules/${id}`, { method: 'DELETE' });
+    showNotif('Módulo removido', 'success');
+    renderAdminModules();
+  } catch (err) { showNotif('Erro ao remover módulo', 'error'); }
+}
+
+async function adminDeleteUser(id) {
+  if (!confirm('Remover este usuário?')) return;
+  try {
+    await apiFetch(`/admin/users/${id}`, { method: 'DELETE' });
+    showNotif('Usuário removido', 'success');
+    renderAdminUsers();
+  } catch (err) { showNotif('Erro ao remover usuário', 'error'); }
+}
+
+async function createModule() {
+  const title   = document.getElementById('admin-mod-title').value.trim();
+  const desc    = document.getElementById('admin-mod-desc').value.trim();
+  const content = document.getElementById('admin-mod-content').value.trim();
+  const phaseId = parseInt(document.getElementById('admin-phase-select').value);
+
+  if (!title) { showNotif('Informe o título do módulo', 'error'); return; }
+
+  try {
+    await apiFetch('/modules', {
+      method: 'POST',
+      body: JSON.stringify({ phaseId, title, description: desc, content })
+    });
+    ['admin-mod-title','admin-mod-desc','admin-mod-content'].forEach(id => document.getElementById(id).value = '');
+    showNotif('Módulo criado com sucesso!', 'success');
+    renderAdminModules();
+  } catch (err) { showNotif(err.message || 'Erro ao criar módulo', 'error'); }
+}
+
+async function createQuestion() {
+  const question    = document.getElementById('admin-q-question').value.trim();
+  const optionA     = document.getElementById('admin-q-a').value.trim();
+  const optionB     = document.getElementById('admin-q-b').value.trim();
+  const optionC     = document.getElementById('admin-q-c').value.trim();
+  const optionD     = document.getElementById('admin-q-d').value.trim();
+  const correctOption = document.getElementById('admin-q-correct').value;
+  const explanation = document.getElementById('admin-q-explanation').value.trim();
+  const moduleId    = parseInt(document.getElementById('admin-q-module').value);
+
+  if (!question || !optionA || !optionB || !optionC || !optionD) {
+    showNotif('Preencha a pergunta e as opções A, B, C e D', 'error'); return;
+  }
+
+  try {
+    await apiFetch('/quiz/questions', {
+      method: 'POST',
+      body: JSON.stringify({ moduleId, question, optionA, optionB, optionC, optionD, correctOption, explanation })
+    });
+    ['admin-q-question','admin-q-a','admin-q-b','admin-q-c','admin-q-d','admin-q-explanation']
+      .forEach(id => document.getElementById(id).value = '');
+    showNotif('Questão adicionada ao quiz!', 'success');
+  } catch (err) { showNotif(err.message || 'Erro ao criar questão', 'error'); }
+}
+
+// ============================
+// NOTIFICATIONS
+// ============================
+function showNotif(msg, type = 'success') {
+  const existing = document.querySelector('.notif');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = `notif ${type}`;
+  el.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> ${msg}`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ============================
+// INIT — auto-login if token exists
+// ============================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('login-pwd').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  const token = sessionStorage.getItem('jwt_token');
+  if (token) {
+    apiFetch('/auth/me').then(data => {
+      APP.currentUser = data.data;
+      if (APP.currentUser.role === 'ADMIN') {
+        window.location.href = '/admin.html';
+        return;
+      }
+      document.getElementById('login-page').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      updateUserUI();
+      renderDashboard();
+      showView('dashboard');
+    }).catch(() => sessionStorage.removeItem('jwt_token'));
+  }
+});
+</script>
+</body>
+</html>

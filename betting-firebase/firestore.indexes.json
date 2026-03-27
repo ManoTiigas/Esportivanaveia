@@ -1,0 +1,103 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "quiz_questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "module_id",    "order": "ASCENDING" },
+        { "fieldPath": "order_index",  "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "simulator_questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "simulator_id", "order": "ASCENDING" },
+        { "fieldPath": "order_index",  "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "simulator_questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "simulator_id", "order": "ASCENDING" },
+        { "fieldPath": "order_index",  "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "simulators",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "module_id",  "order": "ASCENDING" },
+        { "fieldPath": "is_active",  "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "simulator_attempts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "user_id",      "order": "ASCENDING" },
+        { "fieldPath": "simulator_id", "order": "ASCENDING" },
+        { "fieldPath": "completed_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "simulator_attempts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "simulator_id", "order": "ASCENDING" },
+        { "fieldPath": "completed_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "simulator_attempts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "user_id",      "order": "ASCENDING" },
+        { "fieldPath": "completed_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "modules",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "phase_id",    "order": "ASCENDING" },
+        { "fieldPath": "order_index", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "user_progress",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "user_id",         "order": "ASCENDING" },
+        { "fieldPath": "quiz_completed",  "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "quiz_attempts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "user_id",      "order": "ASCENDING" },
+        { "fieldPath": "completed_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "rankings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "role",         "order": "ASCENDING" },
+        { "fieldPath": "total_points", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "rankings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "role",         "order": "ASCENDING" },
+        { "fieldPath": "total_points", "order": "DESCENDING" },
+        { "fieldPath": "rank_position","order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

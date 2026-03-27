@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// ============================================================
+// FIRESTORE SECURITY RULES
+// Esportiva na Veia — Backend usa Admin SDK (Service Account)
+// O Admin SDK ignora estas regras completamente.
+// Estas regras protegem contra acesso DIRETO do cliente
+// (ex: alguém usando o SDK web/mobile sem passar pelo backend).
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Bloqueia TODO acesso direto do cliente.
+    // Toda leitura/escrita deve passar pelo backend Node.js
+    // que usa o Admin SDK com credenciais de service account.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+  }
+}

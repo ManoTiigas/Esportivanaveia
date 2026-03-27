@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// ============================================================
+// FIREBASE STORAGE SECURITY RULES
+// Esportiva na Veia — uploads de vídeos e PDFs
+//
+// O backend usa o Admin SDK (Service Account) para fazer upload,
+// portanto estas regras protegem apenas acesso direto do cliente.
+// ============================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Bloqueia TODO acesso direto do cliente.
+    // Uploads devem passar pelo backend Node.js via /api/upload/*
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+  }
+}

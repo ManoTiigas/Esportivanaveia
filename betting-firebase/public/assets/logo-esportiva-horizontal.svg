@@ -1,0 +1,11 @@
+﻿<svg width="820" height="140" viewBox="0 0 820 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="10" width="120" height="120" rx="28" fill="#1FB7EA"/>
+  <path d="M30 28H79V41H46V56H75V68H46V108H30V28Z" fill="#F5F5F5"/>
+  <path d="M49 28H62L77 80V28H91V108H77L63 54V108H49V28Z" fill="#F5F5F5"/>
+  <path d="M25 33L30 28V108L25 103V33Z" fill="#050505"/>
+  <path d="M79 28L84 33L80 41H75L79 28Z" fill="#050505"/>
+  <path d="M75 68H80L85 108H77L75 68Z" fill="#050505"/>
+  <text x="150" y="78" fill="#F5F5F5" font-size="54" font-weight="900" font-family="Arial Black, Arial, sans-serif" letter-spacing="2">
+    ESPORTIVA NA VEIA
+  </text>
+</svg>
