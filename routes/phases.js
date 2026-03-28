@@ -24,6 +24,12 @@ function sortPhases(phases) {
   });
 }
 
+async function getNextPhaseOrderIndex() {
+  const snap = await db.collection('phases').get();
+  return snap.docs.reduce((max, doc) => {
+    return Math.max(max, Number(doc.data().order_index) || 0);
+  }, 0) + 1;
+}
 // GET /api/phases
 router.get('/', authMiddleware, async (req, res) => {
   try {
@@ -45,13 +51,16 @@ router.post('/', adminMiddleware, async (req, res) => {
     const { title, description, icon = '📚', color = '#00C2FF', orderIndex = 0, isLocked = false } = req.body;
     if (!title) return res.status(400).json({ success: false, message: 'Título é obrigatório' });
 
+    const normalizedOrderIndex = Number(orderIndex) > 0
+      ? Number(orderIndex)
+      : await getNextPhaseOrderIndex();
     const newId = await getNextId('phases');
     await db.collection('phases').doc(String(newId)).set({
       title,
       description:  description || '',
       icon,
       color,
-      order_index:  Number(orderIndex) || 0,
+      order_index:  normalizedOrderIndex,
       is_active:    true,
       is_locked:    !!isLocked,
       created_by:   req.user.id,
@@ -93,3 +102,4 @@ router.delete('/:id', adminMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+

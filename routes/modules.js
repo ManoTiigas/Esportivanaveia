@@ -27,6 +27,16 @@ function sortModules(modules) {
   });
 }
 
+async function getNextModuleOrderIndex(phaseId) {
+  const snap = await db.collection('modules')
+    .where('phase_id', '==', phaseId)
+    .get();
+
+  return snap.docs.reduce((max, doc) => {
+    return Math.max(max, Number(doc.data().order_index) || 0);
+  }, 0) + 1;
+}
+
 async function deleteDocsByRefs(refs) {
   const chunkSize = 400;
   for (let i = 0; i < refs.length; i += chunkSize) {
@@ -59,17 +69,21 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 
     const snap = await db.collection('modules').get();
-    const phaseIds = [...new Set(snap.docs.map(doc => doc.data().phase_id).filter(Boolean))];
     const phaseTitles = {};
     const phaseDisplayOrders = {};
+    const phasesSnap = await db.collection('phases').get();
+    const sortedPhases = phasesSnap.docs
+      .map(doc => ({
+        id: doc.id,
+        title: doc.data().title,
+        orderIndex: Number(doc.data().order_index) || 0
+      }))
+      .sort((a, b) => a.orderIndex - b.orderIndex || Number(a.id) - Number(b.id));
 
-    await Promise.all(phaseIds.map(async phaseIdValue => {
-      const phaseDoc = await db.collection('phases').doc(String(phaseIdValue)).get();
-      if (phaseDoc.exists) {
-        phaseTitles[phaseIdValue] = phaseDoc.data().title;
-        phaseDisplayOrders[phaseIdValue] = Number(phaseDoc.data().order_index) || 0;
-      }
-    }));
+    sortedPhases.forEach((phase, index) => {
+      phaseTitles[phase.id] = phase.title;
+      phaseDisplayOrders[phase.id] = index + 1;
+    });
 
     const sortedModules = sortModules(
       snap.docs.map(doc => mapModule(doc.id, {
@@ -104,13 +118,16 @@ router.post('/', adminMiddleware, async (req, res) => {
     }
 
     const phaseIdInt = parseInt(phaseId, 10);
+    const normalizedOrderIndex = Number(orderIndex) > 0
+      ? Number(orderIndex)
+      : await getNextModuleOrderIndex(phaseIdInt);
     const newId = await getNextId('modules');
     await db.collection('modules').doc(String(newId)).set({
       phase_id: phaseIdInt,
       title,
       description: description || '',
       content: content || '',
-      order_index: Number(orderIndex) || 0,
+      order_index: normalizedOrderIndex,
       is_active: true,
       video_url: null,
       pdf_url: null,
@@ -219,3 +236,5 @@ router.post('/:id/toggle', adminMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
+

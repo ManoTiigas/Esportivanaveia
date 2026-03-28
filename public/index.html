@@ -689,7 +689,7 @@ async function renderPhases() {
     grid.innerHTML = phases.map(p => `
       <div class="phase-card ${p.isLocked ? 'locked' : ''}" style="--phase-color:${p.color}"
            onclick="${!p.isLocked ? `openPhase(${p.id})` : ''}">
-        <div class="phase-badge">FASE ${p.orderIndex}</div>
+        <div class="phase-badge">FASE ${p.displayOrder || p.orderIndex || p.id}</div>
         <div class="phase-icon">${p.icon}</div>
         <div class="phase-title">${p.title}</div>
         <div class="phase-desc">${p.description || ''}</div>
@@ -1324,8 +1324,8 @@ async function renderAdminModules() {
       ? mods.map(m => `
           <div class="module-admin-item">
             <div class="module-admin-info">
-              <div class="module-admin-title">${m.title}</div>
-              <div class="module-admin-meta">${m.phaseTitle} Â· ${m.isActive ? 'Ativo' : 'Inativo'}</div>
+              <div class="module-admin-title">Módulo ${m.displayOrder || m.orderIndex || m.id} · ${m.title}</div>
+              <div class="module-admin-meta">Fase ${m.phaseDisplayOrder || m.phaseId} · ${m.phaseTitle} · ${m.isActive ? 'Ativo' : 'Inativo'}</div>
             </div>
             <div class="module-admin-actions">
               <div class="toggle-switch ${m.isActive ? 'on' : ''}" onclick="adminToggleModule(${m.id}, this)"></div>
@@ -1477,6 +1477,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 

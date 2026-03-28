@@ -37,7 +37,6 @@ router.get('/', authMiddleware, async (req, res) => {
       // Bug fix: where deve vir antes de orderBy para funcionar sem índice extra
       const qSnap = await db.collection('simulator_questions')
         .where('simulator_id', '==', simDoc.id)
-        .orderBy('order_index', 'asc')
         .get();
       return {
         id:          simDoc.id,
@@ -45,7 +44,9 @@ router.get('/', authMiddleware, async (req, res) => {
         title:       s.title,
         description: s.description,
         scenario:    s.scenario,
-        questions:   qSnap.docs.map(q => ({ id: q.id, ...q.data() }))
+        questions:   qSnap.docs
+          .map(q => ({ id: q.id, ...q.data() }))
+          .sort((a, b) => (Number(a.order_index) || 0) - (Number(b.order_index) || 0) || Number(a.id) - Number(b.id))
       };
     }));
 
@@ -181,10 +182,12 @@ router.get('/admin/:id/questions', adminMiddleware, async (req, res) => {
     // Bug fix: where antes de orderBy
     const snap = await db.collection('simulator_questions')
       .where('simulator_id', '==', req.params.id)
-      .orderBy('order_index', 'asc')
       .get();
-    res.json({ success: true, data: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
+    res.json({ success: true, data: snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (Number(a.order_index) || 0) - (Number(b.order_index) || 0) || Number(a.id) - Number(b.id)) });
   } catch (err) {
+    console.error('Erro ao buscar perguntas do simulador:', err);
     res.status(500).json({ success: false, message: 'Erro ao buscar perguntas' });
   }
 });
@@ -198,10 +201,10 @@ router.post('/admin/:id/questions', adminMiddleware, async (req, res) => {
     // Bug fix: where antes de orderBy
     const snap = await db.collection('simulator_questions')
       .where('simulator_id', '==', req.params.id)
-      .orderBy('order_index', 'desc')
-      .limit(1)
       .get();
-    const nextIndex = snap.empty ? 1 : (snap.docs[0].data().order_index || 0) + 1;
+    const nextIndex = snap.docs.reduce((max, doc) => {
+      return Math.max(max, Number(doc.data().order_index) || 0);
+    }, 0) + 1;
 
     const newId = await getNextId('simulator_questions');
     await db.collection('simulator_questions').doc(String(newId)).set({
@@ -212,6 +215,7 @@ router.post('/admin/:id/questions', adminMiddleware, async (req, res) => {
 
     res.json({ success: true, data: { id: newId } });
   } catch (err) {
+    console.error('Erro ao criar pergunta do simulador:', err);
     res.status(500).json({ success: false, message: 'Erro ao criar pergunta' });
   }
 });
@@ -322,5 +326,6 @@ router.post('/admin/evaluate/:id', adminMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
 
 
