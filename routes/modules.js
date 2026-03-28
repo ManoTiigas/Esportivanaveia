@@ -8,14 +8,23 @@ function mapModule(id, moduleData) {
     id,
     phaseId: moduleData.phase_id,
     phaseTitle: moduleData.phase_title || '',
+    phaseDisplayOrder: Number(moduleData.phase_display_order) || 0,
     title: moduleData.title,
     description: moduleData.description,
     content: moduleData.content,
-    orderIndex: moduleData.order_index,
+    orderIndex: Number(moduleData.order_index) || 0,
     isActive: !!moduleData.is_active,
     videoUrl: moduleData.video_url || null,
     pdfUrl: moduleData.pdf_url || null
   };
+}
+
+function sortModules(modules) {
+  return [...modules].sort((a, b) => {
+    if (a.phaseId !== b.phaseId) return (a.phaseId || 0) - (b.phaseId || 0);
+    if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
+    return Number(a.id) - Number(b.id);
+  });
 }
 
 async function deleteDocsByRefs(refs) {
@@ -40,28 +49,45 @@ router.get('/', authMiddleware, async (req, res) => {
       const phaseDoc = await db.collection('phases').doc(String(phaseId)).get();
       const phaseTitle = phaseDoc.exists ? phaseDoc.data().title : '';
       const modules = snap.docs
-        .map(doc => ({ id: doc.id, data: doc.data() }))
-        .sort((a, b) => (a.data.order_index || 0) - (b.data.order_index || 0))
-        .map(item => mapModule(item.id, { ...item.data, phase_title: phaseTitle }));
+        .map(doc => mapModule(doc.id, { ...doc.data(), phase_title: phaseTitle }))
+        .sort((a, b) => a.orderIndex - b.orderIndex || Number(a.id) - Number(b.id))
+        .map((module, index) => ({
+          ...module,
+          displayOrder: index + 1
+        }));
       return res.json({ success: true, data: modules });
     }
 
     const snap = await db.collection('modules').get();
     const phaseIds = [...new Set(snap.docs.map(doc => doc.data().phase_id).filter(Boolean))];
     const phaseTitles = {};
+    const phaseDisplayOrders = {};
 
     await Promise.all(phaseIds.map(async phaseIdValue => {
       const phaseDoc = await db.collection('phases').doc(String(phaseIdValue)).get();
-      if (phaseDoc.exists) phaseTitles[phaseIdValue] = phaseDoc.data().title;
+      if (phaseDoc.exists) {
+        phaseTitles[phaseIdValue] = phaseDoc.data().title;
+        phaseDisplayOrders[phaseIdValue] = Number(phaseDoc.data().order_index) || 0;
+      }
     }));
 
-    const modules = snap.docs
-      .map(doc => ({ doc, data: doc.data() }))
-      .sort((a, b) => {
-        if (a.data.phase_id !== b.data.phase_id) return (a.data.phase_id || 0) - (b.data.phase_id || 0);
-        return (a.data.order_index || 0) - (b.data.order_index || 0);
-      })
-      .map(({ doc, data }) => mapModule(doc.id, { ...data, phase_title: phaseTitles[data.phase_id] || '' }));
+    const sortedModules = sortModules(
+      snap.docs.map(doc => mapModule(doc.id, {
+        ...doc.data(),
+        phase_title: phaseTitles[doc.data().phase_id] || '',
+        phase_display_order: phaseDisplayOrders[doc.data().phase_id] || 0
+      }))
+    );
+
+    const displayOrderByPhase = {};
+    const modules = sortedModules.map(module => {
+      const phaseKey = String(module.phaseId || '');
+      displayOrderByPhase[phaseKey] = (displayOrderByPhase[phaseKey] || 0) + 1;
+      return {
+        ...module,
+        displayOrder: displayOrderByPhase[phaseKey]
+      };
+    });
 
     res.json({ success: true, data: modules });
   } catch (err) {

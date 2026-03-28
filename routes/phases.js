@@ -17,16 +17,22 @@ function mapPhase(id, p) {
   };
 }
 
+function sortPhases(phases) {
+  return [...phases].sort((a, b) => {
+    if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
+    return Number(a.id) - Number(b.id);
+  });
+}
+
 // GET /api/phases
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const snap = await db.collection('phases').get();
-    const phases = snap.docs
-      .map(doc => mapPhase(doc.id, doc.data()))
-      .sort((a, b) => {
-        if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
-        return Number(a.id) - Number(b.id);
-      });
+    const phases = sortPhases(snap.docs.map(doc => mapPhase(doc.id, doc.data())))
+      .map((phase, index) => ({
+        ...phase,
+        displayOrder: index + 1
+      }));
     res.json({ success: true, data: phases });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao buscar fases' });

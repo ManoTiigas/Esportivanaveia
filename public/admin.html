@@ -1710,7 +1710,7 @@ function renderFasesTabela() {
   if (!FASES.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--txt2);padding:20px">Nenhuma fase cadastrada</td></tr>'; return; }
   tb.innerHTML = FASES.map(f => `
     <tr>
-      <td style="font-family:var(--mono);color:var(--txt2)">#${f.id}</td>
+      <td style="font-family:var(--mono);color:var(--txt2)">#${f.displayOrder || f.orderIndex || f.id}</td>
       <td><strong>${esc(f.title)}</strong>${f.description ? `<div style="font-size:11px;color:var(--txt2);margin-top:2px">${esc(f.description)}</div>` : ''}</td>
       <td style="font-size:20px">${f.icon || '📚'}</td>
       <td><span class="badge ${f.isLocked ? 'badge-pendente' : 'badge-ativo'}">${f.isLocked ? '🔒 Bloqueada' : '✓ Aberta'}</span></td>
@@ -1779,7 +1779,7 @@ function renderModulosTabela() {
   if (!lista.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--txt2);padding:20px">Nenhum módulo encontrado</td></tr>'; return; }
   tb.innerHTML = lista.map(m => `
     <tr>
-      <td style="font-family:var(--mono);color:var(--txt2)">#${m.id}</td>
+      <td style="font-family:var(--mono);color:var(--txt2)">#${m.displayOrder || m.orderIndex || m.id}</td>
       <td style="color:var(--txt2);font-size:12px">${esc(m.phaseTitle || '—')}</td>
       <td><strong>${esc(m.title)}</strong>${m.description ? `<div style="font-size:11px;color:var(--txt2);margin-top:2px">${esc(m.description)}</div>` : ''}</td>
       <td><span class="badge ${m.isActive ? 'badge-ativo' : 'badge-inativo'}">${m.isActive ? '✓ Ativo' : '✗ Inativo'}</span></td>

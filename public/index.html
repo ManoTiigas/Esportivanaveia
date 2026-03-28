@@ -154,8 +154,14 @@
             <div class="profile-avatar-large" id="profile-avatar-large" style="background:#9B59B6">DA</div>
             <div class="profile-photo-actions">
               <input type="file" id="profile-photo-input" accept="image/png,image/jpeg,image/webp,image/gif" hidden onchange="uploadProfilePhoto(this)">
-              <button class="btn-secondary profile-photo-btn" type="button" onclick="document.getElementById('profile-photo-input').click()">Alterar foto</button>
-              <button class="btn-secondary profile-photo-btn danger" type="button" id="profile-photo-remove-btn" onclick="removeProfilePhoto()" style="display:none">Remover foto</button>
+              <button class="profile-photo-btn profile-photo-btn-primary" type="button" onclick="document.getElementById('profile-photo-input').click()">
+                <span class="profile-photo-btn-icon">↑</span>
+                <span>Alterar foto</span>
+              </button>
+              <button class="profile-photo-btn profile-photo-btn-danger" type="button" id="profile-photo-remove-btn" onclick="removeProfilePhoto()" style="display:none">
+                <span class="profile-photo-btn-icon">×</span>
+                <span>Remover foto</span>
+              </button>
             </div>
             <div class="profile-user-name" id="profile-user-name">da</div>
             <div class="profile-user-role" id="profile-user-role">Operador · Fase 1</div>
@@ -707,9 +713,14 @@ async function renderPhases() {
 // MODULE PAGE
 // ============================
 async function openPhase(phaseId) {
-  APP.currentPhase = { id: phaseId };
-  document.getElementById('sidebar-phase-label').textContent  = `FASE ${phaseId} — MÓDULOS`;
-  document.getElementById('sidebar-phase-title').textContent  = 'Complete em ordem sequencial';
+  const phaseCard = Array.from(document.querySelectorAll('#phases-grid .phase-card'))
+    .find(card => card.getAttribute('onclick')?.includes(`openPhase(${phaseId})`));
+  const phaseBadge = phaseCard?.querySelector('.phase-badge')?.textContent || 'FASE';
+  const phaseTitle = phaseCard?.querySelector('.phase-title')?.textContent || 'MÓDULOS';
+
+  APP.currentPhase = { id: phaseId, badge: phaseBadge, title: phaseTitle };
+  document.getElementById('sidebar-phase-label').textContent  = `${phaseBadge} — MÓDULOS`;
+  document.getElementById('sidebar-phase-title').textContent  = phaseTitle;
   document.getElementById('module-list').innerHTML =
     `<div style="padding:20px;text-align:center;color:var(--text3)">⏳ Carregando...</div>`;
 
