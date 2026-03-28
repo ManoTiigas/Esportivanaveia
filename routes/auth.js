@@ -61,6 +61,7 @@ router.post('/login', async (req, res) => {
           isActive:       user.is_active !== false,
           avatarInitials: user.avatar_initials,
           avatarColor:    user.avatar_color,
+          profilePhotoUrl: user.profile_photo_url || null,
           totalPoints:    parseFloat(user.total_points) || 0
         }
       }
@@ -87,6 +88,7 @@ router.get('/me', authMiddleware, async (req, res) => {
         isActive:       user.is_active !== false,
         avatarInitials: user.avatar_initials,
         avatarColor:    user.avatar_color,
+        profilePhotoUrl: user.profile_photo_url || null,
         totalPoints:    parseFloat(user.total_points) || 0
       }
     });

@@ -35,12 +35,14 @@ router.get('/', authMiddleware, async (req, res) => {
       const phaseIdInt = parseInt(phaseId, 10);
       const snap = await db.collection('modules')
         .where('phase_id', '==', phaseIdInt)
-        .orderBy('order_index', 'asc')
         .get();
 
       const phaseDoc = await db.collection('phases').doc(String(phaseId)).get();
       const phaseTitle = phaseDoc.exists ? phaseDoc.data().title : '';
-      const modules = snap.docs.map(doc => mapModule(doc.id, { ...doc.data(), phase_title: phaseTitle }));
+      const modules = snap.docs
+        .map(doc => ({ id: doc.id, data: doc.data() }))
+        .sort((a, b) => (a.data.order_index || 0) - (b.data.order_index || 0))
+        .map(item => mapModule(item.id, { ...item.data, phase_title: phaseTitle }));
       return res.json({ success: true, data: modules });
     }
 

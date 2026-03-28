@@ -152,6 +152,11 @@
           <div class="profile-card">
             <div class="profile-card-title">Informações</div>
             <div class="profile-avatar-large" id="profile-avatar-large" style="background:#9B59B6">DA</div>
+            <div class="profile-photo-actions">
+              <input type="file" id="profile-photo-input" accept="image/png,image/jpeg,image/webp,image/gif" hidden onchange="uploadProfilePhoto(this)">
+              <button class="btn-secondary profile-photo-btn" type="button" onclick="document.getElementById('profile-photo-input').click()">Alterar foto</button>
+              <button class="btn-secondary profile-photo-btn danger" type="button" id="profile-photo-remove-btn" onclick="removeProfilePhoto()" style="display:none">Remover foto</button>
+            </div>
             <div class="profile-user-name" id="profile-user-name">da</div>
             <div class="profile-user-role" id="profile-user-role">Operador · Fase 1</div>
             <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">
@@ -429,12 +434,28 @@ async function apiFetch(path, options = {}) {
     sessionStorage.removeItem('jwt_token');
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-page').style.display = 'flex';
-    showNotif('Sessão expirada. Faça login novamente.', 'error');
+    showNotif('Sessao expirada. Faca login novamente.', 'error');
     throw new Error('Unauthorized');
   }
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'Erro na requisição');
+  if (!res.ok) throw new Error(data.message || 'Erro na requisicao');
+  return data;
+}
+
+async function uploadFile(path, file, fieldName) {
+  const token = sessionStorage.getItem('jwt_token');
+  const form = new FormData();
+  form.append(fieldName, file);
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Erro no upload');
   return data;
 }
 
@@ -506,20 +527,73 @@ function updateUserUI() {
   const firstName = u.name.split(' ')[0];
   const initials  = u.avatarInitials || u.name.slice(0,2).toUpperCase();
   const color     = u.avatarColor || '#00C2FF';
+  const photoUrl  = u.profilePhotoUrl || '';
 
-  document.getElementById('nav-avatar').textContent         = initials;
-  document.getElementById('nav-avatar').style.background    = color;
+  setAvatarElement(document.getElementById('nav-avatar'), { initials, color, photoUrl });
   document.getElementById('nav-name').textContent           = firstName;
   document.getElementById('dash-name').textContent          = firstName;
   document.getElementById('menu-name').textContent          = u.name;
-  document.getElementById('menu-role').textContent          = u.role === 'ADMIN' ? 'Administrador' : 'Fase 1 — Operador';
-  document.getElementById('profile-avatar-large').textContent        = initials;
-  document.getElementById('profile-avatar-large').style.background   = color;
+  document.getElementById('menu-role').textContent          = u.role === 'ADMIN' ? 'Administrador' : 'Fase 1 - Operador';
+  setAvatarElement(document.getElementById('profile-avatar-large'), { initials, color, photoUrl });
   document.getElementById('profile-user-name').textContent   = u.name;
-  document.getElementById('profile-user-role').textContent   = u.role === 'ADMIN' ? 'Administrador' : 'Operador · Fase 1';
+  document.getElementById('profile-user-role').textContent   = u.role === 'ADMIN' ? 'Administrador' : 'Operador - Fase 1';
   document.getElementById('profile-role-display').textContent = u.role === 'ADMIN' ? 'Administrador' : 'Operador';
   document.getElementById('profile-email').textContent       = u.email;
   document.getElementById('stat-points').textContent         = (u.totalPoints ?? 0).toFixed(1);
+  document.getElementById('profile-photo-remove-btn').style.display = photoUrl ? 'inline-flex' : 'none';
+}
+
+function avatarMarkup({ initials, color, photoUrl }, className = 'avatar', sizeStyle = '') {
+  const safeInitials = initials || '??';
+  if (photoUrl) {
+    return `<div class="${className} has-photo" style="${sizeStyle}"><img src="${photoUrl}" alt="Foto de perfil" class="avatar-photo"></div>`;
+  }
+  return `<div class="${className}" style="background:${color || '#00C2FF'};${sizeStyle}">${safeInitials}</div>`;
+}
+
+function setAvatarElement(el, { initials, color, photoUrl }) {
+  if (!el) return;
+  if (photoUrl) {
+    el.classList.add('has-photo');
+    el.style.background = 'transparent';
+    el.textContent = '';
+    el.innerHTML = '<img src="' + photoUrl + '" alt="Foto de perfil" class="avatar-photo">';
+    return;
+  }
+
+  el.classList.remove('has-photo');
+  el.innerHTML = '';
+  el.textContent = initials || '??';
+  el.style.background = color || '#00C2FF';
+}
+
+async function uploadProfilePhoto(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+
+  try {
+    await uploadFile('/upload/profile-photo', file, 'photo');
+    const me = await apiFetch('/auth/me');
+    APP.currentUser = me.data;
+    updateUserUI();
+    showNotif('Foto de perfil atualizada com sucesso!', 'success');
+  } catch (err) {
+    showNotif(err.message || 'Erro ao enviar foto de perfil', 'error');
+  } finally {
+    input.value = '';
+  }
+}
+
+async function removeProfilePhoto() {
+  try {
+    await apiFetch('/upload/profile-photo', { method: 'DELETE' });
+    const me = await apiFetch('/auth/me');
+    APP.currentUser = me.data;
+    updateUserUI();
+    showNotif('Foto de perfil removida.', 'success');
+  } catch (err) {
+    showNotif(err.message || 'Erro ao remover foto de perfil', 'error');
+  }
 }
 
 // ============================
@@ -581,9 +655,11 @@ async function renderPodium() {
         <div class="podium-item ${cls}">
           <div class="podium-avatar-wrap">
             ${isFirst ? '<div class="podium-crown">👑</div>' : ''}
-            <div class="podium-avatar" style="background:${u.avatarColor||'#00C2FF'};width:${sz}px;height:${sz}px;font-size:${fs}px;border:3px solid ${colors[pos]};${isFirst?'box-shadow:0 0 24px rgba(245,158,11,0.4)':''}">
-              ${u.avatarInitials || '??'}
-            </div>
+            ${avatarMarkup({
+              initials: u.avatarInitials || '??',
+              color: u.avatarColor || '#00C2FF',
+              photoUrl: u.profilePhotoUrl || ''
+            }, 'podium-avatar', `width:${sz}px;height:${sz}px;font-size:${fs}px;border:3px solid ${colors[pos]};${isFirst?'box-shadow:0 0 24px rgba(245,158,11,0.4)':''}`)}
             <div class="podium-rank-badge" style="background:${colors[pos]}">${u.position}</div>
           </div>
           <div class="podium-name">${u.name.split(' ')[0]}</div>
@@ -1159,9 +1235,11 @@ async function renderRankingFull() {
         <td><span class="rank-pos ${cls[i]||''}">${icons[i] || u.position}</span></td>
         <td>
           <div class="rank-user">
-            <div class="avatar" style="background:${u.avatarColor||'#00C2FF'};width:36px;height:36px;font-size:13px">
-              ${u.avatarInitials||'??'}
-            </div>
+            ${avatarMarkup({
+              initials: u.avatarInitials || '??',
+              color: u.avatarColor || '#00C2FF',
+              photoUrl: u.profilePhotoUrl || ''
+            }, 'avatar', 'width:36px;height:36px;font-size:13px')}
             <div>
               <div style="font-weight:600;font-size:14px">${u.name} ${u.name===APP.currentUser?.name?'(você)':''}</div>
               <div style="font-size:12px;color:var(--text3)">Operador</div>
@@ -1387,5 +1465,11 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+
+
+
+
+
 
 

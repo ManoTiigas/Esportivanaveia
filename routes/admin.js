@@ -19,6 +19,7 @@ router.get('/users', adminMiddleware, async (req, res) => {
         isActive:       u.is_active !== false,
         avatarColor:    u.avatar_color,
         avatarInitials: u.avatar_initials,
+        profilePhotoUrl: u.profile_photo_url || null,
         totalPoints:    parseFloat(u.total_points) || 0,
         createdAt:      u.created_at
       };
@@ -75,6 +76,7 @@ router.get('/recent-completions', adminMiddleware, async (req, res) => {
         name:           user.name,
         avatarInitials: user.avatar_initials,
         avatarColor:    user.avatar_color,
+        profilePhotoUrl: user.profile_photo_url || null,
         moduleTitle:    mod.title,
         quizScore:      parseFloat(att.score) || 0,
         simScore,
@@ -117,6 +119,8 @@ router.post('/users', adminMiddleware, async (req, res) => {
       is_active:       true,
       avatar_initials: initials,
       avatar_color:    avatarColor,
+      profile_photo_url: null,
+      profile_photo_path: null,
       total_points:    0,
       created_at:      new Date().toISOString()
     });

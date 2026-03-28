@@ -26,6 +26,7 @@ router.get('/', authMiddleware, async (req, res) => {
             name: user.name || '',
             avatarInitials: user.avatar_initials || '',
             avatarColor: user.avatar_color || '#00C2FF',
+            profilePhotoUrl: user.profile_photo_url || null,
             totalPoints: parseFloat(item.total_points) || 0,
             quizPoints: parseFloat(item.quiz_points) || 0,
             simulatorPoints: parseFloat(item.simulator_points) || 0,

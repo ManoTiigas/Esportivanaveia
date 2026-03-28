@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const crypto = require('crypto');
 const { db, admin } = require('../db');
-const { adminMiddleware } = require('../middleware/auth');
+const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -155,12 +155,61 @@ async function removeFileFromModule(req, res, targetField, label) {
   }
 }
 
+async function attachProfilePhoto(req, res) {
+  try {
+    await runMulter(upload.single('photo'), req, res);
+
+    if (!req.file) return res.status(400).json({ success: false, message: 'Nenhum arquivo enviado' });
+
+    const userId = String(req.user.id);
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).json({ success: false, message: 'Usuario nao encontrado' });
+
+    const userData = userDoc.data() || {};
+    await removeFromStorage(userData.profile_photo_path);
+
+    const uploadedFile = await uploadToStorage(userId, 'profile_photo', req.file);
+    await userRef.update({
+      profile_photo_url: uploadedFile.url,
+      profile_photo_path: uploadedFile.path,
+    });
+
+    res.json({ success: true, data: { url: uploadedFile.url } });
+  } catch (err) {
+    console.error('Erro no upload da foto de perfil:', err);
+    res.status(400).json({ success: false, message: err.message || 'Erro no upload da foto' });
+  }
+}
+
+async function removeProfilePhoto(req, res) {
+  try {
+    const userId = String(req.user.id);
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).json({ success: false, message: 'Usuario nao encontrado' });
+
+    const userData = userDoc.data() || {};
+    await removeFromStorage(userData.profile_photo_path);
+    await userRef.update({
+      profile_photo_url: null,
+      profile_photo_path: null,
+    });
+
+    res.json({ success: true, message: 'Foto de perfil removida' });
+  } catch (err) {
+    console.error('Erro ao remover foto de perfil:', err);
+    res.status(500).json({ success: false, message: 'Erro ao remover foto de perfil' });
+  }
+}
+
 router.post('/video', adminMiddleware, (req, res) => attachFileToModule(req, res, 'video', 'video_url'));
 router.post('/video/:moduleId', adminMiddleware, (req, res) =>
   attachFileToModule(req, res, 'video', 'video_url')
 );
 router.post('/pdf', adminMiddleware, (req, res) => attachFileToModule(req, res, 'pdf', 'pdf_url'));
 router.post('/pdf/:moduleId', adminMiddleware, (req, res) => attachFileToModule(req, res, 'pdf', 'pdf_url'));
+router.post('/profile-photo', authMiddleware, (req, res) => attachProfilePhoto(req, res));
 
 router.delete('/:moduleId/video', adminMiddleware, (req, res) =>
   removeFileFromModule(req, res, 'video_url', 'Video')
@@ -174,5 +223,6 @@ router.delete('/:moduleId/pdf', adminMiddleware, (req, res) =>
 router.delete('/pdf/:moduleId', adminMiddleware, (req, res) =>
   removeFileFromModule(req, res, 'pdf_url', 'PDF')
 );
+router.delete('/profile-photo', authMiddleware, (req, res) => removeProfilePhoto(req, res));
 
 module.exports = router;
