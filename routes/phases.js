@@ -11,7 +11,7 @@ function mapPhase(id, p) {
     description: p.description,
     icon:        p.icon,
     color:       p.color,
-    orderIndex:  p.order_index,
+    orderIndex:  Number(p.order_index) || 0,
     isActive:    !!p.is_active,
     isLocked:    !!p.is_locked
   };
@@ -20,8 +20,13 @@ function mapPhase(id, p) {
 // GET /api/phases
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const snap = await db.collection('phases').orderBy('order_index', 'asc').get();
-    const phases = snap.docs.map(doc => mapPhase(doc.id, doc.data()));
+    const snap = await db.collection('phases').get();
+    const phases = snap.docs
+      .map(doc => mapPhase(doc.id, doc.data()))
+      .sort((a, b) => {
+        if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
+        return Number(a.id) - Number(b.id);
+      });
     res.json({ success: true, data: phases });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao buscar fases' });
@@ -40,7 +45,7 @@ router.post('/', adminMiddleware, async (req, res) => {
       description:  description || '',
       icon,
       color,
-      order_index:  orderIndex,
+      order_index:  Number(orderIndex) || 0,
       is_active:    true,
       is_locked:    !!isLocked,
       created_by:   req.user.id,

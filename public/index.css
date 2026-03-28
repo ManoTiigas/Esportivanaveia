@@ -19,7 +19,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Poppins', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -94,7 +94,7 @@ body {
   border-radius: 10px;
   padding: 13px 16px;
   color: var(--text);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 15px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -110,7 +110,7 @@ body {
   border-radius: 10px;
   padding: 14px;
   color: #000;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
@@ -265,7 +265,7 @@ body {
   align-items: center;
   justify-content: space-between;
 }
-.dash-greeting { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; }
+.dash-greeting { font-family: 'Poppins', sans-serif; font-size: 26px; font-weight: 700; }
 .dash-sub { color: var(--text2); margin-top: 4px; font-size: 14px; }
 
 /* RANKING */
@@ -374,7 +374,7 @@ body {
 
 /* TRAINING TRAIL */
 .section-title {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -437,7 +437,7 @@ body {
   margin-bottom: 12px;
 }
 .phase-icon { font-size: 28px; position: absolute; top: 20px; right: 20px; opacity: 0.6; }
-.phase-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+.phase-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
 .phase-desc { font-size: 13px; color: var(--text2); line-height: 1.5; margin-bottom: 16px; }
 
 .phase-meta { display: flex; gap: 14px; font-size: 12px; color: var(--text3); margin-bottom: 16px; }
@@ -457,7 +457,7 @@ body {
   border-radius: 8px;
   padding: 8px 18px;
   color: #000;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -470,7 +470,7 @@ body {
   border-radius: 8px;
   padding: 8px 18px;
   color: var(--text3);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 13px;
   font-weight: 600;
   cursor: not-allowed;
@@ -501,7 +501,7 @@ body {
   color: var(--accent);
   margin-bottom: 4px;
 }
-.sidebar-phase-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+.sidebar-phase-title { font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 2px; }
 .sidebar-phase-sub { font-size: 12px; color: var(--text3); }
 
 .btn-back {
@@ -589,7 +589,7 @@ body {
 .content-header {
   margin-bottom: 28px;
 }
-.content-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.content-title { font-family: 'Poppins', sans-serif; font-size: 28px; font-weight: 700; margin-bottom: 8px; }
 .content-subtitle { color: var(--text2); font-size: 15px; }
 
 .content-body {
@@ -600,7 +600,7 @@ body {
   line-height: 1.8;
   font-size: 15px;
 }
-.content-body h2 { font-family: 'Syne', sans-serif; font-size: 20px; margin-bottom: 16px; margin-top: 28px; color: var(--accent); }
+.content-body h2 { font-family: 'Poppins', sans-serif; font-size: 20px; margin-bottom: 16px; margin-top: 28px; color: var(--accent); }
 .content-body h2:first-child { margin-top: 0; }
 .content-body h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; margin-top: 24px; }
 .content-body p { margin-bottom: 16px; color: var(--text2); }
@@ -619,7 +619,7 @@ body {
   border-radius: 10px;
   padding: 12px 24px;
   color: #000;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -638,14 +638,14 @@ body {
   margin-bottom: 24px;
   border: 1px solid var(--border);
 }
-.quiz-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.quiz-title { font-family: 'Poppins', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
 .quiz-subtitle { color: var(--text2); font-size: 14px; margin-bottom: 16px; }
 .quiz-progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
 .quiz-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.4s; }
 .quiz-progress-text { font-size: 13px; color: var(--text3); }
 
 .question-num { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
-.question-text { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 600; margin-bottom: 24px; line-height: 1.4; }
+.question-text { font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 600; margin-bottom: 24px; line-height: 1.4; }
 
 .options-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
 .option-btn {
@@ -658,7 +658,7 @@ body {
   border-radius: 12px;
   cursor: pointer;
   text-align: left;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 15px;
   color: var(--text);
   transition: border-color 0.2s, background 0.2s;
@@ -713,7 +713,7 @@ body {
 }
 .quiz-result.show { display: block; }
 .result-emoji { font-size: 64px; margin-bottom: 16px; }
-.result-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+.result-title { font-family: 'Poppins', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 8px; }
 .result-score { font-size: 56px; font-weight: 700; color: var(--accent); margin: 16px 0; }
 .result-sub { color: var(--text2); font-size: 15px; margin-bottom: 32px; }
 .result-stats { display: flex; justify-content: center; gap: 32px; margin-bottom: 32px; }
@@ -723,7 +723,7 @@ body {
 
 /* SIMULATOR PANEL */
 .sim-header { margin-bottom: 24px; }
-.sim-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.sim-title { font-family: 'Poppins', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
 .sim-sub { color: var(--text2); font-size: 14px; }
 
 .sim-scenario {
@@ -811,7 +811,7 @@ body {
   border-radius: 10px;
   padding: 12px 16px;
   color: var(--text);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 14px;
   outline: none;
   resize: none;
@@ -914,7 +914,7 @@ body {
   max-width: 900px;
   margin: 0 auto;
 }
-.profile-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+.profile-title { font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
 
 .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .profile-card {
@@ -952,12 +952,12 @@ body {
   border-color: rgba(239, 68, 68, 0.35);
   color: #ef4444;
 }
-.profile-user-name { text-align: center; font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.profile-user-name { text-align: center; font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
 .profile-user-role { text-align: center; font-size: 13px; color: var(--text3); }
 
 .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
 .stat-item { text-align: center; padding: 16px; background: var(--bg2); border-radius: 10px; }
-.stat-num { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; }
+.stat-num { font-family: 'Poppins', sans-serif; font-size: 28px; font-weight: 700; }
 .stat-label { font-size: 12px; color: var(--text3); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
 
 .perf-list { display: flex; flex-direction: column; gap: 12px; }
@@ -993,13 +993,13 @@ body {
   font-size: 14px;
 }
 .ranking-table tr:last-child td { border-bottom: none; }
-.rank-pos { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
+.rank-pos { font-family: 'Poppins', sans-serif; font-size: 18px; font-weight: 700; }
 .rank-pos.gold { color: var(--gold); }
 .rank-pos.silver { color: var(--silver); }
 .rank-pos.bronze { color: var(--bronze); }
 
 .rank-user { display: flex; align-items: center; gap: 10px; }
-.rank-points { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--accent); }
+.rank-points { font-family: 'Poppins', sans-serif; font-size: 18px; font-weight: 700; color: var(--accent); }
 .rank-mods { color: var(--text3); }
 
 .my-rank-row { background: rgba(0,194,255,0.05); }
@@ -1007,7 +1007,7 @@ body {
 
 /* ADMIN */
 .admin-page { padding: 32px; max-width: 1100px; margin: 0 auto; }
-.admin-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+.admin-title { font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
 .admin-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
 .admin-tab {
   padding: 8px 18px;
@@ -1045,7 +1045,7 @@ body {
   border-radius: 8px;
   padding: 10px 14px;
   color: var(--text);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s;
@@ -1133,3 +1133,4 @@ body {
   .module-page.active { flex-direction: column; }
   .module-sidebar { width: 100%; height: 200px; }
 }
+
