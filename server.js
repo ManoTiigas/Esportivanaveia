@@ -35,6 +35,7 @@ if (!firebaseBootstrapError) {
   const rankingRoutes = require('./routes/ranking');
   const adminRoutes = require('./routes/admin');
   const uploadRoutes = require('./routes/upload');
+  const notificationsRoutes = require('./routes/notifications');
 
   mountApiRoute('/auth', authRoutes);
   mountApiRoute('/phases', phasesRoutes);
@@ -44,8 +45,9 @@ if (!firebaseBootstrapError) {
   mountApiRoute('/ranking', rankingRoutes);
   mountApiRoute('/admin', adminRoutes);
   mountApiRoute('/upload', uploadRoutes);
+  mountApiRoute('/notifications', notificationsRoutes);
 } else {
-  app.use(['/api', '/auth', '/phases', '/modules', '/quiz', '/simulators', '/ranking', '/admin', '/upload'], (req, res) => {
+  app.use(['/api', '/auth', '/phases', '/modules', '/quiz', '/simulators', '/ranking', '/admin', '/upload', '/notifications'], (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Firebase nao configurado. Defina FIREBASE_CREDENTIAL_PATH ou FIREBASE_CREDENTIAL_JSON.',
@@ -54,7 +56,7 @@ if (!firebaseBootstrapError) {
   });
 }
 
-app.use(['/api/*', '/auth/*', '/phases/*', '/modules/*', '/quiz/*', '/simulators/*', '/ranking/*', '/admin/*', '/upload/*'], (req, res) => {
+app.use(['/api/*', '/auth/*', '/phases/*', '/modules/*', '/quiz/*', '/simulators/*', '/ranking/*', '/admin/*', '/upload/*', '/notifications/*'], (req, res) => {
   res.status(404).json({ success: false, message: `Rota nao encontrada: ${req.originalUrl}` });
 });
 

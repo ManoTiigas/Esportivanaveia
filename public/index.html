@@ -26,7 +26,7 @@
       <label class="form-label">Senha</label>
       <input type="password" class="form-input" id="login-pwd" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
     </div>
-    <button class="btn-primary" onclick="doLogin()">Entrar na Plataforma â†’</button>
+    <button class="btn-primary" onclick="doLogin()">Entrar</button>
     <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--text3)">Use as credenciais cadastradas no sistema</p>
   </div>
 </div>
@@ -40,6 +40,22 @@
     </div>
     <div class="topnav-right">
       <div class="badge-company" id="company-badge">Esportiva na Veia</div>
+      <div class="notifications-wrap" id="notifications-wrap">
+        <button class="notifications-btn" id="notifications-btn" type="button" onclick="toggleNotificationsPanel(event)">
+          <span class="notifications-icon">&#128276;</span>
+          <span class="notifications-badge" id="notifications-badge" style="display:none">0</span>
+        </button>
+        <div class="notifications-panel" id="notifications-panel">
+          <div class="notifications-panel-header">
+            <div>
+              <div class="notifications-panel-title">Notificacoes</div>
+              <div class="notifications-panel-subtitle" id="notifications-panel-subtitle">Nenhuma novidade no momento</div>
+            </div>
+            <button class="notifications-mark-read" type="button" onclick="markAllNotificationsAsRead()">Marcar tudo como lido</button>
+          </div>
+          <div class="notifications-list" id="notifications-list"></div>
+        </div>
+      </div>
       <div class="profile-btn" id="profile-btn" onclick="toggleProfileMenu()">
         <div class="avatar" id="nav-avatar" style="background:#9B59B6">DA</div>
         <span class="profile-name" id="nav-name">da</span>
@@ -421,8 +437,13 @@ const APP = {
     messages: [],
     scenario: null,
     finished: false
-  }
+  },
+  notifications: [],
+  unreadNotifications: 0,
+  activeNotification: null
 };
+
+let notificationPollInterval = null;
 
 // ============================
 // API CONFIG
@@ -438,6 +459,12 @@ async function apiFetch(path, options = {}) {
 
   if (res.status === 401) {
     sessionStorage.removeItem('jwt_token');
+    APP.notifications = [];
+    APP.unreadNotifications = 0;
+    APP.activeNotification = null;
+    closeNotificationsPanel();
+    closeNotificationModal();
+    renderNotifications();
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-page').style.display = 'flex';
     showNotif('Sessao expirada. Faca login novamente.', 'error');
@@ -497,6 +524,7 @@ async function doLogin() {
     document.getElementById('app').style.display = 'block';
 
     updateUserUI();
+    await initializeNotifications();
     if (APP.currentUser.role === 'ADMIN') addAdminMenuItem();
 
     await renderDashboard();
@@ -505,7 +533,7 @@ async function doLogin() {
   } catch (err) {
     showNotif(err.message || 'E-mail ou senha incorretos', 'error');
   } finally {
-    btn.textContent = 'Entrar na Plataforma â†’';
+    btn.textContent = 'Entrar';
     btn.disabled = false;
   }
 }
@@ -513,6 +541,16 @@ async function doLogin() {
 async function doLogout() {
   sessionStorage.removeItem('jwt_token');
   APP.currentUser = null;
+  APP.notifications = [];
+  APP.unreadNotifications = 0;
+  APP.activeNotification = null;
+  closeNotificationsPanel();
+  closeNotificationModal();
+  if (notificationPollInterval) {
+    clearInterval(notificationPollInterval);
+    notificationPollInterval = null;
+  }
+  renderNotifications();
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-page').style.display = 'flex';
 }
@@ -534,6 +572,7 @@ function updateUserUI() {
   const initials  = u.avatarInitials || u.name.slice(0,2).toUpperCase();
   const color     = u.avatarColor || '#00C2FF';
   const photoUrl  = u.profilePhotoUrl || '';
+  const notificationsWrap = document.getElementById('notifications-wrap');
 
   setAvatarElement(document.getElementById('nav-avatar'), { initials, color, photoUrl });
   document.getElementById('nav-name').textContent           = firstName;
@@ -547,6 +586,17 @@ function updateUserUI() {
   document.getElementById('profile-email').textContent       = u.email;
   document.getElementById('stat-points').textContent         = (u.totalPoints ?? 0).toFixed(1);
   document.getElementById('profile-photo-remove-btn').style.display = photoUrl ? 'inline-flex' : 'none';
+  if (notificationsWrap) {
+    notificationsWrap.style.display = u.role === 'ADMIN' ? 'none' : 'block';
+  }
+}
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function avatarMarkup({ initials, color, photoUrl }, className = 'avatar', sizeStyle = '') {
@@ -614,6 +664,7 @@ function showView(name) {
   if (name === 'profile')      renderProfile();
   if (name === 'admin')        renderAdmin();
   closeProfileMenu();
+  closeNotificationsPanel();
 }
 
 // ============================
@@ -1181,9 +1232,208 @@ async function endSimulator() {
 }
 
 // ============================
+// NOTIFICATION CENTER
+// ============================
+function formatNotificationDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function getNotificationTypeLabel(type) {
+  if (type === 'simulator_feedback') return 'Feedback do simulador';
+  if (type === 'phase_released') return 'Nova fase liberada';
+  return 'Notificação';
+}
+
+function updateNotificationsBadge() {
+  const badge = document.getElementById('notifications-badge');
+  if (!badge) return;
+  if (!APP.unreadNotifications) {
+    badge.style.display = 'none';
+    return;
+  }
+  badge.style.display = 'inline-flex';
+  badge.textContent = APP.unreadNotifications > 9 ? '9+' : String(APP.unreadNotifications);
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notifications-list');
+  const subtitle = document.getElementById('notifications-panel-subtitle');
+  if (!list || !subtitle) return;
+
+  updateNotificationsBadge();
+
+  if (!APP.notifications.length) {
+    subtitle.textContent = 'Nenhuma novidade no momento';
+    list.innerHTML = '<div class="notifications-empty">Você está em dia. Quando houver feedback ou nova fase, aparece aqui.</div>';
+    return;
+  }
+
+  subtitle.textContent = APP.unreadNotifications ? `${APP.unreadNotifications} não lida(s)` : 'Tudo lido';
+  list.innerHTML = APP.notifications.map(notification => `
+    <button class="notification-item ${notification.isRead ? '' : 'unread'}" type="button" onclick="openNotificationById('${notification.id}')">
+      <div class="notification-item-icon">${notification.type === 'simulator_feedback' ? 'FB' : 'FA'}</div>
+      <div class="notification-item-content">
+        <div class="notification-item-title">${escapeHtml(notification.title)}</div>
+        <div class="notification-item-message">${escapeHtml(notification.message)}</div>
+        <div class="notification-item-date">${formatNotificationDate(notification.createdAt)}</div>
+      </div>
+    </button>
+  `).join('');
+}
+
+async function fetchNotifications(showToastOnNew = false) {
+  if (!APP.currentUser || APP.currentUser.role === 'ADMIN') {
+    APP.notifications = [];
+    APP.unreadNotifications = 0;
+    renderNotifications();
+    return;
+  }
+
+  try {
+    const previousUnread = APP.unreadNotifications || 0;
+    const res = await apiFetch('/notifications?limit=20');
+    APP.notifications = res.data || [];
+    APP.unreadNotifications = res.unreadCount || 0;
+    renderNotifications();
+
+    if (showToastOnNew && APP.unreadNotifications > previousUnread) {
+      showNotif('Você recebeu novas notificações.', 'success');
+    }
+  } catch (err) {
+    console.warn('Erro ao carregar notificações:', err.message);
+  }
+}
+
+async function initializeNotifications() {
+  await fetchNotifications();
+
+  if (!notificationPollInterval) {
+    notificationPollInterval = setInterval(() => fetchNotifications(true), 60000);
+  }
+}
+
+function toggleNotificationsPanel(event) {
+  if (event) event.stopPropagation();
+  closeProfileMenu();
+  const wrap = document.getElementById('notifications-wrap');
+  const panel = document.getElementById('notifications-panel');
+  if (!wrap || !panel) return;
+
+  const willOpen = !wrap.classList.contains('open');
+  wrap.classList.toggle('open', willOpen);
+  panel.classList.toggle('open', willOpen);
+  if (willOpen) fetchNotifications();
+}
+
+function closeNotificationsPanel() {
+  const wrap = document.getElementById('notifications-wrap');
+  const panel = document.getElementById('notifications-panel');
+  if (wrap) wrap.classList.remove('open');
+  if (panel) panel.classList.remove('open');
+}
+
+async function markNotificationAsRead(notificationId, silent = false) {
+  const notification = APP.notifications.find(item => item.id === notificationId);
+  if (!notification || notification.isRead) return;
+
+  notification.isRead = true;
+  APP.unreadNotifications = Math.max(0, APP.unreadNotifications - 1);
+  renderNotifications();
+
+  try {
+    await apiFetch(`/notifications/${notificationId}/read`, { method: 'POST' });
+  } catch (err) {
+    notification.isRead = false;
+    APP.unreadNotifications += 1;
+    renderNotifications();
+    if (!silent) showNotif('Erro ao atualizar notificação', 'error');
+  }
+}
+
+async function markAllNotificationsAsRead() {
+  if (!APP.notifications.length || !APP.unreadNotifications) return;
+
+  const previous = APP.notifications.map(item => ({ ...item }));
+  APP.notifications = APP.notifications.map(item => ({ ...item, isRead: true }));
+  APP.unreadNotifications = 0;
+  renderNotifications();
+
+  try {
+    await apiFetch('/notifications/read-all', { method: 'POST' });
+  } catch (err) {
+    APP.notifications = previous;
+    APP.unreadNotifications = previous.filter(item => !item.isRead).length;
+    renderNotifications();
+    showNotif('Erro ao marcar notificações como lidas', 'error');
+  }
+}
+
+function openNotificationById(notificationId) {
+  const notification = APP.notifications.find(item => item.id === notificationId);
+  if (!notification) return;
+  openNotification(notification);
+}
+
+async function openNotification(notification) {
+  APP.activeNotification = notification;
+  closeNotificationsPanel();
+  closeProfileMenu();
+  await markNotificationAsRead(notification.id, true);
+
+  document.getElementById('notification-modal-type').textContent = getNotificationTypeLabel(notification.type);
+  document.getElementById('notification-modal-title').textContent = notification.title;
+  document.getElementById('notification-modal-date').textContent = formatNotificationDate(notification.createdAt);
+
+  let bodyHtml = `<p>${escapeHtml(notification.message)}</p>`;
+  const primaryButton = document.getElementById('notification-modal-primary');
+
+  if (notification.type === 'simulator_feedback') {
+    const score = notification.data?.score;
+    const feedback = notification.data?.feedback || 'O admin ainda não deixou comentários adicionais.';
+    bodyHtml += `
+      <div class="notification-detail-card">
+        <div class="notification-detail-label">Pontuação</div>
+        <div class="notification-detail-score">${score ?? 0} / 20</div>
+      </div>
+      <div class="notification-detail-card">
+        <div class="notification-detail-label">Feedback do admin</div>
+        <div class="notification-detail-text">${escapeHtml(feedback)}</div>
+      </div>`;
+    primaryButton.textContent = 'Entendi';
+  } else if (notification.type === 'phase_released') {
+    bodyHtml += '<div class="notification-detail-card"><div class="notification-detail-label">Ação</div><div class="notification-detail-text">Essa fase já está disponível na sua trilha de treinamento.</div></div>';
+    primaryButton.textContent = 'Ir para as fases';
+  } else {
+    primaryButton.textContent = 'Fechar';
+  }
+
+  document.getElementById('notification-modal-body').innerHTML = bodyHtml;
+  document.getElementById('notification-modal').classList.add('open');
+}
+
+function closeNotificationModal() {
+  const modal = document.getElementById('notification-modal');
+  if (modal) modal.classList.remove('open');
+  APP.activeNotification = null;
+}
+
+function handleNotificationPrimaryAction() {
+  const notification = APP.activeNotification;
+  if (notification?.type === 'phase_released') {
+    closeNotificationModal();
+    showView('dashboard');
+    return;
+  }
+  closeNotificationModal();
+}
+// ============================
 // PROFILE MENU
 // ============================
 function toggleProfileMenu() {
+  closeNotificationsPanel();
   document.getElementById('profile-btn').classList.toggle('open');
   document.getElementById('profile-menu').classList.toggle('open');
 }
@@ -1195,6 +1445,8 @@ function closeProfileMenu() {
 
 document.addEventListener('click', e => {
   if (!e.target.closest('#profile-btn')) closeProfileMenu();
+  if (!e.target.closest('#notifications-wrap')) closeNotificationsPanel();
+  if (e.target.id === 'notification-modal') closeNotificationModal();
 });
 
 // ============================
@@ -1324,8 +1576,8 @@ async function renderAdminModules() {
       ? mods.map(m => `
           <div class="module-admin-item">
             <div class="module-admin-info">
-              <div class="module-admin-title">Módulo ${m.displayOrder || m.orderIndex || m.id} · ${m.title}</div>
-              <div class="module-admin-meta">Fase ${m.phaseDisplayOrder || m.phaseId} · ${m.phaseTitle} · ${m.isActive ? 'Ativo' : 'Inativo'}</div>
+              <div class="module-admin-title">Mï¿½dulo ${m.displayOrder || m.orderIndex || m.id} ï¿½ ${m.title}</div>
+              <div class="module-admin-meta">Fase ${m.phaseDisplayOrder || m.phaseId} ï¿½ ${m.phaseTitle} ï¿½ ${m.isActive ? 'Ativo' : 'Inativo'}</div>
             </div>
             <div class="module-admin-actions">
               <div class="toggle-switch ${m.isActive ? 'on' : ''}" onclick="adminToggleModule(${m.id}, this)"></div>
@@ -1469,14 +1721,36 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('login-page').style.display = 'none';
       document.getElementById('app').style.display = 'block';
       updateUserUI();
+      initializeNotifications();
       renderDashboard();
       showView('dashboard');
     }).catch(() => sessionStorage.removeItem('jwt_token'));
   }
 });
 </script>
-</body>
+<div class="notification-modal" id="notification-modal">
+  <div class="notification-modal-card">
+    <button class="notification-modal-close" type="button" onclick="closeNotificationModal()">×</button>
+    <div class="notification-modal-type" id="notification-modal-type">Notificacao</div>
+    <div class="notification-modal-title" id="notification-modal-title">Titulo</div>
+    <div class="notification-modal-date" id="notification-modal-date"></div>
+    <div class="notification-modal-body" id="notification-modal-body"></div>
+    <div class="notification-modal-actions">
+      <button class="btn-accent" id="notification-modal-primary" type="button" onclick="handleNotificationPrimaryAction()">Fechar</button>
+    </div>
+  </div>
+</div></body>
 </html>
+
+
+
+
+
+
+
+
+
+
 
 
 

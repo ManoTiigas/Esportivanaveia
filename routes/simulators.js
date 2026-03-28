@@ -4,6 +4,7 @@ const router  = express.Router();
 const { db, getNextId } = require('../db');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 const { recalculateRanking } = require('./quiz');
+const { createNotification } = require('../utils/notifications');
 
 // IDs são sempre strings no Firestore
 function uid(id) { return String(id); }
@@ -384,7 +385,32 @@ router.get('/admin/attempts', adminMiddleware, async (req, res) => {
 router.post('/admin/evaluate/:id', adminMiddleware, async (req, res) => {
   try {
     const { score, feedback } = req.body;
-    await db.collection('simulator_attempts').doc(req.params.id).update({ score, feedback });
+    const attemptRef = db.collection('simulator_attempts').doc(req.params.id);
+    const attemptDoc = await attemptRef.get();
+    if (!attemptDoc.exists) {
+      return res.status(404).json({ success: false, message: 'Tentativa nao encontrada' });
+    }
+
+    await attemptRef.update({ score, feedback });
+
+    const attempt = attemptDoc.data();
+    const simDoc = await db.collection('simulators').doc(uid(attempt.simulator_id)).get();
+    const simTitle = simDoc.exists ? (simDoc.data().title || 'Simulador') : 'Simulador';
+
+    await createNotification({
+      userId: attempt.user_id,
+      type: 'simulator_feedback',
+      title: 'Novo feedback do simulador',
+      message: `Seu simulador "${simTitle}" foi avaliado pelo admin.`,
+      data: {
+        attemptId: req.params.id,
+        simulatorId: uid(attempt.simulator_id),
+        simulatorTitle: simTitle,
+        score: Number(score) || 0,
+        feedback: feedback || ''
+      }
+    });
+
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao avaliar' });

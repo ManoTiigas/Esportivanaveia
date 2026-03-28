@@ -3,6 +3,7 @@ const express = require('express');
 const router  = express.Router();
 const { db, getNextId } = require('../db');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
+const { createNotificationsForUsers } = require('../utils/notifications');
 
 function mapPhase(id, p) {
   return {
@@ -29,6 +30,16 @@ async function getNextPhaseOrderIndex() {
   return snap.docs.reduce((max, doc) => {
     return Math.max(max, Number(doc.data().order_index) || 0);
   }, 0) + 1;
+}
+
+async function getActiveOperatorIds() {
+  const snap = await db.collection('users')
+    .where('role', '==', 'OPERATOR')
+    .get();
+
+  return snap.docs
+    .filter(doc => doc.data().is_active !== false)
+    .map(doc => doc.id);
 }
 // GET /api/phases
 router.get('/', authMiddleware, async (req, res) => {
@@ -67,6 +78,19 @@ router.post('/', adminMiddleware, async (req, res) => {
       created_at:   new Date().toISOString()
     });
 
+    if (!isLocked) {
+      const operatorIds = await getActiveOperatorIds();
+      await createNotificationsForUsers(operatorIds, {
+        type: 'phase_released',
+        title: 'Nova fase liberada',
+        message: `A fase "${title}" foi liberada para você.`,
+        data: {
+          phaseId: String(newId),
+          phaseTitle: title
+        }
+      });
+    }
+
     res.json({ success: true, data: { id: newId } });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao criar fase' });
@@ -80,7 +104,22 @@ router.post('/:id/toggle', adminMiddleware, async (req, res) => {
     const doc = await ref.get();
     if (!doc.exists) return res.status(404).json({ success: false, message: 'Fase não encontrada' });
 
-    await ref.update({ is_locked: !doc.data().is_locked });
+    const nextIsLocked = !doc.data().is_locked;
+    await ref.update({ is_locked: nextIsLocked });
+
+    if (!nextIsLocked) {
+      const operatorIds = await getActiveOperatorIds();
+      await createNotificationsForUsers(operatorIds, {
+        type: 'phase_released',
+        title: 'Nova fase liberada',
+        message: `A fase "${doc.data().title}" foi liberada para você.`,
+        data: {
+          phaseId: req.params.id,
+          phaseTitle: doc.data().title
+        }
+      });
+    }
+
     res.json({ success: true, message: 'Fase atualizada' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao atualizar fase' });
