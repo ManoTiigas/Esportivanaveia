@@ -18,31 +18,32 @@ router.get('/questions', authMiddleware, async (req, res) => {
 
     const snap = await db.collection('quiz_questions')
       .where('module_id', '==', parseInt(moduleId))
-      .orderBy('order_index', 'asc')
       .get();
 
-    const questions = snap.docs.map(doc => {
-      const q = doc.data();
-      const question = {
-        id:         doc.id,
-        moduleId:   q.module_id,
-        question:   q.question,
-        optionA:    q.option_a,
-        optionB:    q.option_b,
-        optionC:    q.option_c,
-        optionD:    q.option_d,
-        optionE:    q.option_e,
-        points:     parseFloat(q.points),
-        orderIndex: q.order_index
-      };
+    const questions = snap.docs
+      .map(doc => {
+        const q = doc.data();
+        const question = {
+          id:         doc.id,
+          moduleId:   q.module_id,
+          question:   q.question,
+          optionA:    q.option_a,
+          optionB:    q.option_b,
+          optionC:    q.option_c,
+          optionD:    q.option_d,
+          optionE:    q.option_e,
+          points:     parseFloat(q.points),
+          orderIndex: Number(q.order_index) || 0
+        };
 
-      if (req.user.role === 'ADMIN') {
-        question.correctOption = q.correct_option;
-        question.explanation = q.explanation || '';
-      }
+        if (req.user.role === 'ADMIN') {
+          question.correctOption = q.correct_option;
+          question.explanation = q.explanation || '';
+        }
 
-      return question;
-    });
+        return question;
+      })
+      .sort((a, b) => a.orderIndex - b.orderIndex || Number(a.id) - Number(b.id));
 
     res.json({ success: true, data: questions });
   } catch (err) {
@@ -65,6 +66,16 @@ router.post('/questions', adminMiddleware, async (req, res) => {
     if (!['A','B','C','D','E'].includes(correctOption.toUpperCase()))
       return res.status(400).json({ success: false, message: 'correctOption deve ser A, B, C, D ou E' });
 
+    let normalizedOrderIndex = Number(orderIndex) || 0;
+    if (!normalizedOrderIndex) {
+      const existingSnap = await db.collection('quiz_questions')
+        .where('module_id', '==', parseInt(moduleId))
+        .get();
+      normalizedOrderIndex = existingSnap.docs.reduce((max, doc) => {
+        return Math.max(max, Number(doc.data().order_index) || 0);
+      }, 0) + 1;
+    }
+
     const newId = await getNextId('quiz_questions');
     await db.collection('quiz_questions').doc(String(newId)).set({
       module_id:      parseInt(moduleId),
@@ -76,14 +87,15 @@ router.post('/questions', adminMiddleware, async (req, res) => {
       option_e:       optionE || null,
       correct_option: correctOption.toUpperCase(),
       explanation:    explanation || '',
-      points:         parseFloat(points),
-      order_index:    orderIndex,
+      points:         parseFloat(points) || 10,
+      order_index:    normalizedOrderIndex,
       created_at:     new Date().toISOString()
     });
 
     res.json({ success: true, data: { id: newId } });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Erro ao criar questão' });
+    console.error('Erro ao criar questao:', err);
+    res.status(500).json({ success: false, message: 'Erro ao criar questao' });
   }
 });
 
@@ -106,10 +118,11 @@ router.post('/submit', authMiddleware, async (req, res) => {
     // Busca questões COM gabarito (só no servidor)
     const snap = await db.collection('quiz_questions')
       .where('module_id', '==', parseInt(moduleId))
-      .orderBy('order_index', 'asc')
       .get();
 
-    const questions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const questions = snap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .sort((a, b) => (Number(a.order_index) || 0) - (Number(b.order_index) || 0) || Number(a.id) - Number(b.id));
 
     let correctCount = 0;
     let totalPoints  = 0;
@@ -260,5 +273,7 @@ async function recalculateRanking(userId) {
 
 router.recalculateRanking = recalculateRanking;
 module.exports = router;
+
+
 
 

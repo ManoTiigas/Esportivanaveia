@@ -1420,6 +1420,7 @@ async function createQuestion() {
   const correctOption = document.getElementById('admin-q-correct').value;
   const explanation = document.getElementById('admin-q-explanation').value.trim();
   const moduleId    = parseInt(document.getElementById('admin-q-module').value);
+  const points      = parseFloat(document.getElementById('admin-q-points').value) || 10;
 
   if (!question || !optionA || !optionB || !optionC || !optionD) {
     showNotif('Preencha a pergunta e as opções A, B, C e D', 'error'); return;
@@ -1428,7 +1429,7 @@ async function createQuestion() {
   try {
     await apiFetch('/quiz/questions', {
       method: 'POST',
-      body: JSON.stringify({ moduleId, question, optionA, optionB, optionC, optionD, correctOption, explanation })
+      body: JSON.stringify({ moduleId, question, optionA, optionB, optionC, optionD, correctOption, explanation, points })
     });
     ['admin-q-question','admin-q-a','admin-q-b','admin-q-c','admin-q-d','admin-q-explanation']
       .forEach(id => document.getElementById(id).value = '');
@@ -1476,6 +1477,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 
