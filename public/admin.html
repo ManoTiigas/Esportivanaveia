@@ -332,7 +332,7 @@
           </select>
         </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>ID</th><th>Módulo</th><th>Pergunta</th><th>Resposta</th><th>Pts</th><th>Ações</th></tr></thead>
+          <thead><tr><th>Ordem</th><th>Módulo</th><th>Pergunta</th><th>Resposta</th><th>Pts</th><th>Ações</th></tr></thead>
           <tbody id="quiz-tbody"></tbody>
         </table></div>
       </div>
@@ -396,7 +396,7 @@
           </select>
         </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>ID</th><th>Fase</th><th>Módulo</th><th>Título</th><th>Cenário</th><th>Status</th><th>Ações</th></tr></thead>
+          <thead><tr><th>Ordem</th><th>Fase</th><th>Módulo</th><th>Título</th><th>Cenário</th><th>Status</th><th>Ações</th></tr></thead>
           <tbody id="sim-tbody"></tbody>
         </table></div>
       </div>
@@ -971,9 +971,9 @@ function renderSimuladores() {
 
   tb.innerHTML = lista.length ? lista.map(s => `
     <tr>
-      <td style="color:var(--txt2);font-size:12px">#${s.id}</td>
-      <td style="font-size:12px">${esc(s.phase_title)}</td>
-      <td>${esc(s.module_title)}</td>
+      <td style="color:var(--txt2);font-size:12px">Simulador ${s.displayOrder || s.id}</td>
+      <td style="font-size:12px">${s.phase_display_order ? `Fase ${s.phase_display_order} � ` : ""}${esc(s.phase_title)}</td>
+      <td>${esc(s.module_title)}${s.module_display_order ? ` <span style="color:var(--txt2);font-size:11px">� M�dulo ${s.module_display_order}</span>` : ""}</td>
       <td><strong>${esc(s.title)}</strong></td>
       <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--txt2)">${esc(s.scenario)}</td>
       <td><span class="badge ${s.is_active ? 'badge-ok' : 'badge-off'}">${s.is_active ? 'Ativo' : 'Inativo'}</span></td>
@@ -1021,7 +1021,7 @@ function renderPerguntasModal(perguntas) {
   }
   lista.innerHTML = perguntas.map((p, i) => `
     <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px">
-      <span style="font-size:11px;font-weight:700;color:var(--accent);min-width:20px">${i + 1}</span>
+      <span style="font-size:11px;font-weight:700;color:var(--accent);min-width:20px">${p.displayOrder || i + 1}</span>
       <span style="flex:1;font-size:13px">${esc(p.question)}</span>
       <button class="btn btn-danger btn-sm" onclick="removerPergunta(${p.id})">🗑</button>
     </div>`).join('');
@@ -1879,7 +1879,7 @@ function renderQuestoes() {
     }
     tb.innerHTML = QUESTOES.map(q => `
       <tr>
-        <td style="font-family:var(--mono);color:var(--txt2)">#${q.id}</td>
+        <td style="font-family:var(--mono);color:var(--txt2)">Pergunta ${q.displayOrder || q.orderIndex || q.id}</td>
         <td style="font-size:12px;color:var(--txt2)">${esc(MODULOS.find(m=>m.id===q.moduleId)?.title||'—')}</td>
         <td style="max-width:260px">${esc(q.question)}</td>
         <td><span class="badge badge-ativo" style="font-family:var(--mono)">Opção ${q.correctOption||'?'}</span></td>
@@ -2313,6 +2313,9 @@ async function salvarEdicaoModulo() {
 <div id="toast"></div>
 </body>
 </html>
+
+
+
 
 
 

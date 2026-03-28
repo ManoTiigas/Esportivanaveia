@@ -43,7 +43,11 @@ router.get('/questions', authMiddleware, async (req, res) => {
 
         return question;
       })
-      .sort((a, b) => a.orderIndex - b.orderIndex || Number(a.id) - Number(b.id));
+      .sort((a, b) => a.orderIndex - b.orderIndex || Number(a.id) - Number(b.id))
+      .map((question, index) => ({
+        ...question,
+        displayOrder: index + 1
+      }));
 
     res.json({ success: true, data: questions });
   } catch (err) {
@@ -273,6 +277,7 @@ async function recalculateRanking(userId) {
 
 router.recalculateRanking = recalculateRanking;
 module.exports = router;
+
 
 
 

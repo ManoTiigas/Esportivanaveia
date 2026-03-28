@@ -47,6 +47,10 @@ router.get('/', authMiddleware, async (req, res) => {
         questions:   qSnap.docs
           .map(q => ({ id: q.id, ...q.data() }))
           .sort((a, b) => (Number(a.order_index) || 0) - (Number(b.order_index) || 0) || Number(a.id) - Number(b.id))
+          .map((question, index) => ({
+            ...question,
+            displayOrder: index + 1
+          }))
       };
     }));
 
@@ -119,34 +123,92 @@ router.post('/submit', authMiddleware, async (req, res) => {
 // GET /api/simulators/admin/list
 router.get('/admin/list', adminMiddleware, async (req, res) => {
   try {
-    const simsSnap     = await db.collection('simulators').get();
-    const questionsSnap = await db.collection('simulator_questions').get();
-    const questionsAll  = questionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const [simsSnap, questionsSnap, modulesSnap, phasesSnap] = await Promise.all([
+      db.collection('simulators').get(),
+      db.collection('simulator_questions').get(),
+      db.collection('modules').get(),
+      db.collection('phases').get()
+    ]);
+    const questionsAll = questionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const phaseMetaById = {};
+    const moduleMetaById = {};
+
+    const sortedPhases = phasesSnap.docs
+      .map(doc => ({
+        id: doc.id,
+        title: doc.data().title || '',
+        orderIndex: Number(doc.data().order_index) || 0
+      }))
+      .sort((a, b) => a.orderIndex - b.orderIndex || Number(a.id) - Number(b.id));
+
+    sortedPhases.forEach((phase, index) => {
+      phaseMetaById[phase.id] = {
+        title: phase.title,
+        displayOrder: index + 1
+      };
+    });
+
+    const sortedModules = modulesSnap.docs
+      .map(doc => ({
+        id: doc.id,
+        phaseId: doc.data().phase_id,
+        title: doc.data().title || '',
+        orderIndex: Number(doc.data().order_index) || 0
+      }))
+      .sort((a, b) => {
+        const phaseDiff = (a.phaseId || 0) - (b.phaseId || 0);
+        if (phaseDiff !== 0) return phaseDiff;
+        if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
+        return Number(a.id) - Number(b.id);
+      });
+
+    const moduleDisplayCountByPhase = {};
+    sortedModules.forEach((module) => {
+      const phaseKey = String(module.phaseId || '');
+      moduleDisplayCountByPhase[phaseKey] = (moduleDisplayCountByPhase[phaseKey] || 0) + 1;
+      moduleMetaById[module.id] = {
+        title: module.title,
+        phaseId: module.phaseId,
+        displayOrder: moduleDisplayCountByPhase[phaseKey]
+      };
+    });
 
     const data = await Promise.all(simsSnap.docs.map(async simDoc => {
       const s = simDoc.data();
-
-      const modDoc = await db.collection('modules').doc(uid(s.module_id)).get();
-      const mod = modDoc.exists ? modDoc.data() : {};
-
-      let phaseTitle = '';
-      if (mod.phase_id) {
-        const phaseDoc = await db.collection('phases').doc(uid(mod.phase_id)).get();
-        if (phaseDoc.exists) phaseTitle = phaseDoc.data().title;
-      }
+      const moduleMeta = moduleMetaById[uid(s.module_id)] || {};
+      const phaseMeta = phaseMetaById[uid(moduleMeta.phaseId)] || {};
 
       return {
         id:           simDoc.id,
         ...s,
-        module_title: mod.title || '',
-        phase_title:  phaseTitle,
+        module_title: moduleMeta.title || '',
+        module_display_order: moduleMeta.displayOrder || 0,
+        phase_title:  phaseMeta.title || '',
+        phase_display_order: phaseMeta.displayOrder || 0,
         questions:    questionsAll
           .filter(q => q.simulator_id === simDoc.id)
           .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+          .map((question, index) => ({
+            ...question,
+            displayOrder: index + 1
+          }))
       };
     }));
 
-    res.json({ success: true, data });
+    const sortedData = data
+      .sort((a, b) => {
+        const phaseDiff = (Number(a.phase_display_order) || 0) - (Number(b.phase_display_order) || 0);
+        if (phaseDiff !== 0) return phaseDiff;
+        const moduleDiff = (Number(a.module_display_order) || 0) - (Number(b.module_display_order) || 0);
+        if (moduleDiff !== 0) return moduleDiff;
+        return Number(a.id) - Number(b.id);
+      })
+      .map((simulator, index) => ({
+        ...simulator,
+        displayOrder: index + 1
+      }));
+
+    res.json({ success: true, data: sortedData });
   } catch (err) {
     console.error('Erro ao buscar simuladores:', err);
     res.status(500).json({ success: false, message: 'Erro ao buscar simuladores' });
@@ -185,7 +247,11 @@ router.get('/admin/:id/questions', adminMiddleware, async (req, res) => {
       .get();
     res.json({ success: true, data: snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => (Number(a.order_index) || 0) - (Number(b.order_index) || 0) || Number(a.id) - Number(b.id)) });
+      .sort((a, b) => (Number(a.order_index) || 0) - (Number(b.order_index) || 0) || Number(a.id) - Number(b.id))
+      .map((question, index) => ({
+        ...question,
+        displayOrder: index + 1
+      })) });
   } catch (err) {
     console.error('Erro ao buscar perguntas do simulador:', err);
     res.status(500).json({ success: false, message: 'Erro ao buscar perguntas' });
@@ -326,6 +392,7 @@ router.post('/admin/evaluate/:id', adminMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
 
 
 
