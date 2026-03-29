@@ -27,6 +27,48 @@ function sortModules(modules) {
   });
 }
 
+async function getUserProgressByModule(userId, phaseId) {
+  const snap = await db.collection('user_progress')
+    .where('user_id', '==', String(userId))
+    .get();
+
+  return snap.docs.reduce((acc, doc) => {
+    const progress = doc.data() || {};
+    if (phaseId && Number(progress.phase_id) !== Number(phaseId)) return acc;
+
+    acc[String(progress.module_id)] = {
+      quizCompleted: progress.quiz_completed === true,
+      simulatorCompleted: progress.simulator_completed === true
+    };
+    return acc;
+  }, {});
+}
+
+function attachModuleAvailability(modules, progressByModule, isAdmin) {
+  if (isAdmin) {
+    return modules.map(module => ({
+      ...module,
+      isUnlocked: true,
+      isCompleted: !!progressByModule[String(module.id)]?.simulatorCompleted
+    }));
+  }
+
+  return modules.map((module, index) => {
+    const currentProgress = progressByModule[String(module.id)] || {};
+    const previousModule = index > 0 ? modules[index - 1] : null;
+    const previousProgress = previousModule ? (progressByModule[String(previousModule.id)] || {}) : null;
+    const isUnlocked = index === 0 || previousProgress?.simulatorCompleted === true;
+
+    return {
+      ...module,
+      isUnlocked,
+      isCompleted: currentProgress.simulatorCompleted === true,
+      quizCompleted: currentProgress.quizCompleted === true,
+      simulatorCompleted: currentProgress.simulatorCompleted === true
+    };
+  });
+}
+
 async function getNextModuleOrderIndex(phaseId) {
   const snap = await db.collection('modules')
     .where('phase_id', '==', phaseId)
@@ -65,7 +107,13 @@ router.get('/', authMiddleware, async (req, res) => {
           ...module,
           displayOrder: index + 1
         }));
-      return res.json({ success: true, data: modules });
+      const progressByModule = await getUserProgressByModule(req.user.id, phaseIdInt);
+      const modulesWithAvailability = attachModuleAvailability(
+        modules,
+        progressByModule,
+        req.user.role === 'ADMIN'
+      );
+      return res.json({ success: true, data: modulesWithAvailability });
     }
 
     const snap = await db.collection('modules').get();

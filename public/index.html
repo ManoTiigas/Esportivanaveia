@@ -767,55 +767,77 @@ async function openPhase(phaseId) {
   const phaseCard = Array.from(document.querySelectorAll('#phases-grid .phase-card'))
     .find(card => card.getAttribute('onclick')?.includes(`openPhase(${phaseId})`));
   const phaseBadge = phaseCard?.querySelector('.phase-badge')?.textContent || 'FASE';
-  const phaseTitle = phaseCard?.querySelector('.phase-title')?.textContent || 'MÓDULOS';
+  const phaseTitle = phaseCard?.querySelector('.phase-title')?.textContent || 'MODULOS';
 
   APP.currentPhase = { id: phaseId, badge: phaseBadge, title: phaseTitle };
-  document.getElementById('sidebar-phase-label').textContent  = `${phaseBadge} — MÓDULOS`;
+  document.getElementById('sidebar-phase-label').textContent  = `${phaseBadge} - MODULOS`;
   document.getElementById('sidebar-phase-title').textContent  = phaseTitle;
   document.getElementById('module-list').innerHTML =
-    `<div style="padding:20px;text-align:center;color:var(--text3)">⏳ Carregando...</div>`;
+    `<div style="padding:20px;text-align:center;color:var(--text3)">Carregando...</div>`;
 
   showView('module');
-
-  try {
-    const data = await apiFetch(`/modules?phaseId=${phaseId}`);
-    const mods = (data.data || []).filter(m => m.isActive);
-
-    if (!mods.length) {
-      document.getElementById('module-list').innerHTML =
-        `<div style="padding:20px;text-align:center;color:var(--text3)">Nenhum módulo ativo.</div>`;
-      return;
-    }
-
-    APP.currentModule   = mods[0];
-    APP._currentModules = mods;
-    renderModuleList(mods);
-    loadModule(mods[0]);
-  } catch (err) {
-    showNotif('Erro ao carregar módulos', 'error');
-  }
+  await refreshCurrentPhaseModules();
 }
 
 function renderModuleList(mods) {
   document.getElementById('module-list').innerHTML = mods.map((m, i) => `
-    <div class="module-item ${m.id === APP.currentModule?.id ? 'active' : ''}"
-         onclick="selectModuleItem(${m.id})">
+    <div class="module-item ${m.id === APP.currentModule?.id ? 'active' : ''} ${m.isUnlocked ? '' : 'locked'}"
+         onclick="${m.isUnlocked ? `selectModuleItem(${m.id})` : ''}">
       <div class="module-num">${i + 1}</div>
       <div class="module-info">
         <div class="module-item-title">${m.title}</div>
-        <div class="module-item-status">● Disponível</div>
+        <div class="module-item-status">${m.isCompleted ? 'Concluido' : m.isUnlocked ? 'Disponivel' : 'Bloqueado ate concluir o modulo anterior'}</div>
       </div>
     </div>`).join('');
 }
 
+async function refreshCurrentPhaseModules(advanceToNext = false) {
+  if (!APP.currentPhase || !APP.currentPhase.id) return;
+
+  try {
+    const data = await apiFetch(`/modules?phaseId=${APP.currentPhase.id}`);
+    const mods = (data.data || []).filter(m => m.isActive);
+
+    if (!mods.length) {
+      APP.currentModule = null;
+      APP._currentModules = [];
+      document.getElementById('module-list').innerHTML =
+        `<div style="padding:20px;text-align:center;color:var(--text3)">Nenhum modulo ativo.</div>`;
+      return;
+    }
+
+    const currentModuleId = APP.currentModule?.id;
+    const currentIndex = mods.findIndex(m => m.id === currentModuleId);
+    let nextModule = null;
+
+    if (advanceToNext && currentIndex >= 0) {
+      nextModule = mods.slice(currentIndex + 1).find(m => m.isUnlocked);
+    }
+
+    APP._currentModules = mods;
+    APP.currentModule = nextModule
+      || mods.find(m => m.id === currentModuleId && m.isUnlocked)
+      || mods.find(m => m.isUnlocked)
+      || mods[0];
+
+    renderModuleList(mods);
+    if (APP.currentModule) {
+      loadModule(APP.currentModule);
+    }
+
+    if (nextModule) {
+      showNotif(`Novo modulo liberado: ${nextModule.title}`, 'success');
+    }
+  } catch (err) {
+    showNotif('Erro ao carregar modulos', 'error');
+  }
+}
+
 function selectModuleItem(id) {
   const m = APP._currentModules?.find(x => x.id === id);
-  if (!m) return;
+  if (!m || !m.isUnlocked) return;
   APP.currentModule = m;
-
-  document.querySelectorAll('.module-item').forEach(el => el.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-
+  renderModuleList(APP._currentModules || []);
   switchTab('content', document.querySelector('[data-tab=content]'));
   loadModule(m);
 }
@@ -1210,6 +1232,7 @@ async function endSimulator() {
     const me = await apiFetch('/auth/me');
     APP.currentUser = me.data;
     updateUserUI();
+    await refreshCurrentPhaseModules(true);
   } catch (err) {
     console.warn('Erro ao salvar simulador:', err.message);
   }
