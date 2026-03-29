@@ -781,8 +781,8 @@ async function openPhase(phaseId) {
 
 function renderModuleList(mods) {
   document.getElementById('module-list').innerHTML = mods.map((m, i) => `
-    <div class="module-item ${m.id === APP.currentModule?.id ? 'active' : ''} ${m.isUnlocked ? '' : 'locked'}"
-         onclick="${m.isUnlocked ? `selectModuleItem(${m.id})` : ''}">
+    <div class="module-item ${m.id === APP.currentModule?.id ? 'active' : ''} ${m.isUnlocked && !m.isCompleted ? '' : 'locked'}"
+         onclick="${m.isUnlocked && !m.isCompleted ? `selectModuleItem(${m.id})` : ''}">
       <div class="module-num">${i + 1}</div>
       <div class="module-info">
         <div class="module-item-title">${m.title}</div>
@@ -811,18 +811,26 @@ async function refreshCurrentPhaseModules(advanceToNext = false) {
     let nextModule = null;
 
     if (advanceToNext && currentIndex >= 0) {
-      nextModule = mods.slice(currentIndex + 1).find(m => m.isUnlocked);
+      nextModule = mods.slice(currentIndex + 1).find(m => m.isUnlocked && !m.isCompleted);
     }
 
     APP._currentModules = mods;
     APP.currentModule = nextModule
-      || mods.find(m => m.id === currentModuleId && m.isUnlocked)
-      || mods.find(m => m.isUnlocked)
-      || mods[0];
+      || mods.find(m => m.id === currentModuleId && m.isUnlocked && !m.isCompleted)
+      || mods.find(m => m.isUnlocked && !m.isCompleted)
+      || null;
 
     renderModuleList(mods);
+
     if (APP.currentModule) {
+      switchTab('content', document.querySelector('[data-tab=content]'));
       loadModule(APP.currentModule);
+    } else {
+      document.getElementById('content-title').textContent = 'Todos os modulos desta fase foram concluidos';
+      document.getElementById('content-subtitle').textContent = 'Aguarde a liberacao de novas fases ou novos modulos.';
+      document.getElementById('content-body').innerHTML = '<p style="color:var(--text3)">Voce concluiu todos os modulos disponiveis.</p>';
+      document.getElementById('quiz-area').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">Quiz indisponivel para modulos concluidos.</div>';
+      document.getElementById('sim-area').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">Simulador indisponivel para modulos concluidos.</div>';
     }
 
     if (nextModule) {
@@ -835,7 +843,7 @@ async function refreshCurrentPhaseModules(advanceToNext = false) {
 
 function selectModuleItem(id) {
   const m = APP._currentModules?.find(x => x.id === id);
-  if (!m || !m.isUnlocked) return;
+  if (!m || !m.isUnlocked || m.isCompleted) return;
   APP.currentModule = m;
   renderModuleList(APP._currentModules || []);
   switchTab('content', document.querySelector('[data-tab=content]'));
