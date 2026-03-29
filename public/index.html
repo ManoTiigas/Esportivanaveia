@@ -782,7 +782,7 @@ async function openPhase(phaseId) {
 function renderModuleList(mods) {
   document.getElementById('module-list').innerHTML = mods.map((m, i) => `
     <div class="module-item ${m.id === APP.currentModule?.id ? 'active' : ''} ${m.isUnlocked || m.isCompleted ? '' : 'locked'}"
-         onclick="selectModuleItem(${m.id})">
+         onclick="selectModuleItem('${m.id}')">
       <div class="module-num">${i + 1}</div>
       <div class="module-info">
         <div class="module-item-title">${m.title}</div>
@@ -838,7 +838,8 @@ async function refreshCurrentPhaseModules(advanceToNext = false) {
 }
 
 function selectModuleItem(id) {
-  const m = APP._currentModules?.find(x => x.id === id);
+  const targetId = String(id);
+  const m = APP._currentModules?.find(x => String(x.id) === targetId);
   if (!m || (!m.isUnlocked && !m.isCompleted)) return;
   APP.currentModule = m;
   renderModuleList(APP._currentModules || []);
@@ -855,7 +856,7 @@ function loadModule(m) {
 
   // Texto / conteúdo HTML (primeiro)
   if (m.content) {
-    html += `<div class="content-body" id="content-body">${m.content}</div>`;
+    html += m.content;
   }
 
   // Vídeo (depois do texto)
