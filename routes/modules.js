@@ -105,14 +105,15 @@ function attachModuleAvailability(modules, progressByModule, isAdmin) {
     const currentProgress = progressByModule[String(module.id)] || {};
     const previousModule = index > 0 ? modules[index - 1] : null;
     const previousProgress = previousModule ? (progressByModule[String(previousModule.id)] || {}) : null;
-    const isUnlocked = index === 0 || previousProgress?.simulatorCompleted === true;
+    const isCompleted = currentProgress.simulatorCompleted === true;
+    const isUnlocked = isCompleted || index === 0 || previousProgress?.simulatorCompleted === true;
 
     return {
       ...module,
       isUnlocked,
-      isCompleted: currentProgress.simulatorCompleted === true,
+      isCompleted,
       quizCompleted: currentProgress.quizCompleted === true,
-      simulatorCompleted: currentProgress.simulatorCompleted === true
+      simulatorCompleted: isCompleted
     };
   });
 }

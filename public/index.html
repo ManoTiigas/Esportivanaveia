@@ -781,8 +781,8 @@ async function openPhase(phaseId) {
 
 function renderModuleList(mods) {
   document.getElementById('module-list').innerHTML = mods.map((m, i) => `
-    <div class="module-item ${m.id === APP.currentModule?.id ? 'active' : ''} ${m.isUnlocked ? '' : 'locked'}"
-         onclick="${m.isUnlocked ? `selectModuleItem(${m.id})` : ''}">
+    <div class="module-item ${m.id === APP.currentModule?.id ? 'active' : ''} ${m.isUnlocked || m.isCompleted ? '' : 'locked'}"
+         onclick="selectModuleItem(${m.id})">
       <div class="module-num">${i + 1}</div>
       <div class="module-info">
         <div class="module-item-title">${m.title}</div>
@@ -839,7 +839,7 @@ async function refreshCurrentPhaseModules(advanceToNext = false) {
 
 function selectModuleItem(id) {
   const m = APP._currentModules?.find(x => x.id === id);
-  if (!m || !m.isUnlocked) return;
+  if (!m || (!m.isUnlocked && !m.isCompleted)) return;
   APP.currentModule = m;
   renderModuleList(APP._currentModules || []);
   switchTab('content', document.querySelector('[data-tab=content]'));
@@ -921,19 +921,20 @@ function switchTab(name, btn) {
 function updateModuleStudyMode(module) {
   const quizTab = document.querySelector('[data-tab=quiz]');
   const simulatorTab = document.querySelector('[data-tab=simulator]');
-  const nextButton = document.querySelector('.btn-next-section .btn-accent');
+  const nextButtonWrap = document.querySelector('.btn-next-section');
   const isStudyOnly = module?.isCompleted === true;
 
   [quizTab, simulatorTab].forEach(btn => {
     if (!btn) return;
+    btn.style.display = isStudyOnly ? 'none' : 'inline-flex';
     btn.disabled = isStudyOnly;
     btn.style.opacity = isStudyOnly ? '0.45' : '1';
     btn.style.pointerEvents = isStudyOnly ? 'none' : 'auto';
     btn.title = isStudyOnly ? 'Modulo concluido: apenas o conteudo permanece disponivel.' : '';
   });
 
-  if (nextButton) {
-    nextButton.style.display = isStudyOnly ? 'none' : 'inline-flex';
+  if (nextButtonWrap) {
+    nextButtonWrap.style.display = isStudyOnly ? 'none' : 'flex';
   }
 }
 
