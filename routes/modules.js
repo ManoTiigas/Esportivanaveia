@@ -27,21 +27,69 @@ function sortModules(modules) {
   });
 }
 
-async function getUserProgressByModule(userId, phaseId) {
-  const snap = await db.collection('user_progress')
-    .where('user_id', '==', String(userId))
-    .get();
+async function getUserProgressByModule(userId, phaseId, modules = []) {
+  const userIdStr = String(userId);
+  const moduleIdsInPhase = new Set(modules.map(module => String(module.id)));
 
-  return snap.docs.reduce((acc, doc) => {
+  const [progressSnap, quizAttemptsSnap, simulatorAttemptsSnap, simulatorsSnap] = await Promise.all([
+    db.collection('user_progress')
+      .where('user_id', '==', userIdStr)
+      .get(),
+    db.collection('quiz_attempts')
+      .where('user_id', '==', userIdStr)
+      .get(),
+    db.collection('simulator_attempts')
+      .where('user_id', '==', userIdStr)
+      .get(),
+    db.collection('simulators').get()
+  ]);
+
+  const simulatorToModuleMap = simulatorsSnap.docs.reduce((acc, doc) => {
+    const data = doc.data() || {};
+    acc[String(doc.id)] = String(data.module_id);
+    return acc;
+  }, {});
+
+  const progressByModule = progressSnap.docs.reduce((acc, doc) => {
     const progress = doc.data() || {};
     if (phaseId && Number(progress.phase_id) !== Number(phaseId)) return acc;
 
-    acc[String(progress.module_id)] = {
+    const moduleId = String(progress.module_id);
+    if (moduleIdsInPhase.size && !moduleIdsInPhase.has(moduleId)) return acc;
+
+    acc[moduleId] = {
       quizCompleted: progress.quiz_completed === true,
       simulatorCompleted: progress.simulator_completed === true
     };
     return acc;
   }, {});
+
+  quizAttemptsSnap.docs.forEach(doc => {
+    const attempt = doc.data() || {};
+    const moduleId = String(attempt.module_id);
+    if (moduleIdsInPhase.size && !moduleIdsInPhase.has(moduleId)) return;
+
+    progressByModule[moduleId] = {
+      ...(progressByModule[moduleId] || {}),
+      quizCompleted: true,
+      simulatorCompleted: progressByModule[moduleId]?.simulatorCompleted === true
+    };
+  });
+
+  simulatorAttemptsSnap.docs.forEach(doc => {
+    const attempt = doc.data() || {};
+    const moduleId = simulatorToModuleMap[String(attempt.simulator_id)];
+    if (!moduleId) return;
+    if (moduleIdsInPhase.size && !moduleIdsInPhase.has(moduleId)) return;
+
+    progressByModule[moduleId] = {
+      ...(progressByModule[moduleId] || {}),
+      quizCompleted: progressByModule[moduleId]?.quizCompleted === true,
+      simulatorCompleted: true
+    };
+  });
+
+  return progressByModule;
 }
 
 function attachModuleAvailability(modules, progressByModule, isAdmin) {
@@ -107,7 +155,7 @@ router.get('/', authMiddleware, async (req, res) => {
           ...module,
           displayOrder: index + 1
         }));
-      const progressByModule = await getUserProgressByModule(req.user.id, phaseIdInt);
+      const progressByModule = await getUserProgressByModule(req.user.id, phaseIdInt, modules);
       const modulesWithAvailability = attachModuleAvailability(
         modules,
         progressByModule,
