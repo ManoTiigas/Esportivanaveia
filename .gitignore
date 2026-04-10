@@ -7,3 +7,5 @@ public/uploads/*
 serviceAccountKey.json
 serviceAccount*.json
 .gitignore
+.claude
+settings.local.json

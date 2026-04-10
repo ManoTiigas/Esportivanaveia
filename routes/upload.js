@@ -5,27 +5,24 @@ const crypto = require('crypto');
 const { db, admin } = require('../db');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 
+const ALLOWED_MIME_PREFIXES = ['video/', 'image/'];
+const ALLOWED_MIME_EXACT   = ['application/pdf', 'application/octet-stream'];
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 200 * 1024 * 1024 },
+  limits: { fileSize: 500 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed = [
-      'video/mp4',
-      'video/webm',
-      'video/ogg',
-      'application/pdf',
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-    ];
+    const mime = (file.mimetype || '').toLowerCase().split(';')[0].trim();
+    const ext  = (file.originalname || '').split('.').pop().toLowerCase();
+    const allowedExts = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'pdf',
+                         'jpg', 'jpeg', 'png', 'gif', 'webp'];
 
-    if (allowed.includes(file.mimetype)) {
-      cb(null, true);
-      return;
-    }
+    const ok = ALLOWED_MIME_PREFIXES.some(p => mime.startsWith(p))
+            || ALLOWED_MIME_EXACT.includes(mime)
+            || allowedExts.includes(ext);
 
-    cb(new Error(`Tipo de arquivo nao permitido: ${file.mimetype}`));
+    if (ok) return cb(null, true);
+    cb(new Error(`Tipo de arquivo não permitido: ${file.mimetype} (.${ext})`));
   },
 });
 
@@ -177,8 +174,14 @@ async function attachProfilePhoto(req, res) {
 
     res.json({ success: true, data: { url: uploadedFile.url } });
   } catch (err) {
-    console.error('Erro no upload da foto de perfil:', err);
-    res.status(400).json({ success: false, message: err.message || 'Erro no upload da foto' });
+    console.error('Erro no upload da foto de perfil:', err.message, err.code || '');
+    const isStorageErr = err.message?.includes('Storage') || err.code?.startsWith('storage/') || err.code === 404;
+    res.status(400).json({
+      success: false,
+      message: isStorageErr
+        ? `Erro no Firebase Storage: ${err.message}. Verifique FIREBASE_STORAGE_BUCKET no .env`
+        : err.message || 'Erro no upload da foto',
+    });
   }
 }
 

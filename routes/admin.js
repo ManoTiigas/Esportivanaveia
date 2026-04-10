@@ -181,7 +181,7 @@ router.put('/users/:id', adminMiddleware, async (req, res) => {
         : String(status).toLowerCase() !== 'bloqueado';
 
       if (userId === String(req.user.id) && !nextIsActive) {
-        return res.status(400).json({ success: false, message: 'VocÃª nÃ£o pode desativar sua prÃ³pria conta' });
+        return res.status(400).json({ success: false, message: 'Você não pode desativar sua própria conta' });
       }
 
       fields.is_active = nextIsActive;

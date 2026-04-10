@@ -97,6 +97,12 @@
           </div>
         </div>
 
+        <section class="dashboard-hero">
+          <div class="hero-stage hero-stage-banner">
+            <img src="banner.svg" alt="Esportiva Na Veia" class="hero-banner-svg">
+          </div>
+        </section>
+
         <!-- RANKING TOP 3 -->
         <div class="ranking-section">
           <div class="ranking-header">
@@ -1305,7 +1311,7 @@ function formatNotificationDate(value) {
 function getNotificationTypeLabel(type) {
   if (type === 'simulator_feedback') return 'Feedback do simulador';
   if (type === 'phase_released') return 'Nova fase liberada';
-  return 'Notificação';
+  return 'Notificaï¿½ï¿½o';
 }
 
 function updateNotificationsBadge() {
@@ -1328,11 +1334,11 @@ function renderNotifications() {
 
   if (!APP.notifications.length) {
     subtitle.textContent = 'Nenhuma novidade no momento';
-    list.innerHTML = '<div class="notifications-empty">Você está em dia. Quando houver feedback ou nova fase, aparece aqui.</div>';
+    list.innerHTML = '<div class="notifications-empty">Vocï¿½ estï¿½ em dia. Quando houver feedback ou nova fase, aparece aqui.</div>';
     return;
   }
 
-  subtitle.textContent = APP.unreadNotifications ? `${APP.unreadNotifications} não lida(s)` : 'Tudo lido';
+  subtitle.textContent = APP.unreadNotifications ? `${APP.unreadNotifications} nï¿½o lida(s)` : 'Tudo lido';
   list.innerHTML = APP.notifications.map(notification => `
     <button class="notification-item ${notification.isRead ? '' : 'unread'}" type="button" onclick="openNotificationById('${notification.id}')">
       <div class="notification-item-icon">${notification.type === 'simulator_feedback' ? 'FB' : 'FA'}</div>
@@ -1361,10 +1367,10 @@ async function fetchNotifications(showToastOnNew = false) {
     renderNotifications();
 
     if (showToastOnNew && APP.unreadNotifications > previousUnread) {
-      showNotif('Você recebeu novas notificações.', 'success');
+      showNotif('Vocï¿½ recebeu novas notificaï¿½ï¿½es.', 'success');
     }
   } catch (err) {
-    console.warn('Erro ao carregar notificações:', err.message);
+    console.warn('Erro ao carregar notificaï¿½ï¿½es:', err.message);
   }
 }
 
@@ -1410,7 +1416,7 @@ async function markNotificationAsRead(notificationId, silent = false) {
     notification.isRead = false;
     APP.unreadNotifications += 1;
     renderNotifications();
-    if (!silent) showNotif('Erro ao atualizar notificação', 'error');
+    if (!silent) showNotif('Erro ao atualizar notificaï¿½ï¿½o', 'error');
   }
 }
 
@@ -1428,7 +1434,7 @@ async function markAllNotificationsAsRead() {
     APP.notifications = previous;
     APP.unreadNotifications = previous.filter(item => !item.isRead).length;
     renderNotifications();
-    showNotif('Erro ao marcar notificações como lidas', 'error');
+    showNotif('Erro ao marcar notificaï¿½ï¿½es como lidas', 'error');
   }
 }
 
@@ -1453,10 +1459,10 @@ async function openNotification(notification) {
 
   if (notification.type === 'simulator_feedback') {
     const score = notification.data?.score;
-    const feedback = notification.data?.feedback || 'O admin ainda não deixou comentários adicionais.';
+    const feedback = notification.data?.feedback || 'O admin ainda nï¿½o deixou comentï¿½rios adicionais.';
     bodyHtml += `
       <div class="notification-detail-card">
-        <div class="notification-detail-label">Pontuação</div>
+        <div class="notification-detail-label">Pontuaï¿½ï¿½o</div>
         <div class="notification-detail-score">${score ?? 0} / 20</div>
       </div>
       <div class="notification-detail-card">
@@ -1465,7 +1471,7 @@ async function openNotification(notification) {
       </div>`;
     primaryButton.textContent = 'Entendi';
   } else if (notification.type === 'phase_released') {
-    bodyHtml += '<div class="notification-detail-card"><div class="notification-detail-label">Ação</div><div class="notification-detail-text">Essa fase já está disponível na sua trilha de treinamento.</div></div>';
+    bodyHtml += '<div class="notification-detail-card"><div class="notification-detail-label">Aï¿½ï¿½o</div><div class="notification-detail-text">Essa fase jï¿½ estï¿½ disponï¿½vel na sua trilha de treinamento.</div></div>';
     primaryButton.textContent = 'Ir para as fases';
   } else {
     primaryButton.textContent = 'Fechar';
@@ -1791,7 +1797,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <div class="notification-modal" id="notification-modal">
   <div class="notification-modal-card">
-    <button class="notification-modal-close" type="button" onclick="closeNotificationModal()">×</button>
+    <button class="notification-modal-close" type="button" onclick="closeNotificationModal()">ï¿½</button>
     <div class="notification-modal-type" id="notification-modal-type">Notificacao</div>
     <div class="notification-modal-title" id="notification-modal-title">Titulo</div>
     <div class="notification-modal-date" id="notification-modal-date"></div>

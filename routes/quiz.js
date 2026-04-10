@@ -166,10 +166,8 @@ router.post('/submit', authMiddleware, async (req, res) => {
     // Salvar respostas individuais (batch — max 500 ops, suficiente para quizzes)
     const batch = db.batch();
     for (const q of questions) {
-      const selected  = answers && answers[q.id] ? answers[q.id].toUpperCase() : 'A';
+      const selected  = answers && answers[q.id] ? answers[q.id].toUpperCase() : null;
       const isCorrect = selected === q.correct_option;
-      // Usa getNextId para cada resposta evitaria colisão, mas é lento.
-      // ansId composto é seguro pois attemptId é único e q.id é único dentro do módulo.
       const ansId = `${attemptId}_${q.id}`;
       batch.set(db.collection('quiz_answers').doc(ansId), {
         attempt_id:      String(attemptId),
@@ -216,9 +214,10 @@ router.post('/submit', authMiddleware, async (req, res) => {
 async function recalculateRanking(userId) {
   const userIdStr = uid(userId);
 
-  // Admins nunca entram no ranking
   const userDoc = await db.collection('users').doc(userIdStr).get();
-  if (!userDoc.exists || userDoc.data().role === 'ADMIN') return;
+  if (!userDoc.exists) return;
+  const userRole = userDoc.data().role;
+  if (userRole === 'ADMIN') return;
 
   // Soma pontos de quiz — user_id salvo como string
   const quizSnap = await db.collection('quiz_attempts')
@@ -238,10 +237,9 @@ async function recalculateRanking(userId) {
 
   const total = qPts + sPts;
 
-  // Upsert ranking — inclui role para evitar N+1 na listagem
   await db.collection('rankings').doc(userIdStr).set({
     user_id:           userIdStr,
-    role:              'OPERATOR',
+    role:              userRole,
     total_points:      total,
     quiz_points:       qPts,
     simulator_points:  sPts,

@@ -13,14 +13,15 @@ async function authMiddleware(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userDoc = await db.collection('users').doc(String(decoded.id)).get();
     if (!userDoc.exists) {
-      return res.status(401).json({ success: false, message: 'UsuÃ¡rio nÃ£o encontrado' });
+      return res.status(401).json({ success: false, message: 'Usuário não encontrado' });
     }
 
     if (userDoc.data().is_active === false) {
-      return res.status(403).json({ success: false, message: 'UsuÃ¡rio desativado' });
+      return res.status(403).json({ success: false, message: 'Usuário desativado' });
     }
 
-    req.user = decoded; // { id, name, email, role }
+    // Re-valida a role diretamente do banco para evitar escalada de privilégio via JWT stale
+    req.user = { ...decoded, role: userDoc.data().role };
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Token inválido ou expirado' });

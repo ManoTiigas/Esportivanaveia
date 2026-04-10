@@ -538,7 +538,7 @@
 
       <!-- VÍDEO -->
       <div class="mfield">
-        <label>📹 Vídeo (.mp4 / .webm — máx 500MB)</label>
+        <label>📹 Vídeo (.mp4, .webm, .mov — máx 500MB)</label>
         <div id="nm-video-preview" style="display:none;margin-bottom:10px">
           <video id="nm-video-player" controls style="width:100%;border-radius:8px;background:#000;max-height:200px"></video>
           <button class="btn btn-danger btn-sm" style="margin-top:6px;width:100%" onclick="removerMidia('video')">🗑 Remover vídeo</button>
@@ -547,7 +547,7 @@
           <label class="upload-area" id="nm-video-label" onclick="document.getElementById('nm-video-file').click()">
             <span id="nm-video-text">🎬 Clique para selecionar vídeo</span>
           </label>
-          <input type="file" id="nm-video-file" accept=".mp4,.webm" style="display:none" onchange="previewVideo(this)">
+          <input type="file" id="nm-video-file" accept=".mp4,.webm,.mov,.avi,.ogg" style="display:none" onchange="previewVideo(this)">
           <div id="nm-video-progress" style="display:none;margin-top:8px">
             <div style="height:6px;background:var(--border2);border-radius:3px;overflow:hidden">
               <div id="nm-video-bar" style="height:100%;background:var(--azul);border-radius:3px;width:0%;transition:width .2s"></div>
@@ -559,7 +559,7 @@
 
       <!-- PDF -->
       <div class="mfield">
-        <label>📄 PDF (máx 5MB)</label>
+        <label>📄 PDF (máx 500MB)</label>
         <div id="nm-pdf-preview" style="display:none;margin-bottom:10px">
           <div style="background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px">
             <span style="font-size:24px">📄</span>
@@ -972,8 +972,8 @@ function renderSimuladores() {
   tb.innerHTML = lista.length ? lista.map(s => `
     <tr>
       <td style="color:var(--txt2);font-size:12px">Simulador ${s.displayOrder || s.id}</td>
-      <td style="font-size:12px">${s.phase_display_order ? `Fase ${s.phase_display_order} � ` : ""}${esc(s.phase_title)}</td>
-      <td>${esc(s.module_title)}${s.module_display_order ? ` <span style="color:var(--txt2);font-size:11px">� M�dulo ${s.module_display_order}</span>` : ""}</td>
+      <td style="font-size:12px">${s.phase_display_order ? `Fase ${s.phase_display_order} � ` : ""}${esc(s.phase_title)}</td>
+      <td>${esc(s.module_title)}${s.module_display_order ? ` <span style="color:var(--txt2);font-size:11px">� M�dulo ${s.module_display_order}</span>` : ""}</td>
       <td><strong>${esc(s.title)}</strong></td>
       <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--txt2)">${esc(s.scenario)}</td>
       <td><span class="badge ${s.is_active ? 'badge-ok' : 'badge-off'}">${s.is_active ? 'Ativo' : 'Inativo'}</span></td>
@@ -1779,8 +1779,8 @@ function renderModulosTabela() {
   if (!lista.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--txt2);padding:20px">Nenhum módulo encontrado</td></tr>'; return; }
   tb.innerHTML = lista.map(m => `
     <tr>
-      <td style="font-family:var(--mono);color:var(--txt2)">M�dulo ${m.displayOrder || m.orderIndex || m.id}</td>
-      <td style="color:var(--txt2);font-size:12px">Fase ${m.phaseDisplayOrder || m.phaseId || '—'} � ${esc(m.phaseTitle || '—')}</td>
+      <td style="font-family:var(--mono);color:var(--txt2)">M�dulo ${m.displayOrder || m.orderIndex || m.id}</td>
+      <td style="color:var(--txt2);font-size:12px">Fase ${m.phaseDisplayOrder || m.phaseId || '—'} � ${esc(m.phaseTitle || '—')}</td>
       <td><strong>${esc(m.title)}</strong>${m.description ? `<div style="font-size:11px;color:var(--txt2);margin-top:2px">${esc(m.description)}</div>` : ''}</td>
       <td><span class="badge ${m.isActive ? 'badge-ativo' : 'badge-inativo'}">${m.isActive ? '✓ Ativo' : '✗ Inativo'}</span></td>
       <td>
@@ -2251,7 +2251,7 @@ async function uploadComProgresso(file, url, barId, pctId, progressId) {
       reject(new Error('Falha na conexão durante o upload'));
     });
 
-    xhr.open('POST', API.replace('/api','') + url);
+    xhr.open('POST', url);
     xhr.setRequestHeader('Authorization', 'Bearer ' + token());
     xhr.send(form);
   });

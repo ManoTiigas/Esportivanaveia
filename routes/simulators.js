@@ -301,12 +301,16 @@ router.delete('/admin/questions/:id', adminMiddleware, async (req, res) => {
 router.put('/admin/:id', adminMiddleware, async (req, res) => {
   try {
     const { title, description, scenario, isActive } = req.body;
-    await db.collection('simulators').doc(req.params.id).update({
-      title,
-      description: description || '',
-      scenario,
-      is_active:   !!isActive
-    });
+    const fields = {};
+    if (title !== undefined)       fields.title       = title;
+    if (description !== undefined) fields.description = description || '';
+    if (scenario !== undefined)    fields.scenario    = scenario;
+    if (isActive !== undefined)    fields.is_active   = !!isActive;
+
+    if (!Object.keys(fields).length)
+      return res.status(400).json({ success: false, message: 'Nenhum campo para atualizar' });
+
+    await db.collection('simulators').doc(req.params.id).update(fields);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao atualizar simulador' });
@@ -316,7 +320,25 @@ router.put('/admin/:id', adminMiddleware, async (req, res) => {
 // DELETE /api/simulators/admin/:id
 router.delete('/admin/:id', adminMiddleware, async (req, res) => {
   try {
-    await db.collection('simulators').doc(req.params.id).delete();
+    const simId = req.params.id;
+    const [questionsSnap, attemptsSnap] = await Promise.all([
+      db.collection('simulator_questions').where('simulator_id', '==', simId).get(),
+      db.collection('simulator_attempts').where('simulator_id', '==', simId).get()
+    ]);
+
+    const allRefs = [
+      ...questionsSnap.docs.map(d => d.ref),
+      ...attemptsSnap.docs.map(d => d.ref),
+      db.collection('simulators').doc(simId)
+    ];
+
+    const CHUNK = 400;
+    for (let i = 0; i < allRefs.length; i += CHUNK) {
+      const batch = db.batch();
+      allRefs.slice(i, i + CHUNK).forEach(ref => batch.delete(ref));
+      await batch.commit();
+    }
+
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao remover simulador' });
@@ -385,17 +407,37 @@ router.get('/admin/attempts', adminMiddleware, async (req, res) => {
 router.post('/admin/evaluate/:id', adminMiddleware, async (req, res) => {
   try {
     const { score, feedback } = req.body;
+    const newScore = Number(score) || 0;
+
     const attemptRef = db.collection('simulator_attempts').doc(req.params.id);
     const attemptDoc = await attemptRef.get();
     if (!attemptDoc.exists) {
-      return res.status(404).json({ success: false, message: 'Tentativa nao encontrada' });
+      return res.status(404).json({ success: false, message: 'Tentativa não encontrada' });
     }
 
-    await attemptRef.update({ score, feedback });
+    await attemptRef.update({ score: newScore, feedback });
 
     const attempt = attemptDoc.data();
+
+    // Atualiza simulator_best_score em user_progress se o novo score for maior
     const simDoc = await db.collection('simulators').doc(uid(attempt.simulator_id)).get();
     const simTitle = simDoc.exists ? (simDoc.data().title || 'Simulador') : 'Simulador';
+
+    if (simDoc.exists) {
+      const modId = simDoc.data().module_id;
+      const progressKey = `${attempt.user_id}_${modId}`;
+      const progressRef = db.collection('user_progress').doc(progressKey);
+      const progressDoc = await progressRef.get();
+      const currentBest = progressDoc.exists
+        ? (parseFloat(progressDoc.data().simulator_best_score) || 0)
+        : 0;
+      if (newScore > currentBest) {
+        await progressRef.set({ simulator_best_score: newScore }, { merge: true });
+      }
+    }
+
+    // Recalcula ranking com a nova pontuação
+    await recalculateRanking(attempt.user_id);
 
     await createNotification({
       userId: attempt.user_id,
@@ -406,7 +448,7 @@ router.post('/admin/evaluate/:id', adminMiddleware, async (req, res) => {
         attemptId: req.params.id,
         simulatorId: uid(attempt.simulator_id),
         simulatorTitle: simTitle,
-        score: Number(score) || 0,
+        score: newScore,
         feedback: feedback || ''
       }
     });

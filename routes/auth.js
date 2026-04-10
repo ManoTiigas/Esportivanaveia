@@ -34,11 +34,11 @@ router.post('/login', async (req, res) => {
     if (!user || typeof user.password !== 'string')
       return res.status(401).json({ success: false, message: 'E-mail ou senha incorretos' });
 
+    if (user.is_active === false)
+      return res.status(403).json({ success: false, message: 'Usuário desativado' });
+
     if (!(await bcrypt.compare(password, user.password)))
       return res.status(401).json({ success: false, message: 'E-mail ou senha incorretos' });
-
-    if (user.is_active === false)
-      return res.status(403).json({ success: false, message: 'Usuario desativado' });
 
     if (!process.env.JWT_SECRET)
       return res.status(500).json({ success: false, message: 'JWT_SECRET nao configurado no servidor' });
