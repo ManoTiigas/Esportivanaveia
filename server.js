@@ -18,7 +18,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 function mountApiRoute(routePath, router) {
@@ -68,6 +69,9 @@ app.get('*', (req, res) => {
 });
 
 app.use((err, req, res, next) => {
+  if (err.status === 413 || err.type === 'entity.too.large') {
+    return res.status(413).json({ success: false, message: 'Arquivo muito grande. Limite: 500MB' });
+  }
   console.error('Erro nao tratado:', err);
   res.status(500).json({ success: false, message: 'Erro interno no servidor' });
 });
