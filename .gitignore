@@ -1,11 +1,16 @@
+# Dependencias
 node_modules/
+
+# Variaveis de ambiente e segredos
 .env
 firebase-service-account.json
-public/uploads/*
-!public/uploads/.gitkeep
-.env.example
 serviceAccountKey.json
 serviceAccount*.json
-.gitignore
-.claude
+
+# Uploads locais
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Arquivos locais de ferramentas
+.claude/
 settings.local.json

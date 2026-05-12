@@ -6,6 +6,7 @@
 <title>Esportiva na Veia - Treinamento de Atendimento</title>
 <link rel="icon" href="/assets/logo-esportiva-icon.svg" type="image/svg+xml">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="index.css">
 </head>
 <body>
@@ -1769,6 +1770,7 @@ function showNotif(msg, type = 'success') {
   setTimeout(() => el.remove(), 3500);
 }
 
+
 // ============================
 // INIT — auto-login if token exists
 // ============================
@@ -1806,14 +1808,104 @@ document.addEventListener('DOMContentLoaded', () => {
       <button class="btn-accent" id="notification-modal-primary" type="button" onclick="handleNotificationPrimaryAction()">Fechar</button>
     </div>
   </div>
-</div></body>
+</div>
+<script>
+(() => {
+  const emojiRegex = /[🌀-🟿🚀-🛿☀-⛿✀-➿]/gu;
+  const iconByEmoji = {
+    '👤': 'bi-person',
+    '📊': 'bi-bar-chart',
+    '🏆': 'bi-trophy',
+    '🔑': 'bi-key',
+    '🚪': 'bi-door-open',
+    '👋': 'bi-hand-wave',
+    '📚': 'bi-journals',
+    '📖': 'bi-book',
+    '❓': 'bi-question-circle',
+    '📹': 'bi-camera-video',
+    '📄': 'bi-file-earmark-text',
+    '💡': 'bi-lightbulb',
+    '✅': 'bi-check-circle',
+    '❌': 'bi-x-circle',
+    '🔒': 'bi-lock',
+    '📋': 'bi-card-checklist',
+    '➤': 'bi-send',
+    '⚙': 'bi-gear',
+    '⚙️': 'bi-gear',
+    '🌟': 'bi-stars',
+    '👍': 'bi-hand-thumbs-up',
+    '⏳': 'bi-hourglass-split',
+    '🚧': 'bi-cone-striped',
+    '😊': 'bi-emoji-smile',
+    '🔔': 'bi-bell',
+    '📝': 'bi-pencil-square'
+  };
+
+  function getIconClass(char) {
+    return iconByEmoji[char] || 'bi-circle';
+  }
+
+  function replaceTextNode(textNode) {
+    const text = textNode.nodeValue;
+    if (!text || !emojiRegex.test(text)) return;
+    emojiRegex.lastIndex = 0;
+
+    const frag = document.createDocumentFragment();
+    let lastIndex = 0;
+    let match;
+
+    while ((match = emojiRegex.exec(text)) !== null) {
+      const index = match.index;
+      const char = match[0];
+
+      if (index > lastIndex) {
+        frag.appendChild(document.createTextNode(text.slice(lastIndex, index)));
+      }
+
+      const icon = document.createElement('i');
+      icon.className = `emoji-icon bi ${getIconClass(char)}`;
+      icon.setAttribute('aria-hidden', 'true');
+      frag.appendChild(icon);
+      lastIndex = index + char.length;
+    }
+
+    if (lastIndex < text.length) {
+      frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+    }
+
+    textNode.parentNode.replaceChild(frag, textNode);
+  }
+
+  function walkAndReplace(root) {
+    if (!root || root.nodeType !== Node.ELEMENT_NODE) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const parentTag = node.parentElement && node.parentElement.tagName;
+        if (parentTag === 'SCRIPT' || parentTag === 'STYLE') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+
+    const nodes = [];
+    let current = walker.nextNode();
+    while (current) {
+      nodes.push(current);
+      current = walker.nextNode();
+    }
+    nodes.forEach(replaceTextNode);
+  }
+
+  function runEmojiToIconPass() {
+    walkAndReplace(document.body);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    runEmojiToIconPass();
+  });
+})();
+</script>
+</body>
 </html>
-
-
-
-
-
-
 
 
 

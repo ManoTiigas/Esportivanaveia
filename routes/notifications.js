@@ -37,9 +37,14 @@ router.post('/read-all', authMiddleware, async (req, res) => {
     const unreadDocs = snap.docs.filter(doc => doc.data().is_read !== true);
 
     if (unreadDocs.length) {
-      const batch = db.batch();
-      unreadDocs.forEach(doc => batch.update(doc.ref, { is_read: true }));
-      await batch.commit();
+      const CHUNK_SIZE = 400;
+      const batches = [];
+      for (let i = 0; i < unreadDocs.length; i += CHUNK_SIZE) {
+        const batch = db.batch();
+        unreadDocs.slice(i, i + CHUNK_SIZE).forEach(doc => batch.update(doc.ref, { is_read: true }));
+        batches.push(batch.commit());
+      }
+      await Promise.all(batches);
     }
 
     res.json({ success: true });

@@ -4,6 +4,7 @@ const router  = express.Router();
 const { db, getNextId } = require('../db');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 const { createNotificationsForUsers } = require('../utils/notifications');
+const { normalizeId, toNumber } = require('../utils/firestore');
 
 function mapPhase(id, p) {
   return {
@@ -12,7 +13,7 @@ function mapPhase(id, p) {
     description: p.description,
     icon:        p.icon,
     color:       p.color,
-    orderIndex:  Number(p.order_index) || 0,
+    orderIndex:  toNumber(p.order_index),
     isActive:    !!p.is_active,
     isLocked:    !!p.is_locked
   };
@@ -21,14 +22,14 @@ function mapPhase(id, p) {
 function sortPhases(phases) {
   return [...phases].sort((a, b) => {
     if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
-    return Number(a.id) - Number(b.id);
+    return toNumber(a.id) - toNumber(b.id);
   });
 }
 
 async function getNextPhaseOrderIndex() {
   const snap = await db.collection('phases').get();
   return snap.docs.reduce((max, doc) => {
-    return Math.max(max, Number(doc.data().order_index) || 0);
+    return Math.max(max, toNumber(doc.data().order_index));
   }, 0) + 1;
 }
 
@@ -39,7 +40,7 @@ async function getActiveOperatorIds() {
 
   return snap.docs
     .filter(doc => doc.data().is_active !== false)
-    .map(doc => doc.id);
+    .map(doc => normalizeId(doc.id));
 }
 // GET /api/phases
 router.get('/', authMiddleware, async (req, res) => {
@@ -62,8 +63,8 @@ router.post('/', adminMiddleware, async (req, res) => {
     const { title, description, icon = '📚', color = '#00C2FF', orderIndex = 0, isLocked = false } = req.body;
     if (!title) return res.status(400).json({ success: false, message: 'Título é obrigatório' });
 
-    const normalizedOrderIndex = Number(orderIndex) > 0
-      ? Number(orderIndex)
+    const normalizedOrderIndex = toNumber(orderIndex) > 0
+      ? toNumber(orderIndex)
       : await getNextPhaseOrderIndex();
     const newId = await getNextId('phases');
     await db.collection('phases').doc(String(newId)).set({
@@ -74,7 +75,7 @@ router.post('/', adminMiddleware, async (req, res) => {
       order_index:  normalizedOrderIndex,
       is_active:    true,
       is_locked:    !!isLocked,
-      created_by:   req.user.id,
+      created_by:   normalizeId(req.user.id),
       created_at:   new Date().toISOString()
     });
 
@@ -141,4 +142,3 @@ router.delete('/:id', adminMiddleware, async (req, res) => {
 });
 
 module.exports = router;
-

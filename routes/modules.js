@@ -2,17 +2,18 @@ const express = require('express');
 const router = express.Router();
 const { db, getNextId } = require('../db');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
+const { deleteRefsInChunks, normalizeId, toInt, toNumber } = require('../utils/firestore');
 
 function mapModule(id, moduleData) {
   return {
     id,
     phaseId: moduleData.phase_id,
     phaseTitle: moduleData.phase_title || '',
-    phaseDisplayOrder: Number(moduleData.phase_display_order) || 0,
+    phaseDisplayOrder: toNumber(moduleData.phase_display_order),
     title: moduleData.title,
     description: moduleData.description,
     content: moduleData.content,
-    orderIndex: Number(moduleData.order_index) || 0,
+    orderIndex: toNumber(moduleData.order_index),
     isActive: !!moduleData.is_active,
     videoUrl: moduleData.video_url || null,
     pdfUrl: moduleData.pdf_url || null
@@ -23,13 +24,13 @@ function sortModules(modules) {
   return [...modules].sort((a, b) => {
     if (a.phaseId !== b.phaseId) return (a.phaseId || 0) - (b.phaseId || 0);
     if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
-    return Number(a.id) - Number(b.id);
+    return toNumber(a.id) - toNumber(b.id);
   });
 }
 
 async function getUserProgressByModule(userId, phaseId, modules = []) {
-  const userIdStr = String(userId);
-  const moduleIdsInPhase = new Set(modules.map(module => String(module.id)));
+  const userIdStr = normalizeId(userId);
+  const moduleIdsInPhase = new Set(modules.map(module => normalizeId(module.id)));
 
   const [progressSnap, quizAttemptsSnap, simulatorAttemptsSnap, simulatorsSnap] = await Promise.all([
     db.collection('user_progress')
@@ -46,15 +47,15 @@ async function getUserProgressByModule(userId, phaseId, modules = []) {
 
   const simulatorToModuleMap = simulatorsSnap.docs.reduce((acc, doc) => {
     const data = doc.data() || {};
-    acc[String(doc.id)] = String(data.module_id);
+    acc[normalizeId(doc.id)] = normalizeId(data.module_id);
     return acc;
   }, {});
 
   const progressByModule = progressSnap.docs.reduce((acc, doc) => {
     const progress = doc.data() || {};
-    if (phaseId && Number(progress.phase_id) !== Number(phaseId)) return acc;
+    if (phaseId && toNumber(progress.phase_id) !== toNumber(phaseId)) return acc;
 
-    const moduleId = String(progress.module_id);
+    const moduleId = normalizeId(progress.module_id);
     if (moduleIdsInPhase.size && !moduleIdsInPhase.has(moduleId)) return acc;
 
     acc[moduleId] = {
@@ -66,7 +67,7 @@ async function getUserProgressByModule(userId, phaseId, modules = []) {
 
   quizAttemptsSnap.docs.forEach(doc => {
     const attempt = doc.data() || {};
-    const moduleId = String(attempt.module_id);
+    const moduleId = normalizeId(attempt.module_id);
     if (moduleIdsInPhase.size && !moduleIdsInPhase.has(moduleId)) return;
 
     progressByModule[moduleId] = {
@@ -78,7 +79,7 @@ async function getUserProgressByModule(userId, phaseId, modules = []) {
 
   simulatorAttemptsSnap.docs.forEach(doc => {
     const attempt = doc.data() || {};
-    const moduleId = simulatorToModuleMap[String(attempt.simulator_id)];
+    const moduleId = simulatorToModuleMap[normalizeId(attempt.simulator_id)];
     if (!moduleId) return;
     if (moduleIdsInPhase.size && !moduleIdsInPhase.has(moduleId)) return;
 
@@ -97,14 +98,14 @@ function attachModuleAvailability(modules, progressByModule, isAdmin) {
     return modules.map(module => ({
       ...module,
       isUnlocked: true,
-      isCompleted: !!progressByModule[String(module.id)]?.simulatorCompleted
+      isCompleted: !!progressByModule[normalizeId(module.id)]?.simulatorCompleted
     }));
   }
 
   return modules.map((module, index) => {
-    const currentProgress = progressByModule[String(module.id)] || {};
+    const currentProgress = progressByModule[normalizeId(module.id)] || {};
     const previousModule = index > 0 ? modules[index - 1] : null;
-    const previousProgress = previousModule ? (progressByModule[String(previousModule.id)] || {}) : null;
+    const previousProgress = previousModule ? (progressByModule[normalizeId(previousModule.id)] || {}) : null;
     const isCompleted = currentProgress.simulatorCompleted === true;
     const isUnlocked = isCompleted || index === 0 || previousProgress?.simulatorCompleted === true;
 
@@ -124,17 +125,8 @@ async function getNextModuleOrderIndex(phaseId) {
     .get();
 
   return snap.docs.reduce((max, doc) => {
-    return Math.max(max, Number(doc.data().order_index) || 0);
+    return Math.max(max, toNumber(doc.data().order_index));
   }, 0) + 1;
-}
-
-async function deleteDocsByRefs(refs) {
-  const chunkSize = 400;
-  for (let i = 0; i < refs.length; i += chunkSize) {
-    const batch = db.batch();
-    refs.slice(i, i + chunkSize).forEach(ref => batch.delete(ref));
-    await batch.commit();
-  }
 }
 
 router.get('/', authMiddleware, async (req, res) => {
@@ -142,7 +134,7 @@ router.get('/', authMiddleware, async (req, res) => {
     const { phaseId } = req.query;
 
     if (phaseId) {
-      const phaseIdInt = parseInt(phaseId, 10);
+      const phaseIdInt = toInt(phaseId);
       const snap = await db.collection('modules')
         .where('phase_id', '==', phaseIdInt)
         .get();
@@ -151,7 +143,7 @@ router.get('/', authMiddleware, async (req, res) => {
       const phaseTitle = phaseDoc.exists ? phaseDoc.data().title : '';
       const modules = snap.docs
         .map(doc => mapModule(doc.id, { ...doc.data(), phase_title: phaseTitle }))
-        .sort((a, b) => a.orderIndex - b.orderIndex || Number(a.id) - Number(b.id))
+        .sort((a, b) => a.orderIndex - b.orderIndex || toNumber(a.id) - toNumber(b.id))
         .map((module, index) => ({
           ...module,
           displayOrder: index + 1
@@ -173,9 +165,9 @@ router.get('/', authMiddleware, async (req, res) => {
       .map(doc => ({
         id: doc.id,
         title: doc.data().title,
-        orderIndex: Number(doc.data().order_index) || 0
+        orderIndex: toNumber(doc.data().order_index)
       }))
-      .sort((a, b) => a.orderIndex - b.orderIndex || Number(a.id) - Number(b.id));
+      .sort((a, b) => a.orderIndex - b.orderIndex || toNumber(a.id) - toNumber(b.id));
 
     sortedPhases.forEach((phase, index) => {
       phaseTitles[phase.id] = phase.title;
@@ -192,7 +184,7 @@ router.get('/', authMiddleware, async (req, res) => {
 
     const displayOrderByPhase = {};
     const modules = sortedModules.map(module => {
-      const phaseKey = String(module.phaseId || '');
+      const phaseKey = normalizeId(module.phaseId || '');
       displayOrderByPhase[phaseKey] = (displayOrderByPhase[phaseKey] || 0) + 1;
       return {
         ...module,
@@ -214,9 +206,9 @@ router.post('/', adminMiddleware, async (req, res) => {
       return res.status(400).json({ success: false, message: 'phaseId e title sao obrigatorios' });
     }
 
-    const phaseIdInt = parseInt(phaseId, 10);
-    const normalizedOrderIndex = Number(orderIndex) > 0
-      ? Number(orderIndex)
+    const phaseIdInt = toInt(phaseId);
+    const normalizedOrderIndex = toNumber(orderIndex) > 0
+      ? toNumber(orderIndex)
       : await getNextModuleOrderIndex(phaseIdInt);
     const newId = await getNextId('modules');
     await db.collection('modules').doc(String(newId)).set({
@@ -228,7 +220,7 @@ router.post('/', adminMiddleware, async (req, res) => {
       is_active: true,
       video_url: null,
       pdf_url: null,
-      created_by: String(req.user.id),
+      created_by: normalizeId(req.user.id),
       created_at: new Date().toISOString()
     });
 
@@ -251,8 +243,8 @@ router.put('/:id', adminMiddleware, async (req, res) => {
     if (description !== undefined) fields.description = description;
     if (content !== undefined) fields.content = content;
     if (isActive !== undefined) fields.is_active = !!isActive;
-    if (phaseId !== undefined) fields.phase_id = parseInt(phaseId, 10);
-    if (orderIndex !== undefined) fields.order_index = Number(orderIndex) || 0;
+    if (phaseId !== undefined) fields.phase_id = toInt(phaseId);
+    if (orderIndex !== undefined) fields.order_index = toNumber(orderIndex);
     if (videoUrl !== undefined) fields.video_url = videoUrl || null;
     if (pdfUrl !== undefined) fields.pdf_url = pdfUrl || null;
 
@@ -270,12 +262,12 @@ router.put('/:id', adminMiddleware, async (req, res) => {
 
 router.delete('/:id', adminMiddleware, async (req, res) => {
   try {
-    const moduleId = String(req.params.id);
+    const moduleId = normalizeId(req.params.id);
     const moduleRef = db.collection('modules').doc(moduleId);
     const moduleDoc = await moduleRef.get();
     if (!moduleDoc.exists) return res.status(404).json({ success: false, message: 'Modulo nao encontrado' });
 
-    const moduleIdInt = parseInt(moduleId, 10);
+    const moduleIdInt = toInt(moduleId);
     const quizQuestionsSnap = await db.collection('quiz_questions').where('module_id', '==', moduleIdInt).get();
     const quizAttemptsSnap = await db.collection('quiz_attempts').where('module_id', '==', moduleIdInt).get();
     const progressSnap = await db.collection('user_progress').where('module_id', '==', moduleIdInt).get();
@@ -300,7 +292,7 @@ router.delete('/:id', adminMiddleware, async (req, res) => {
       quizAnswerRefs.push(...answersSnap.docs.map(doc => doc.ref));
     }
 
-    await deleteDocsByRefs([
+    await deleteRefsInChunks(db, [
       ...quizQuestionsSnap.docs.map(doc => doc.ref),
       ...quizAttemptsSnap.docs.map(doc => doc.ref),
       ...quizAnswerRefs,
@@ -333,5 +325,4 @@ router.post('/:id/toggle', adminMiddleware, async (req, res) => {
 });
 
 module.exports = router;
-
 

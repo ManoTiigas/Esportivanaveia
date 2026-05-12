@@ -1,40 +1,47 @@
-// middleware/auth.js — Verificação de token JWT
 const jwt = require('jsonwebtoken');
-const { db } = require('../db');
+
+const appConfig = require('../config/app');
+const { getUserById } = require('../services/userService');
 
 async function authMiddleware(req, res, next) {
-  const header = req.headers['authorization'];
-  if (!header || !header.startsWith('Bearer ')) {
-    return res.status(401).json({ success: false, message: 'Token não fornecido' });
+  const authorizationHeader = req.headers.authorization;
+
+  if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false, message: 'Token nao fornecido' });
   }
 
-  const token = header.split(' ')[1];
+  const token = authorizationHeader.split(' ')[1];
+
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userDoc = await db.collection('users').doc(String(decoded.id)).get();
-    if (!userDoc.exists) {
-      return res.status(401).json({ success: false, message: 'Usuário não encontrado' });
+    const decodedToken = jwt.verify(token, appConfig.auth.jwtSecret);
+    const user = await getUserById(decodedToken.id);
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Usuario nao encontrado' });
     }
 
-    if (userDoc.data().is_active === false) {
-      return res.status(403).json({ success: false, message: 'Usuário desativado' });
+    if (user.is_active === false) {
+      return res.status(403).json({ success: false, message: 'Usuario desativado' });
     }
 
-    // Re-valida a role diretamente do banco para evitar escalada de privilégio via JWT stale
-    req.user = { ...decoded, role: userDoc.data().role };
-    next();
-  } catch (err) {
-    return res.status(401).json({ success: false, message: 'Token inválido ou expirado' });
+    req.user = { ...decodedToken, role: user.role };
+    return next();
+  } catch (error) {
+    return res.status(401).json({ success: false, message: 'Token invalido ou expirado' });
   }
 }
 
 function adminMiddleware(req, res, next) {
   authMiddleware(req, res, () => {
     if (req.user.role !== 'ADMIN') {
-      return res.status(403).json({ success: false, message: 'Acesso negado — apenas administradores' });
+      return res.status(403).json({ success: false, message: 'Acesso negado: apenas administradores' });
     }
-    next();
+
+    return next();
   });
 }
 
-module.exports = { authMiddleware, adminMiddleware };
+module.exports = {
+  adminMiddleware,
+  authMiddleware,
+};

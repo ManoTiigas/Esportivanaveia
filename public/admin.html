@@ -6,6 +6,7 @@
 <title>Admin - Esportiva na Veia</title>
 <link rel="icon" href="/assets/logo-esportiva-icon.svg" type="image/svg+xml">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="admin.css">
 </head>
 <body>
@@ -24,33 +25,33 @@
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">Visão Geral</div>
-      <div class="nav-item ativo" onclick="irPagina('dashboard')">
+      <div class="nav-item ativo" data-page-target="dashboard">
         <span class="nav-icon">📊</span> Dashboard
       </div>
-      <div class="nav-item" onclick="irPagina('ranking')">
+      <div class="nav-item" data-page-target="ranking">
         <span class="nav-icon">🏆</span> Ranking
       </div>
       <div class="nav-section">Gerenciamento</div>
-      <div class="nav-item" onclick="irPagina('operadores')">
+      <div class="nav-item" data-page-target="operadores">
         <span class="nav-icon">👥</span> Operadores
       </div>
-      <div class="nav-item" onclick="irPagina('resultados')">
+      <div class="nav-item" data-page-target="resultados">
         <span class="nav-icon">📋</span> Resultados
       </div>
       <div class="nav-section">Conteúdo</div>
-      <div class="nav-item" onclick="irPagina('modulos')">
+      <div class="nav-item" data-page-target="modulos">
         <span class="nav-icon">📚</span> Módulos & Fases
       </div>
-      <div class="nav-item" onclick="irPagina('quiz')">
+      <div class="nav-item" data-page-target="quiz">
         <span class="nav-icon">❓</span> Questões do Quiz
       </div>
-      <div class="nav-item" onclick="irPagina('simuladores')">
+      <div class="nav-item" data-page-target="simuladores">
         <span class="nav-icon">🎭</span> Simuladores
       </div>
-      <div class="nav-item" onclick="irPagina('respostas')">
+      <div class="nav-item" data-page-target="respostas">
         <span class="nav-icon">💬</span> Respostas
       </div>
-      <div class="nav-item" onclick="irPagina('usuarios')">
+      <div class="nav-item" data-page-target="usuarios">
         <span class="nav-icon">➕</span> Criar Usuário
       </div>
     </nav>
@@ -61,7 +62,7 @@
           <div class="name" id="adm-nome">Administrador</div>
           <div class="role">administrator</div>
         </div>
-        <button class="btn-logout" title="Sair" onclick="logout()">⏻</button>
+        <button class="btn-logout" id="btn-logout" title="Sair">⏻</button>
       </div>
     </div>
   </aside>
@@ -71,7 +72,7 @@
     <div class="topbar">
       <div class="topbar-title" id="topbar-title">Dashboard</div>
       <div class="topbar-actions">
-        <button class="btn btn-secondary btn-sm" onclick="atualizarPaginaAtual()">↻ Atualizar</button>
+        <button class="btn btn-secondary btn-sm" data-fn="atualizarPaginaAtual">↻ Atualizar</button>
       </div>
     </div>
 
@@ -118,7 +119,7 @@
         <div class="card">
           <div class="card-head">
             <div class="card-title">🏆 Top 5 Operadores</div>
-            <button class="btn btn-secondary btn-sm" onclick="irPagina('ranking')">Ver todos →</button>
+            <button class="btn btn-secondary btn-sm" data-fn="irPagina" data-a1="ranking">Ver todos →</button>
           </div>
           <div class="rank-list">
           </div>
@@ -197,7 +198,7 @@
         <div class="toolbar">
           <div class="search-wrap">
             <span class="search-icon">🔍</span>
-            <input type="text" id="rank-search" placeholder="Buscar operador..." oninput="filtrarRanking(this.value)">
+            <input type="text" id="rank-search" placeholder="Buscar operador..." data-ifn="filtrarRanking" data-i-val="1">
           </div>
           <button class="btn btn-secondary btn-sm">⬇ Exportar CSV</button>
         </div>
@@ -215,14 +216,14 @@
         <div class="toolbar">
           <div class="search-wrap">
             <span class="search-icon">🔍</span>
-            <input type="text" id="op-search" placeholder="Buscar por nome ou e-mail..." oninput="filtrarOperadores()">
+            <input type="text" id="op-search" placeholder="Buscar por nome ou e-mail..." data-ifn="filtrarOperadores">
           </div>
-          <select class="filter-sel" id="op-filter" onchange="filtrarOperadores()">
+          <select class="filter-sel" id="op-filter" data-cfn="filtrarOperadores">
             <option value="">Todos os status</option>
             <option value="ativo">Ativos</option>
             <option value="bloqueado">Bloqueados</option>
           </select>
-          <button class="btn btn-primary btn-sm" onclick="abrirModal('modal-novo-op')">+ Novo Operador</button>
+          <button class="btn btn-primary btn-sm" data-fn="abrirModal" data-a1="modal-novo-op">+ Novo Operador</button>
           <button class="btn btn-secondary btn-sm">⬇ CSV</button>
         </div>
         <div class="table-wrap">
@@ -254,9 +255,9 @@
         <div class="toolbar">
           <div class="search-wrap">
             <span class="search-icon">🔍</span>
-            <input type="text" id="res-search" placeholder="Buscar operador..." oninput="filtrarResultados()">
+            <input type="text" id="res-search" placeholder="Buscar operador..." data-ifn="filtrarResultados">
           </div>
-          <select class="filter-sel" id="res-mod" onchange="filtrarResultados()">
+          <select class="filter-sel" id="res-mod" data-cfn="filtrarResultados">
             <option value="">Todos os módulos</option>
             <option value="0">Módulo 1 — Bom Atendimento</option>
             <option value="1">Módulo 2 — Postura</option>
@@ -292,7 +293,7 @@
       <div class="card" style="margin-bottom:20px">
         <div class="card-head">
           <div class="card-title">📁 Fases</div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModal('modal-nova-fase')">+ Nova Fase</button>
+          <button class="btn btn-primary btn-sm" data-fn="abrirModal" data-a1="modal-nova-fase">+ Nova Fase</button>
         </div>
         <div class="table-wrap"><table>
           <thead><tr><th>Ordem</th><th>Título</th><th>Ícone</th><th>Status</th><th>Ações</th></tr></thead>
@@ -302,10 +303,10 @@
       <div class="card">
         <div class="card-head">
           <div class="card-title">📄 Módulos</div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModalModulo()">+ Novo Módulo</button>
+          <button class="btn btn-primary btn-sm" data-fn="abrirModalModulo">+ Novo Módulo</button>
         </div>
         <div class="toolbar">
-          <select class="filter-sel" id="mod-filtro-fase" onchange="renderModulosTabela()">
+          <select class="filter-sel" id="mod-filtro-fase" data-cfn="renderModulosTabela">
             <option value="">Todas as fases</option>
           </select>
         </div>
@@ -324,10 +325,10 @@
       <div class="card">
         <div class="card-head">
           <div class="card-title">❓ Questões</div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModal('modal-nova-questao')">+ Nova Questão</button>
+          <button class="btn btn-primary btn-sm" data-fn="abrirModal" data-a1="modal-nova-questao">+ Nova Questão</button>
         </div>
         <div class="toolbar">
-          <select class="filter-sel" id="quiz-filtro-mod" onchange="renderQuestoes()">
+          <select class="filter-sel" id="quiz-filtro-mod" data-cfn="renderQuestoes">
             <option value="">Todos os módulos</option>
           </select>
         </div>
@@ -358,16 +359,16 @@
             </div>
             <div class="mfield"><label>Cor do avatar</label>
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px" id="nu-cores">
-                <div class="cor-opt selected" data-cor="#00C2FF" style="background:#00C2FF" onclick="selecionarCor(this)"></div>
-                <div class="cor-opt" data-cor="#FF6B35" style="background:#FF6B35" onclick="selecionarCor(this)"></div>
-                <div class="cor-opt" data-cor="#22d98a" style="background:#22d98a" onclick="selecionarCor(this)"></div>
-                <div class="cor-opt" data-cor="#f5c542" style="background:#f5c542" onclick="selecionarCor(this)"></div>
-                <div class="cor-opt" data-cor="#8b5cf6" style="background:#8b5cf6" onclick="selecionarCor(this)"></div>
-                <div class="cor-opt" data-cor="#f05252" style="background:#f05252" onclick="selecionarCor(this)"></div>
+                <div class="cor-opt selected" data-cor="#00C2FF" style="background:#00C2FF" data-fn="selecionarCor" data-uses-el="1"></div>
+                <div class="cor-opt" data-cor="#FF6B35" style="background:#FF6B35" data-fn="selecionarCor" data-uses-el="1"></div>
+                <div class="cor-opt" data-cor="#22d98a" style="background:#22d98a" data-fn="selecionarCor" data-uses-el="1"></div>
+                <div class="cor-opt" data-cor="#f5c542" style="background:#f5c542" data-fn="selecionarCor" data-uses-el="1"></div>
+                <div class="cor-opt" data-cor="#8b5cf6" style="background:#8b5cf6" data-fn="selecionarCor" data-uses-el="1"></div>
+                <div class="cor-opt" data-cor="#f05252" style="background:#f05252" data-fn="selecionarCor" data-uses-el="1"></div>
               </div>
             </div>
             <div id="nu-msg" style="font-size:13px;margin-bottom:12px;min-height:20px"></div>
-            <button class="btn btn-primary" style="width:100%" onclick="criarUsuario()">Criar Usuário</button>
+            <button class="btn btn-primary" style="width:100%" data-fn="criarUsuario">Criar Usuário</button>
           </div>
         </div>
         <div class="card">
@@ -388,10 +389,10 @@
       <div class="card">
         <div class="card-head">
           <div class="card-title">🎭 Cenários Cadastrados</div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModal('modal-novo-sim')">+ Novo Simulador</button>
+          <button class="btn btn-primary btn-sm" data-fn="abrirModal" data-a1="modal-novo-sim">+ Novo Simulador</button>
         </div>
         <div class="toolbar">
-          <select class="filter-sel" id="sim-filtro-mod" onchange="renderSimuladores()">
+          <select class="filter-sel" id="sim-filtro-mod" data-cfn="renderSimuladores">
             <option value="">Todos os módulos</option>
           </select>
         </div>
@@ -412,10 +413,10 @@
           <div class="card-title">💬 Tentativas de Simulador</div>
         </div>
         <div class="toolbar" style="flex-wrap:wrap;gap:8px">
-          <select class="filter-sel" id="resp-filtro-sim" onchange="carregarRespostas()" style="min-width:180px">
+          <select class="filter-sel" id="resp-filtro-sim" data-cfn="carregarRespostas" style="min-width:180px">
             <option value="">Todos os simuladores</option>
           </select>
-          <select class="filter-sel" id="resp-filtro-user" onchange="carregarRespostas()" style="min-width:160px">
+          <select class="filter-sel" id="resp-filtro-user" data-cfn="carregarRespostas" style="min-width:160px">
             <option value="">Todos os operadores</option>
           </select>
         </div>
@@ -438,7 +439,7 @@
   <div class="modal">
     <div class="modal-head">
       <h3>Novo Operador</h3>
-      <button class="modal-close" onclick="fecharModal('modal-novo-op')">✕</button>
+      <button class="modal-close" data-fn="fecharModal" data-a1="modal-novo-op">✕</button>
     </div>
     <div class="mfield">
       <label>Nome completo</label>
@@ -461,8 +462,8 @@
     </div>
     <div id="nop-msg" style="font-size:13px;min-height:18px;margin-bottom:4px"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="fecharModal('modal-novo-op')">Cancelar</button>
-      <button class="btn btn-primary" onclick="criarOperadorModal()">Criar conta</button>
+      <button class="btn btn-secondary" data-fn="fecharModal" data-a1="modal-novo-op">Cancelar</button>
+      <button class="btn btn-primary" data-fn="criarOperadorModal">Criar conta</button>
     </div>
   </div>
 </div>
@@ -475,7 +476,7 @@
   <div class="modal">
     <div class="modal-head">
       <h3>Editar Operador</h3>
-      <button class="modal-close" onclick="fecharModal('modal-editar-op')">✕</button>
+      <button class="modal-close" data-fn="fecharModal" data-a1="modal-editar-op">✕</button>
     </div>
     <div class="mfield">
       <label>Nome completo</label>
@@ -494,8 +495,8 @@
     </div>
     <input type="hidden" id="eop-email" />
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="fecharModal('modal-editar-op')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarEdicao()">Salvar</button>
+      <button class="btn btn-secondary" data-fn="fecharModal" data-a1="modal-editar-op">Cancelar</button>
+      <button class="btn btn-primary" data-fn="salvarEdicao">Salvar</button>
     </div>
   </div>
 </div>
@@ -504,7 +505,7 @@
 <!-- MODAL: NOVA FASE -->
 <div class="modal-overlay" id="modal-nova-fase">
   <div class="modal">
-    <div class="modal-head"><h3>Nova Fase</h3><button class="modal-close" onclick="fecharModal('modal-nova-fase')">✕</button></div>
+    <div class="modal-head"><h3>Nova Fase</h3><button class="modal-close" data-fn="fecharModal" data-a1="modal-nova-fase">✕</button></div>
     <div class="mfield"><label>Título</label><input type="text" id="nf-titulo" placeholder="Ex: Fundamentos do Atendimento" /></div>
     <div class="mfield"><label>Descrição</label><textarea id="nf-desc" placeholder="Descreva esta fase..." rows="3" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px;resize:vertical"></textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -513,8 +514,8 @@
     </div>
     <div class="mfield"><label>Ordem</label><input type="number" id="nf-ordem" value="0" min="0" /></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="fecharModal('modal-nova-fase')">Cancelar</button>
-      <button class="btn btn-primary" onclick="criarFase()">Criar Fase</button>
+      <button class="btn btn-secondary" data-fn="fecharModal" data-a1="modal-nova-fase">Cancelar</button>
+      <button class="btn btn-primary" data-fn="criarFase">Criar Fase</button>
     </div>
   </div>
 </div>
@@ -522,7 +523,7 @@
 <!-- MODAL: NOVO MÓDULO -->
 <div class="modal-overlay" id="modal-novo-modulo">
   <div class="modal" style="max-width:600px">
-    <div class="modal-head"><h3 id="modal-modulo-titulo">Novo Módulo</h3><button class="modal-close" onclick="fecharModalModulo()">✕</button></div>
+    <div class="modal-head"><h3 id="modal-modulo-titulo">Novo Módulo</h3><button class="modal-close" data-fn="fecharModalModulo">✕</button></div>
     <div class="mfield"><label>Fase</label><select id="nm-fase"></select></div>
     <div class="mfield"><label>Título</label><input type="text" id="nm-titulo" placeholder="Ex: Como lidar com reclamações" /></div>
     <div class="mfield"><label>Descrição</label><textarea id="nm-desc" placeholder="Descrição breve do módulo..." rows="2" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px;resize:vertical"></textarea></div>
@@ -541,13 +542,13 @@
         <label>📹 Vídeo (.mp4, .webm, .mov — máx 500MB)</label>
         <div id="nm-video-preview" style="display:none;margin-bottom:10px">
           <video id="nm-video-player" controls style="width:100%;border-radius:8px;background:#000;max-height:200px"></video>
-          <button class="btn btn-danger btn-sm" style="margin-top:6px;width:100%" onclick="removerMidia('video')">🗑 Remover vídeo</button>
+          <button class="btn btn-danger btn-sm" style="margin-top:6px;width:100%" data-fn="removerMidia" data-a1="video">🗑 Remover vídeo</button>
         </div>
         <div id="nm-video-upload">
-          <label class="upload-area" id="nm-video-label" onclick="document.getElementById('nm-video-file').click()">
+          <label class="upload-area" id="nm-video-label" data-fn="clickVideoInput">
             <span id="nm-video-text">🎬 Clique para selecionar vídeo</span>
           </label>
-          <input type="file" id="nm-video-file" accept=".mp4,.webm,.mov,.avi,.ogg" style="display:none" onchange="previewVideo(this)">
+          <input type="file" id="nm-video-file" accept=".mp4,.webm,.mov,.avi,.ogg" style="display:none" data-cfn="previewVideo" data-uses-el="1">
           <div id="nm-video-progress" style="display:none;margin-top:8px">
             <div style="height:6px;background:var(--border2);border-radius:3px;overflow:hidden">
               <div id="nm-video-bar" style="height:100%;background:var(--azul);border-radius:3px;width:0%;transition:width .2s"></div>
@@ -568,13 +569,13 @@
               <a id="nm-pdf-link" href="#" target="_blank" style="font-size:11px;color:var(--azul)">Visualizar PDF</a>
             </div>
           </div>
-          <button class="btn btn-danger btn-sm" style="margin-top:6px;width:100%" onclick="removerMidia('pdf')">🗑 Remover PDF</button>
+          <button class="btn btn-danger btn-sm" style="margin-top:6px;width:100%" data-fn="removerMidia" data-a1="pdf">🗑 Remover PDF</button>
         </div>
         <div id="nm-pdf-upload">
-          <label class="upload-area" id="nm-pdf-label" onclick="document.getElementById('nm-pdf-file').click()">
+          <label class="upload-area" id="nm-pdf-label" data-fn="clickPdfInput">
             <span id="nm-pdf-text">📄 Clique para selecionar PDF</span>
           </label>
-          <input type="file" id="nm-pdf-file" accept=".pdf" style="display:none" onchange="previewPdf(this)">
+          <input type="file" id="nm-pdf-file" accept=".pdf" style="display:none" data-cfn="previewPdf" data-uses-el="1">
           <div id="nm-pdf-progress" style="display:none;margin-top:8px">
             <div style="height:6px;background:var(--border2);border-radius:3px;overflow:hidden">
               <div id="nm-pdf-bar" style="height:100%;background:var(--roxo);border-radius:3px;width:0%;transition:width .2s"></div>
@@ -586,8 +587,8 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="fecharModalModulo()">Cancelar</button>
-      <button class="btn btn-primary" id="nm-btn-salvar" onclick="criarModulo()">Criar Módulo</button>
+      <button class="btn btn-secondary" data-fn="fecharModalModulo">Cancelar</button>
+      <button class="btn btn-primary" id="nm-btn-salvar" data-fn="criarModulo">Criar Módulo</button>
     </div>
   </div>
 </div>
@@ -595,7 +596,7 @@
 <!-- MODAL: NOVA QUESTÃO -->
 <div class="modal-overlay" id="modal-nova-questao">
   <div class="modal" style="max-width:620px">
-    <div class="modal-head"><h3>Nova Questão</h3><button class="modal-close" onclick="fecharModal('modal-nova-questao')">✕</button></div>
+    <div class="modal-head"><h3>Nova Questão</h3><button class="modal-close" data-fn="fecharModal" data-a1="modal-nova-questao">✕</button></div>
     <div class="mfield"><label>Módulo</label><select id="nq-modulo"></select></div>
     <div class="mfield"><label>Pergunta</label><textarea id="nq-pergunta" rows="3" placeholder="Digite a pergunta..." style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px;resize:vertical"></textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -612,7 +613,7 @@
         </select>
       </div>
       <div class="mfield"><label>Dificuldade</label>
-        <select id="nq-dificuldade" onchange="atualizarPontosDificuldade()">
+        <select id="nq-dificuldade" data-cfn="atualizarPontosDificuldade">
           <option value="2">😊 Fácil — 2 pts</option>
           <option value="3" selected>😐 Médio — 3 pts</option>
           <option value="5">😤 Difícil — 5 pts</option>
@@ -627,8 +628,8 @@
       <textarea id="nq-explicacao" rows="2" placeholder="Por que essa é a resposta certa..." style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px;resize:vertical"></textarea>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="fecharModal('modal-nova-questao')">Cancelar</button>
-      <button class="btn btn-primary" onclick="criarQuestao()">Salvar Questão</button>
+      <button class="btn btn-secondary" data-fn="fecharModal" data-a1="modal-nova-questao">Cancelar</button>
+      <button class="btn btn-primary" data-fn="criarQuestao">Salvar Questão</button>
     </div>
   </div>
 </div>
@@ -636,7 +637,7 @@
 <!-- MODAL: NOVO SIMULADOR -->
 <div class="modal-overlay" id="modal-novo-sim">
   <div class="modal" style="max-width:560px">
-    <div class="modal-head"><h3>Novo Simulador</h3><button class="modal-close" onclick="fecharModal('modal-novo-sim')">✕</button></div>
+    <div class="modal-head"><h3>Novo Simulador</h3><button class="modal-close" data-fn="fecharModal" data-a1="modal-novo-sim">✕</button></div>
     <div class="mfield"><label>Módulo</label>
       <select id="ns-modulo"></select>
     </div>
@@ -650,8 +651,8 @@
       <textarea id="ns-cenario" rows="4" placeholder="Ex: Olá, fiz um saque há 3 dias e ainda não recebi..." style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px;resize:vertical"></textarea>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="fecharModal('modal-novo-sim')">Cancelar</button>
-      <button class="btn btn-primary" onclick="criarSimulador()">Salvar</button>
+      <button class="btn btn-secondary" data-fn="fecharModal" data-a1="modal-novo-sim">Cancelar</button>
+      <button class="btn btn-primary" data-fn="criarSimulador">Salvar</button>
     </div>
   </div>
 </div>
@@ -659,7 +660,7 @@
 <!-- MODAL: EDITAR SIMULADOR -->
 <div class="modal-overlay" id="modal-edit-sim">
   <div class="modal" style="max-width:600px;max-height:90vh;overflow-y:auto">
-    <div class="modal-head"><h3>Editar Simulador</h3><button class="modal-close" onclick="fecharModal('modal-edit-sim')">✕</button></div>
+    <div class="modal-head"><h3>Editar Simulador</h3><button class="modal-close" data-fn="fecharModal" data-a1="modal-edit-sim">✕</button></div>
     <input type="hidden" id="es-id" />
     <div class="mfield"><label>Título</label><input type="text" id="es-titulo" /></div>
     <div class="mfield"><label>Descrição</label><input type="text" id="es-descricao" /></div>
@@ -682,13 +683,13 @@
     <div style="display:flex;gap:8px">
       <input type="text" id="es-nova-pergunta" placeholder="Ex: Quanto tempo vai demorar para resolver?" 
              style="flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--txt);font-family:var(--sans);font-size:13px"
-             onkeydown="if(event.key==='Enter'){event.preventDefault();adicionarPergunta()}" />
-      <button class="btn btn-primary btn-sm" onclick="adicionarPergunta()">+ Adicionar</button>
+             onkeydown="if(event.key==='Enter'){event.preventDefault();adicionarPergunta();}" />
+      <button class="btn btn-primary btn-sm" data-fn="adicionarPergunta">+ Adicionar</button>
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="fecharModal('modal-edit-sim')">Fechar</button>
-      <button class="btn btn-primary" onclick="salvarSimulador()">💾 Salvar</button>
+      <button class="btn btn-secondary" data-fn="fecharModal" data-a1="modal-edit-sim">Fechar</button>
+      <button class="btn btn-primary" data-fn="salvarSimulador">💾 Salvar</button>
     </div>
   </div>
 </div>
@@ -696,7 +697,7 @@
 <!-- MODAL: VER CONVERSA + AVALIAR -->
 <div class="modal-overlay" id="modal-conversa">
   <div class="modal" style="max-width:640px;max-height:90vh;overflow-y:auto">
-    <div class="modal-head"><h3 id="conv-titulo">Conversa do Operador</h3><button class="modal-close" onclick="fecharModal('modal-conversa')">✕</button></div>
+    <div class="modal-head"><h3 id="conv-titulo">Conversa do Operador</h3><button class="modal-close" data-fn="fecharModal" data-a1="modal-conversa">✕</button></div>
     <div style="font-size:12px;color:var(--txt2);margin-bottom:12px" id="conv-meta"></div>
     <div id="conv-chat" style="background:var(--bg);border-radius:10px;padding:14px;max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:16px"></div>
     <div style="border-top:1px solid var(--border2);padding-top:14px">
@@ -711,8 +712,8 @@
       </div>
       <input type="hidden" id="aval-attempt-id" />
       <div class="modal-footer" style="padding:0;border:none;margin-top:8px">
-        <button class="btn btn-secondary" onclick="fecharModal('modal-conversa')">Fechar</button>
-        <button class="btn btn-primary" onclick="salvarAvaliacao()">💾 Salvar Avaliação</button>
+        <button class="btn btn-secondary" data-fn="fecharModal" data-a1="modal-conversa">Fechar</button>
+        <button class="btn btn-primary" data-fn="salvarAvaliacao">💾 Salvar Avaliação</button>
       </div>
     </div>
   </div>
@@ -771,10 +772,59 @@ async function api(path, opts = {}) {
 }
 
 // ════════════════════════════════════════════
+// DISPATCH — substitui inline onclick/onchange/oninput
+// ════════════════════════════════════════════
+function clickVideoInput() { document.getElementById('nm-video-file').click(); }
+function clickPdfInput()   { document.getElementById('nm-pdf-file').click(); }
+function abrirModalModuloById(id) {
+  abrirModalModulo(MODULOS.find(x => String(x.id) === String(id)) || null);
+}
+
+function callAction(fn, a1, a2, el) {
+  if (typeof window[fn] !== 'function') return;
+  const usesEl = el && el.dataset.usesEl;
+  if (usesEl)                        window[fn](el);
+  else if (a2 !== undefined && a2 !== '') window[fn](a1, a2);
+  else if (a1 !== undefined && a1 !== '') window[fn](a1);
+  else                               window[fn]();
+}
+
+function setupDispatch() {
+  document.addEventListener('click', function(e) {
+    const el = e.target.closest('[data-fn]');
+    if (el) callAction(el.dataset.fn, el.dataset.a1, el.dataset.a2, el);
+  });
+  document.addEventListener('change', function(e) {
+    const el = e.target.closest('[data-cfn]');
+    if (el) {
+      if (el.dataset.usesEl) window[el.dataset.cfn]?.(el);
+      else                   window[el.dataset.cfn]?.();
+    }
+  });
+  document.addEventListener('input', function(e) {
+    const el = e.target.closest('[data-ifn]');
+    if (el) {
+      if (el.dataset.iVal) window[el.dataset.ifn]?.(el.value);
+      else                 window[el.dataset.ifn]?.();
+    }
+  });
+}
+
+// ════════════════════════════════════════════
 // ENTRAR NO APP (sem login próprio — usa token do index.html)
 // ════════════════════════════════════════════
 async function entrarNoApp(user) {
   document.getElementById('app').style.display = 'block';
+
+  bindInlineDomEvents();
+  setupInlineEventDelegation();
+  setupDispatch();
+
+  document.querySelectorAll('.nav-item[data-page-target]').forEach(n => {
+    n.addEventListener('click', () => irPagina(n.dataset.pageTarget));
+  });
+
+  document.getElementById('btn-logout').addEventListener('click', logout);
 
   const nome = user.name || user.email.split('@')[0];
   document.getElementById('adm-nome').textContent = nome;
@@ -978,8 +1028,8 @@ function renderSimuladores() {
       <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--txt2)">${esc(s.scenario)}</td>
       <td><span class="badge ${s.is_active ? 'badge-ok' : 'badge-off'}">${s.is_active ? 'Ativo' : 'Inativo'}</span></td>
       <td>
-        <button class="btn btn-secondary btn-sm" onclick="abrirEditSim(${s.id})">✏️</button>
-        <button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="deletarSim(${s.id})">🗑</button>
+        <button class="btn btn-secondary btn-sm" data-fn="abrirEditSim" data-a1="${s.id}">✏️</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:4px" data-fn="deletarSim" data-a1="${s.id}">🗑</button>
       </td>
     </tr>`).join('')
     : '<tr><td colspan="7" style="text-align:center;color:var(--txt2);padding:20px">Nenhum simulador cadastrado.</td></tr>';
@@ -1023,7 +1073,7 @@ function renderPerguntasModal(perguntas) {
     <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px">
       <span style="font-size:11px;font-weight:700;color:var(--accent);min-width:20px">${p.displayOrder || i + 1}</span>
       <span style="flex:1;font-size:13px">${esc(p.question)}</span>
-      <button class="btn btn-danger btn-sm" onclick="removerPergunta(${p.id})">🗑</button>
+      <button class="btn btn-danger btn-sm" data-fn="removerPergunta" data-a1="${p.id}">🗑</button>
     </div>`).join('');
 }
 
@@ -1137,7 +1187,7 @@ function renderRespostas() {
       <td style="font-size:13px">${esc(t.sim_title)}<br><span style="font-size:11px;color:var(--txt2)">${esc(t.module_title)}</span></td>
       <td><span style="font-weight:700;color:${scoreColor}">${t.score} / 20</span></td>
       <td style="font-size:12px;color:var(--txt2)">${dt}</td>
-      <td><button class="btn btn-secondary btn-sm" onclick="verConversa(${t.id})">👁 Ver</button></td>
+      <td><button class="btn btn-secondary btn-sm" data-fn="verConversa" data-a1="${t.id}">👁 Ver</button></td>
     </tr>`;
   }).join('')
   : '<tr><td colspan="5" style="text-align:center;color:var(--txt2);padding:24px">Nenhuma resposta encontrada.</td></tr>';
@@ -1237,12 +1287,14 @@ function irPagina(pag) {
   if (pg) pg.classList.add('ativo');
   document.getElementById('topbar-title').textContent = TITULOS[pag] || pag;
 
-  // Marca nav item ativo pelo onclick
+  // Marca nav item ativo pelo alvo normalizado da navegação
   document.querySelectorAll('.nav-item').forEach(n => {
-    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(`'${pag}'`)) {
+    if (n.dataset.pageTarget === pag) {
       n.classList.add('ativo');
     }
   });
+
+  document.querySelector('.main')?.scrollTo({ top: 0, behavior: 'auto' });
 
   if (pag === 'dashboard')   atualizarHora();
   if (pag === 'simuladores') carregarSimuladores();
@@ -1258,6 +1310,89 @@ function irPagina(pag) {
     if (typeof renderQuestoes === 'function') renderQuestoes();
   }
   if (pag === 'usuarios')    { if (typeof renderUsuariosTabela === 'function') renderUsuariosTabela(); }
+}
+
+function bindInlineDomEvents(root = document) {
+  const inlineEvents = [
+    { attr: 'onclick', event: 'click' },
+    { attr: 'onchange', event: 'change' },
+    { attr: 'oninput', event: 'input' },
+    { attr: 'onsubmit', event: 'submit' }
+  ];
+  const navRegex = /irPagina\(['"]([^'"]+)['"]\)/;
+
+  inlineEvents.forEach(({ attr, event }) => {
+    root.querySelectorAll(`[${attr}]`).forEach((el) => {
+      const code = el.getAttribute(attr);
+      if (!code) return;
+
+      const navMatch = code.match(navRegex);
+      if (navMatch?.[1]) {
+        el.dataset.pageTarget = navMatch[1];
+      }
+
+      el.dataset[`inline${event[0].toUpperCase()}${event.slice(1)}`] = code;
+      el.removeAttribute(attr);
+    });
+  });
+}
+
+function executeInlineCode(code, eventObject, element, attr) {
+  try {
+    const handler = new Function(
+      'window',
+      'document',
+      'event',
+      'element',
+      `return (function () { ${code} }).call(element);`
+    );
+    const result = handler(window, document, eventObject, element);
+    if (result === false) {
+      eventObject.preventDefault();
+      eventObject.stopPropagation();
+    }
+    return result;
+  } catch (err) {
+    console.error(`Falha ao executar handler inline para ${attr}:`, err, code);
+    return undefined;
+  }
+}
+
+function setupInlineEventDelegation() {
+  if (window.__adminInlineDelegationBound) return;
+  window.__adminInlineDelegationBound = true;
+
+  const delegatedEvents = [
+    { event: 'click', attr: 'onclick', dataKey: 'inlineClick' },
+    { event: 'change', attr: 'onchange', dataKey: 'inlineChange' },
+    { event: 'input', attr: 'oninput', dataKey: 'inlineInput' },
+    { event: 'submit', attr: 'onsubmit', dataKey: 'inlineSubmit' }
+  ];
+
+  delegatedEvents.forEach(({ event, attr, dataKey }) => {
+    document.addEventListener(event, (eventObject) => {
+      if (!(eventObject.target instanceof Element)) return;
+
+      const dataAttrName = `data-${dataKey.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)}`;
+      const element = eventObject.target.closest(`[${dataAttrName}], [${attr}]`);
+
+      if (!element) return;
+
+      const code = element.dataset[dataKey] || element.getAttribute(attr);
+      if (!code) return;
+
+      if (!element.dataset[dataKey]) {
+        element.dataset[dataKey] = code;
+      }
+
+      const navMatch = code.match(/irPagina\(['"]([^'"]+)['"]\)/);
+      if (navMatch?.[1] && !element.dataset.pageTarget) {
+        element.dataset.pageTarget = navMatch[1];
+      }
+
+      executeInlineCode(code, eventObject, element, attr);
+    });
+  });
 }
 
 // ════════════════════════════════════════════
@@ -1343,9 +1478,9 @@ function renderOperadores(lista) {
       <td>
         <div style="display:flex;gap:6px">
           <button class="btn btn-secondary btn-sm btn-icon" title="Editar"
-            onclick="abrirEditar(${op.id})">✏️</button>
+            data-fn="abrirEditar" data-a1="${op.id}">✏️</button>
           ${!isAdmin ? `<button class="btn btn-danger btn-sm btn-icon" title="Remover"
-            onclick="removerOperador(${op.id},'${esc(nome)}')">🗑️</button>` : ''}
+            data-fn="removerOperador" data-a1="${op.id}" data-a2="${esc(nome)}">🗑️</button>` : ''}
         </div>
       </td>
     </tr>`;
@@ -1534,7 +1669,8 @@ function resetNovoModuloModal() {
   if (title) title.textContent = 'Novo Modulo';
   if (saveButton) {
     saveButton.textContent = 'Criar Modulo';
-    saveButton.onclick = () => criarModulo();
+    saveButton.dataset.fn = 'criarModulo';
+    saveButton.onclick = null;
   }
   if (mediaSection) mediaSection.style.display = 'none';
   if (phaseSelect) {
@@ -1716,8 +1852,8 @@ function renderFasesTabela() {
       <td><span class="badge ${f.isLocked ? 'badge-pendente' : 'badge-ativo'}">${f.isLocked ? '🔒 Bloqueada' : '✓ Aberta'}</span></td>
       <td>
         <div style="display:flex;gap:6px">
-          <button class="btn btn-secondary btn-sm" onclick="toggleFase(${f.id})">${f.isLocked ? '🔓 Desbloquear' : '🔒 Bloquear'}</button>
-          <button class="btn btn-danger btn-sm btn-icon" onclick="deletarFase(${f.id},'${esc(f.title)}')" title="Remover">🗑️</button>
+          <button class="btn btn-secondary btn-sm" data-fn="toggleFase" data-a1="${f.id}">${f.isLocked ? '🔓 Desbloquear' : '🔒 Bloquear'}</button>
+          <button class="btn btn-danger btn-sm btn-icon" data-fn="deletarFase" data-a1="${f.id}" data-a2="${esc(f.title)}" title="Remover">🗑️</button>
         </div>
       </td>
     </tr>`).join('');
@@ -1785,9 +1921,9 @@ function renderModulosTabela() {
       <td><span class="badge ${m.isActive ? 'badge-ativo' : 'badge-inativo'}">${m.isActive ? '✓ Ativo' : '✗ Inativo'}</span></td>
       <td>
         <div style="display:flex;gap:6px">
-          <button class="btn btn-secondary btn-sm btn-icon" onclick="abrirModalModulo(MODULOS.find(x => String(x.id) === String(${m.id})))" title="Editar / Mídia">✏️</button>
-          <button class="btn btn-secondary btn-sm" onclick="toggleModulo(${m.id})">${m.isActive ? '🔴 Desativar' : '🟢 Ativar'}</button>
-          <button class="btn btn-danger btn-sm btn-icon" onclick="deletarModulo(${m.id},'${esc(m.title)}')" title="Remover">🗑️</button>
+          <button class="btn btn-secondary btn-sm btn-icon" data-fn="abrirModalModuloById" data-a1="${m.id}" title="Editar / Mídia">✏️</button>
+          <button class="btn btn-secondary btn-sm" data-fn="toggleModulo" data-a1="${m.id}">${m.isActive ? '🔴 Desativar' : '🟢 Ativar'}</button>
+          <button class="btn btn-danger btn-sm btn-icon" data-fn="deletarModulo" data-a1="${m.id}" data-a2="${esc(m.title)}" title="Remover">🗑️</button>
         </div>
       </td>
     </tr>`).join('');
@@ -1884,7 +2020,7 @@ function renderQuestoes() {
         <td style="max-width:260px">${esc(q.question)}</td>
         <td><span class="badge badge-ativo" style="font-family:var(--mono)">Opção ${q.correctOption||'?'}</span></td>
         <td style="font-family:var(--mono)">${q.points||10}</td>
-        <td><button class="btn btn-danger btn-sm btn-icon" onclick="deletarQuestao(${q.id})" title="Remover">🗑️</button></td>
+        <td><button class="btn btn-danger btn-sm btn-icon" data-fn="deletarQuestao" data-a1="${q.id}" title="Remover">🗑️</button></td>
       </tr>`).join('');
   });
 }
@@ -1972,7 +2108,7 @@ function renderUsuariosTabela() {
       </td>
       <td style="font-size:12px;color:var(--txt2)">${esc(u.email)}</td>
       <td><span class="badge ${u.role==='ADMIN'?'badge-admin':(u.isActive === false ? 'badge-inativo' : 'badge-ativo')}">${u.role==='ADMIN'?'ADMIN':(u.isActive === false ? 'Bloqueado' : 'Operador')}</span></td>
-      <td><button class="btn btn-danger btn-sm btn-icon" onclick="removerOperador(${u.id},'${esc(nome)}')" title="Remover">🗑️</button></td>
+      <td><button class="btn btn-danger btn-sm btn-icon" data-fn="removerOperador" data-a1="${u.id}" data-a2="${esc(nome)}" title="Remover">🗑️</button></td>
     </tr>`;
   }).join('');
 }
@@ -2072,7 +2208,7 @@ function exportarCSV() {
 
 // Adiciona botão de exportar ao topbar quando estiver na página de resultados
 document.querySelector('.topbar-actions').insertAdjacentHTML('beforeend',
-  '<button class="btn btn-secondary btn-sm" id="btn-export" style="display:none" onclick="exportarCSV()">⬇ Exportar CSV</button>'
+  '<button class="btn btn-secondary btn-sm" id="btn-export" style="display:none" data-fn="exportarCSV">⬇ Exportar CSV</button>'
 );
 
 // Mostra/oculta botão exportar conforme a página
@@ -2140,7 +2276,8 @@ function abrirModalModulo(mod = null) {
   if (mod) {
     titulo.textContent = 'Editar Modulo';
     btnSalvar.textContent = 'Salvar Alteracoes';
-    btnSalvar.onclick = () => salvarEdicaoModulo();
+    btnSalvar.dataset.fn = 'salvarEdicaoModulo';
+    btnSalvar.onclick = null;
     midia.style.display = 'block';
 
     if (mod.phaseId != null) {
@@ -2311,14 +2448,107 @@ async function salvarEdicaoModulo() {
 
 </script>
 <div id="toast"></div>
+<script>
+(() => {
+  const emojiRegex = /[🌀-🟿🚀-🛿☀-⛿✀-➿]/gu;
+  const iconByEmoji = {
+    '📊': 'bi-bar-chart',
+    '🏆': 'bi-trophy',
+    '👥': 'bi-people',
+    '📋': 'bi-card-checklist',
+    '📚': 'bi-journals',
+    '❓': 'bi-question-circle',
+    '🎭': 'bi-emoji-smile',
+    '💬': 'bi-chat-dots',
+    '➕': 'bi-plus-circle',
+    '✅': 'bi-check-circle',
+    '📈': 'bi-graph-up',
+    '🟢': 'bi-circle-fill',
+    '🔵': 'bi-circle-fill',
+    '🔴': 'bi-circle-fill',
+    '🕐': 'bi-clock-history',
+    '🔍': 'bi-search',
+    '📁': 'bi-folder2-open',
+    '📄': 'bi-file-earmark-text',
+    '✕': 'bi-x-lg',
+    '📹': 'bi-camera-video',
+    '🗑': 'bi-trash',
+    '🗑️': 'bi-trash',
+    '🎬': 'bi-film',
+    '😊': 'bi-emoji-smile',
+    '😐': 'bi-emoji-neutral',
+    '😤': 'bi-emoji-frown',
+    '✏': 'bi-pencil-square',
+    '✏️': 'bi-pencil-square',
+    '💾': 'bi-floppy',
+    '👁': 'bi-eye',
+    '🎧': 'bi-headset',
+    '⚠': 'bi-exclamation-triangle',
+    '✓': 'bi-check-lg',
+    '🔒': 'bi-lock',
+    '🔓': 'bi-unlock',
+    '🔴': 'bi-circle-fill',
+    '🟢': 'bi-circle-fill'
+  };
+
+  function getIconClass(char) {
+    return iconByEmoji[char] || 'bi-circle';
+  }
+
+  function replaceTextNode(textNode) {
+    const text = textNode.nodeValue;
+    if (!text || !emojiRegex.test(text)) return;
+    emojiRegex.lastIndex = 0;
+
+    const frag = document.createDocumentFragment();
+    let lastIndex = 0;
+    let match;
+
+    while ((match = emojiRegex.exec(text)) !== null) {
+      const index = match.index;
+      const char = match[0];
+
+      if (index > lastIndex) {
+        frag.appendChild(document.createTextNode(text.slice(lastIndex, index)));
+      }
+
+      const icon = document.createElement('i');
+      icon.className = `emoji-icon bi ${getIconClass(char)}`;
+      icon.setAttribute('aria-hidden', 'true');
+      frag.appendChild(icon);
+      lastIndex = index + char.length;
+    }
+
+    if (lastIndex < text.length) {
+      frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+    }
+
+    textNode.parentNode.replaceChild(frag, textNode);
+  }
+
+  function walkAndReplace(root) {
+    if (!root || root.nodeType !== Node.ELEMENT_NODE) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const parentTag = node.parentElement && node.parentElement.tagName;
+        if (parentTag === 'SCRIPT' || parentTag === 'STYLE') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+
+    const nodes = [];
+    let current = walker.nextNode();
+    while (current) {
+      nodes.push(current);
+      current = walker.nextNode();
+    }
+    nodes.forEach(replaceTextNode);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    walkAndReplace(document.body);
+  });
+})();
+</script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-

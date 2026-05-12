@@ -4,27 +4,36 @@ const router  = express.Router();
 const bcrypt  = require('bcryptjs');
 const { db, getNextId } = require('../db');
 const { adminMiddleware } = require('../middleware/auth');
+const { getAvatarInitials, serializePublicUser } = require('../services/userService');
+const { normalizeId, toInt, toNumber } = require('../utils/firestore');
+const { validatePassword } = require('../utils/validation');
 
-// GET /api/admin/users
+const VALID_ROLES = ['ADMIN', 'OPERATOR'];
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// GET /api/admin/users?limit=50&cursor=<created_at ISO do último item>
 router.get('/users', adminMiddleware, async (req, res) => {
   try {
-    const snap = await db.collection('users').orderBy('created_at', 'desc').get();
+    const pageSize = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+    const cursor   = req.query.cursor;
+
+    let query = db.collection('users').orderBy('created_at', 'desc').limit(pageSize);
+    if (cursor) query = query.startAfter(cursor);
+
+    const snap = await query.get();
     const users = snap.docs.map(doc => {
       const u = doc.data();
       return {
-        id:             doc.id,
-        name:           u.name,
-        email:          u.email,
-        role:           u.role,
-        isActive:       u.is_active !== false,
-        avatarColor:    u.avatar_color,
-        avatarInitials: u.avatar_initials,
-        profilePhotoUrl: u.profile_photo_url || null,
-        totalPoints:    parseFloat(u.total_points) || 0,
-        createdAt:      u.created_at
+        ...serializePublicUser({ id: doc.id, ...u }),
+        createdAt: u.created_at
       };
     });
-    res.json({ success: true, data: users });
+
+    const nextCursor = snap.docs.length === pageSize
+      ? snap.docs[snap.docs.length - 1].data().created_at
+      : null;
+
+    res.json({ success: true, data: users, nextCursor });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao buscar usuários' });
   }
@@ -44,32 +53,31 @@ router.get('/recent-completions', adminMiddleware, async (req, res) => {
     for (const attDoc of attSnap.docs) {
       const att = attDoc.data();
 
-      // Busca usuário
-      const userDoc = await db.collection('users').doc(String(att.user_id)).get();
+      const [userDoc, modDoc, simSnap] = await Promise.all([
+        db.collection('users').doc(normalizeId(att.user_id)).get(),
+        db.collection('modules').doc(normalizeId(att.module_id)).get(),
+        db.collection('simulators').where('module_id', '==', toInt(att.module_id)).limit(1).get(),
+      ]);
+
       if (!userDoc.exists) continue;
       const user = userDoc.data();
       if (user.role !== 'OPERATOR') continue;
-
-      // Busca módulo — module_id é número, doc ID é string
-      const modDoc = await db.collection('modules').doc(String(att.module_id)).get();
       if (!modDoc.exists) continue;
       const mod = modDoc.data();
 
-      // Busca melhor tentativa de simulador do usuário neste módulo
-      // module_id salvo como número no simulators
-      const simSnap = await db.collection('simulators')
-        .where('module_id', '==', parseInt(att.module_id)).limit(1).get();
       let simScore = 0;
       if (!simSnap.empty) {
         const simId = simSnap.docs[0].id;
-        // Bug fix: where antes de orderBy; user_id como string
         const simAttSnap = await db.collection('simulator_attempts')
           .where('user_id', '==', String(att.user_id))
+          .where('simulator_id', '==', simId)
           .get();
-        const latestSimAttempt = simAttSnap.docs
-          .filter(doc => doc.data().simulator_id === simId)
-          .sort((a, b) => String(b.data().completed_at || '').localeCompare(String(a.data().completed_at || '')))[0];
-        if (latestSimAttempt) simScore = parseFloat(latestSimAttempt.data().score) || 0;
+        if (!simAttSnap.empty) {
+          simScore = simAttSnap.docs.reduce((best, doc) => {
+            const s = toNumber(doc.data().score);
+            return s > best ? s : best;
+          }, 0);
+        }
       }
 
       results.push({
@@ -78,7 +86,7 @@ router.get('/recent-completions', adminMiddleware, async (req, res) => {
         avatarColor:    user.avatar_color,
         profilePhotoUrl: user.profile_photo_url || null,
         moduleTitle:    mod.title,
-        quizScore:      parseFloat(att.score) || 0,
+        quizScore:      toNumber(att.score),
         simScore,
         completedAt:    att.completed_at
       });
@@ -101,19 +109,29 @@ router.post('/users', adminMiddleware, async (req, res) => {
     if (!name || !email || !password)
       return res.status(400).json({ success: false, message: 'Nome, e-mail e senha são obrigatórios' });
 
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (!EMAIL_REGEX.test(normalizedEmail))
+      return res.status(400).json({ success: false, message: 'E-mail inválido' });
+
+    const pwdError = validatePassword(String(password));
+    if (pwdError) return res.status(400).json({ success: false, message: pwdError });
+
+    const roleUpper = String(role).toUpperCase();
+    if (!VALID_ROLES.includes(roleUpper))
+      return res.status(400).json({ success: false, message: 'Role inválida. Use ADMIN ou OPERATOR' });
+
     // Verifica e-mail duplicado
-    const existing = await db.collection('users').where('email', '==', email).limit(1).get();
+    const existing = await db.collection('users').where('email', '==', normalizedEmail).limit(1).get();
     if (!existing.empty)
       return res.status(400).json({ success: false, message: 'E-mail já cadastrado' });
 
-    const initials  = name.split(' ').filter(Boolean).map(w => w[0].toUpperCase()).join('').slice(0, 2);
-    const hash      = await bcrypt.hash(password, 10);
-    const newId     = await getNextId('users');
-    const roleUpper = role.toUpperCase();
+    const initials = getAvatarInitials(name);
+    const hash     = await bcrypt.hash(password, 10);
+    const newId    = await getNextId('users');
 
     await db.collection('users').doc(String(newId)).set({
       name,
-      email,
+      email: normalizedEmail,
       password: hash,
       role:     roleUpper,
       is_active:       true,
@@ -149,7 +167,7 @@ router.post('/users', adminMiddleware, async (req, res) => {
 // PUT /api/admin/users/:id
 router.put('/users/:id', adminMiddleware, async (req, res) => {
   try {
-    const userId = String(req.params.id);
+    const userId = normalizeId(req.params.id);
     const { name, password, avatarColor, isActive, status } = req.body;
 
     const userRef = db.collection('users').doc(userId);
@@ -165,12 +183,7 @@ router.put('/users/:id', adminMiddleware, async (req, res) => {
         return res.status(400).json({ success: false, message: 'Nome é obrigatório' });
 
       fields.name = trimmedName;
-      fields.avatar_initials = trimmedName
-        .split(' ')
-        .filter(Boolean)
-        .map(word => word[0].toUpperCase())
-        .join('')
-        .slice(0, 2);
+      fields.avatar_initials = getAvatarInitials(trimmedName);
     }
 
     if (avatarColor !== undefined) fields.avatar_color = avatarColor || '#00C2FF';
@@ -180,7 +193,7 @@ router.put('/users/:id', adminMiddleware, async (req, res) => {
         ? !!isActive
         : String(status).toLowerCase() !== 'bloqueado';
 
-      if (userId === String(req.user.id) && !nextIsActive) {
+      if (userId === normalizeId(req.user.id) && !nextIsActive) {
         return res.status(400).json({ success: false, message: 'Você não pode desativar sua própria conta' });
       }
 
@@ -188,8 +201,8 @@ router.put('/users/:id', adminMiddleware, async (req, res) => {
     }
 
     if (password !== undefined && String(password).trim()) {
-      if (String(password).length < 6)
-        return res.status(400).json({ success: false, message: 'Senha deve ter ao menos 6 caracteres' });
+      const pwdError = validatePassword(String(password));
+      if (pwdError) return res.status(400).json({ success: false, message: pwdError });
 
       fields.password = await bcrypt.hash(String(password), 10);
     }
@@ -208,7 +221,7 @@ router.put('/users/:id', adminMiddleware, async (req, res) => {
 // DELETE /api/admin/users/:id
 router.delete('/users/:id', adminMiddleware, async (req, res) => {
   try {
-    if (req.params.id === String(req.user.id))
+    if (req.params.id === normalizeId(req.user.id))
       return res.status(400).json({ success: false, message: 'Você não pode remover sua própria conta' });
 
     await db.collection('users').doc(req.params.id).delete();
@@ -222,4 +235,3 @@ router.delete('/users/:id', adminMiddleware, async (req, res) => {
 });
 
 module.exports = router;
-

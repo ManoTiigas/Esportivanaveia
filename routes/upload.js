@@ -1,34 +1,76 @@
 const express = require('express');
-const router = express.Router();
 const multer = require('multer');
 const crypto = require('crypto');
 const { db, admin } = require('../db');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
+const {
+  ALLOWED_PHOTO_EXTS,
+  createSecurityAudit,
+  getFileExt,
+  getMime,
+  isAllowedModuleUpload,
+  validateModuleFile,
+  validatePhotoFile,
+} = require('../utils/uploadSecurity');
 
-const ALLOWED_MIME_PREFIXES = ['video/', 'image/'];
-const ALLOWED_MIME_EXACT   = ['application/pdf', 'application/octet-stream'];
+const router = express.Router();
 
-const upload = multer({
+const uploadModule = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 500 * 1024 * 1024 },
+  limits: { fileSize: 200 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const mime = (file.mimetype || '').toLowerCase().split(';')[0].trim();
-    const ext  = (file.originalname || '').split('.').pop().toLowerCase();
-    const allowedExts = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'pdf',
-                         'jpg', 'jpeg', 'png', 'gif', 'webp'];
+    if (isAllowedModuleUpload(file)) {
+      cb(null, true);
+      return;
+    }
 
-    const ok = ALLOWED_MIME_PREFIXES.some(p => mime.startsWith(p))
-            || ALLOWED_MIME_EXACT.includes(mime)
-            || allowedExts.includes(ext);
-
-    if (ok) return cb(null, true);
-    cb(new Error(`Tipo de arquivo não permitido: ${file.mimetype} (.${ext})`));
+    const ext = getFileExt(file.originalname);
+    cb(new Error(`Tipo de arquivo nao permitido: ${file.mimetype} (.${ext})`));
   },
 });
 
+const uploadPhoto = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const mime = getMime(file);
+    const ext = getFileExt(file.originalname);
+    const ok = mime.startsWith('image/') || ALLOWED_PHOTO_EXTS.includes(ext);
+    if (ok) return cb(null, true);
+    cb(new Error(`Tipo de arquivo nao permitido para foto: ${file.mimetype} (.${ext})`));
+  },
+});
+
+function isUserSafeUploadError(err) {
+  if (err.code === 'LIMIT_FILE_SIZE') return true;
+  const msg = String(err.message || '').toLowerCase();
+  return msg.startsWith('arquivo rejeitado') || msg.startsWith('tipo de arquivo');
+}
+
+function isStorageConfigError(err) {
+  const msg = String(err?.message || '').toLowerCase();
+  return (
+    msg.includes('storage') ||
+    msg.includes('bucket') ||
+    msg.includes('oauth2') ||
+    msg.includes('token failed') ||
+    msg.includes('permission') ||
+    msg.includes('unauthorized') ||
+    msg.includes('forbidden')
+  );
+}
+
+function getUploadErrorMessage(err) {
+  if (isUserSafeUploadError(err)) return err.message;
+  if (isStorageConfigError(err)) {
+    return 'Falha ao enviar arquivo para o Firebase Storage. Verifique FIREBASE_STORAGE_BUCKET, credenciais do servico e permissoes do bucket.';
+  }
+  return 'Erro no upload. Tente novamente.';
+}
+
 function runMulter(multerFn, req, res) {
   return new Promise((resolve, reject) => {
-    multerFn(req, res, err => {
+    multerFn(req, res, (err) => {
       if (err) reject(err);
       else resolve();
     });
@@ -47,22 +89,18 @@ function getBucket() {
   try {
     return admin.storage().bucket();
   } catch (err) {
-    throw new Error(
-      'Firebase Storage nao configurado. Defina FIREBASE_STORAGE_BUCKET nas variaveis da Vercel.'
-    );
+    throw new Error('Firebase Storage nao configurado. Defina FIREBASE_STORAGE_BUCKET nas variaveis de ambiente do servidor.');
   }
 }
 
 function getDownloadUrl(bucketName, storagePath, downloadToken) {
-  return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(
-    storagePath
-  )}?alt=media&token=${downloadToken}`;
+  return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(storagePath)}?alt=media&token=${downloadToken}`;
 }
 
 async function uploadToStorage(moduleId, targetField, file) {
   const bucket = getBucket();
   const originalName = String(file.originalname || '');
-  const extension = originalName.includes('.') ? originalName.split('.').pop().toLowerCase() : '';
+  const extension = getFileExt(originalName);
   const safeExtension = extension ? `.${extension.replace(/[^a-z0-9]/gi, '')}` : '';
   const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${safeExtension}`;
   const storagePath = `modules/${moduleId}/${targetField}/${fileName}`;
@@ -95,13 +133,25 @@ async function removeFromStorage(storagePath) {
   }
 }
 
+function logSecurityBlock(req, targetField, err) {
+  console.warn('Upload bloqueado pelo modulo de seguranca:', {
+    ...createSecurityAudit(req.file, targetField),
+    actorId: req.user?.id || null,
+    actorRole: req.user?.role || null,
+    ip: req.ip,
+    reason: err.message,
+  });
+}
+
 async function attachFileToModule(req, res, fieldName, targetField) {
   try {
-    await runMulter(upload.single(fieldName), req, res);
+    await runMulter(uploadModule.single(fieldName), req, res);
 
     const moduleId = getModuleId(req);
     if (!req.file) return res.status(400).json({ success: false, message: 'Nenhum arquivo enviado' });
     if (!moduleId) return res.status(400).json({ success: false, message: 'moduleId e obrigatorio' });
+
+    validateModuleFile(req.file, targetField);
 
     const moduleRef = db.collection('modules').doc(moduleId);
     const moduleDoc = await moduleRef.get();
@@ -110,7 +160,7 @@ async function attachFileToModule(req, res, fieldName, targetField) {
     }
 
     const storageField = getStorageField(targetField);
-    const existingData = moduleDoc.data();
+    const existingData = moduleDoc.data() || {};
 
     await removeFromStorage(existingData[storageField]);
 
@@ -120,10 +170,16 @@ async function attachFileToModule(req, res, fieldName, targetField) {
       [storageField]: uploadedFile.path,
     });
 
-    res.json({ success: true, data: { url: uploadedFile.url } });
+    return res.json({ success: true, data: { url: uploadedFile.url } });
   } catch (err) {
+    if (isUserSafeUploadError(err)) {
+      logSecurityBlock(req, targetField, err);
+    }
     console.error(`Erro no upload de ${fieldName}:`, err);
-    res.status(400).json({ success: false, message: err.message || 'Erro no upload' });
+    return res.status(400).json({
+      success: false,
+      message: getUploadErrorMessage(err),
+    });
   }
 }
 
@@ -137,7 +193,7 @@ async function removeFileFromModule(req, res, targetField, label) {
     if (!moduleDoc.exists) return res.status(404).json({ success: false, message: 'Modulo nao encontrado' });
 
     const storageField = getStorageField(targetField);
-    const moduleData = moduleDoc.data();
+    const moduleData = moduleDoc.data() || {};
 
     await removeFromStorage(moduleData[storageField]);
     await moduleRef.update({
@@ -145,18 +201,20 @@ async function removeFileFromModule(req, res, targetField, label) {
       [storageField]: null,
     });
 
-    res.json({ success: true, message: `${label} removido` });
+    return res.json({ success: true, message: `${label} removido` });
   } catch (err) {
     console.error(`Erro ao remover ${label}:`, err);
-    res.status(500).json({ success: false, message: `Erro ao remover ${label}` });
+    return res.status(500).json({ success: false, message: `Erro ao remover ${label}` });
   }
 }
 
 async function attachProfilePhoto(req, res) {
   try {
-    await runMulter(upload.single('photo'), req, res);
+    await runMulter(uploadPhoto.single('photo'), req, res);
 
     if (!req.file) return res.status(400).json({ success: false, message: 'Nenhum arquivo enviado' });
+
+    validatePhotoFile(req.file);
 
     const userId = String(req.user.id);
     const userRef = db.collection('users').doc(userId);
@@ -172,15 +230,12 @@ async function attachProfilePhoto(req, res) {
       profile_photo_path: uploadedFile.path,
     });
 
-    res.json({ success: true, data: { url: uploadedFile.url } });
+    return res.json({ success: true, data: { url: uploadedFile.url } });
   } catch (err) {
     console.error('Erro no upload da foto de perfil:', err.message, err.code || '');
-    const isStorageErr = err.message?.includes('Storage') || err.code?.startsWith('storage/') || err.code === 404;
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
-      message: isStorageErr
-        ? `Erro no Firebase Storage: ${err.message}. Verifique FIREBASE_STORAGE_BUCKET no .env`
-        : err.message || 'Erro no upload da foto',
+      message: getUploadErrorMessage(err),
     });
   }
 }
@@ -199,33 +254,23 @@ async function removeProfilePhoto(req, res) {
       profile_photo_path: null,
     });
 
-    res.json({ success: true, message: 'Foto de perfil removida' });
+    return res.json({ success: true, message: 'Foto de perfil removida' });
   } catch (err) {
     console.error('Erro ao remover foto de perfil:', err);
-    res.status(500).json({ success: false, message: 'Erro ao remover foto de perfil' });
+    return res.status(500).json({ success: false, message: 'Erro ao remover foto de perfil' });
   }
 }
 
 router.post('/video', adminMiddleware, (req, res) => attachFileToModule(req, res, 'video', 'video_url'));
-router.post('/video/:moduleId', adminMiddleware, (req, res) =>
-  attachFileToModule(req, res, 'video', 'video_url')
-);
+router.post('/video/:moduleId', adminMiddleware, (req, res) => attachFileToModule(req, res, 'video', 'video_url'));
 router.post('/pdf', adminMiddleware, (req, res) => attachFileToModule(req, res, 'pdf', 'pdf_url'));
 router.post('/pdf/:moduleId', adminMiddleware, (req, res) => attachFileToModule(req, res, 'pdf', 'pdf_url'));
 router.post('/profile-photo', authMiddleware, (req, res) => attachProfilePhoto(req, res));
 
-router.delete('/:moduleId/video', adminMiddleware, (req, res) =>
-  removeFileFromModule(req, res, 'video_url', 'Video')
-);
-router.delete('/video/:moduleId', adminMiddleware, (req, res) =>
-  removeFileFromModule(req, res, 'video_url', 'Video')
-);
-router.delete('/:moduleId/pdf', adminMiddleware, (req, res) =>
-  removeFileFromModule(req, res, 'pdf_url', 'PDF')
-);
-router.delete('/pdf/:moduleId', adminMiddleware, (req, res) =>
-  removeFileFromModule(req, res, 'pdf_url', 'PDF')
-);
+router.delete('/:moduleId/video', adminMiddleware, (req, res) => removeFileFromModule(req, res, 'video_url', 'Video'));
+router.delete('/video/:moduleId', adminMiddleware, (req, res) => removeFileFromModule(req, res, 'video_url', 'Video'));
+router.delete('/:moduleId/pdf', adminMiddleware, (req, res) => removeFileFromModule(req, res, 'pdf_url', 'PDF'));
+router.delete('/pdf/:moduleId', adminMiddleware, (req, res) => removeFileFromModule(req, res, 'pdf_url', 'PDF'));
 router.delete('/profile-photo', authMiddleware, (req, res) => removeProfilePhoto(req, res));
 
 module.exports = router;
