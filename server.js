@@ -72,7 +72,7 @@ app.get('*', (req, res) => {
 
 app.use((error, req, res, next) => {
   if (error.status === 413 || error.type === 'entity.too.large') {
-    return res.status(413).json({ success: false, message: appConfig.uploads.apiLimitMessage });
+    return res.status(413).json({ success: false, message: appConfig.uploads.messages.tooLargeGeneric });
   }
 
   console.error('Erro nao tratado:', error);

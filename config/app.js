@@ -31,6 +31,16 @@ module.exports = {
     allowedHeaders: ['Content-Type', 'Authorization'],
   },
   uploads: {
-    apiLimitMessage: 'Arquivo muito grande. Limite: 200MB para videos/PDFs, 10MB para fotos.',
+    limits: {
+      videoBytes: 60 * 1024 * 1024,
+      pdfBytes: 15 * 1024 * 1024,
+      photoBytes: 5 * 1024 * 1024,
+    },
+    messages: {
+      tooLargeGeneric: 'Arquivo muito grande.',
+      tooLargeVideo: 'Video muito grande. Limite: 60MB.',
+      tooLargePdf: 'PDF muito grande. Limite: 15MB.',
+      tooLargePhoto: 'Foto muito grande. Limite: 5MB.',
+    },
   },
 };

@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const crypto = require('crypto');
+const appConfig = require('../config/app');
 const { db, admin } = require('../db');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 const {
@@ -15,23 +16,21 @@ const {
 
 const router = express.Router();
 
-const uploadModule = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 200 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (isAllowedModuleUpload(file)) {
-      cb(null, true);
-      return;
-    }
+const { limits: uploadLimits, messages: uploadMessages } = appConfig.uploads;
 
-    const ext = getFileExt(file.originalname);
-    cb(new Error(`Tipo de arquivo nao permitido: ${file.mimetype} (.${ext})`));
-  },
-});
+function moduleFileFilter(req, file, cb) {
+  if (isAllowedModuleUpload(file)) {
+    cb(null, true);
+    return;
+  }
+
+  const ext = getFileExt(file.originalname);
+  cb(new Error(`Tipo de arquivo nao permitido: ${file.mimetype} (.${ext})`));
+}
 
 const uploadPhoto = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: uploadLimits.photoBytes },
   fileFilter: (req, file, cb) => {
     const mime = getMime(file);
     const ext = getFileExt(file.originalname);
@@ -61,11 +60,35 @@ function isStorageConfigError(err) {
 }
 
 function getUploadErrorMessage(err) {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return err.message || uploadMessages.tooLargeGeneric;
+  }
   if (isUserSafeUploadError(err)) return err.message;
   if (isStorageConfigError(err)) {
     return 'Falha ao enviar arquivo para o Firebase Storage. Verifique FIREBASE_STORAGE_BUCKET, credenciais do servico e permissoes do bucket.';
   }
   return 'Erro no upload. Tente novamente.';
+}
+
+function getModuleUploadLimit(fieldName) {
+  if (fieldName === 'video') return uploadLimits.videoBytes;
+  if (fieldName === 'pdf') return uploadLimits.pdfBytes;
+  return Math.max(uploadLimits.videoBytes, uploadLimits.pdfBytes);
+}
+
+function getLimitMessageByField(fieldName) {
+  if (fieldName === 'video') return uploadMessages.tooLargeVideo;
+  if (fieldName === 'pdf') return uploadMessages.tooLargePdf;
+  if (fieldName === 'photo') return uploadMessages.tooLargePhoto;
+  return uploadMessages.tooLargeGeneric;
+}
+
+function createModuleUploadMiddleware(fieldName) {
+  return multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: getModuleUploadLimit(fieldName) },
+    fileFilter: moduleFileFilter,
+  }).single(fieldName);
 }
 
 function runMulter(multerFn, req, res) {
@@ -145,7 +168,7 @@ function logSecurityBlock(req, targetField, err) {
 
 async function attachFileToModule(req, res, fieldName, targetField) {
   try {
-    await runMulter(uploadModule.single(fieldName), req, res);
+    await runMulter(createModuleUploadMiddleware(fieldName), req, res);
 
     const moduleId = getModuleId(req);
     if (!req.file) return res.status(400).json({ success: false, message: 'Nenhum arquivo enviado' });
@@ -172,6 +195,9 @@ async function attachFileToModule(req, res, fieldName, targetField) {
 
     return res.json({ success: true, data: { url: uploadedFile.url } });
   } catch (err) {
+    if (err.code === 'LIMIT_FILE_SIZE' && !err.message) {
+      err.message = getLimitMessageByField(fieldName);
+    }
     if (isUserSafeUploadError(err)) {
       logSecurityBlock(req, targetField, err);
     }
@@ -232,6 +258,9 @@ async function attachProfilePhoto(req, res) {
 
     return res.json({ success: true, data: { url: uploadedFile.url } });
   } catch (err) {
+    if (err.code === 'LIMIT_FILE_SIZE' && !err.message) {
+      err.message = getLimitMessageByField('photo');
+    }
     console.error('Erro no upload da foto de perfil:', err.message, err.code || '');
     return res.status(400).json({
       success: false,
