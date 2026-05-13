@@ -1,4 +1,7 @@
 const { db } = require('../db');
+const { chunkArray } = require('./firestore');
+
+const MAX_NOTIFICATIONS_PER_USER = 12;
 
 function serializeNotification(doc) {
   const data = doc.data() || {};
@@ -36,7 +39,27 @@ async function createNotification({
     payload.data = data;
   }
 
-  return db.collection('notifications').add(payload);
+  const createdRef = await db.collection('notifications').add(payload);
+  await pruneUserNotifications(userId);
+  return createdRef;
+}
+
+async function pruneUserNotifications(userId) {
+  const normalizedUserId = String(userId);
+  const snapshot = await db.collection('notifications')
+    .where('user_id', '==', normalizedUserId)
+    .get();
+
+  const staleDocs = snapshot.docs
+    .sort((left, right) => String(right.data().created_at || '').localeCompare(String(left.data().created_at || '')))
+    .slice(MAX_NOTIFICATIONS_PER_USER);
+  if (!staleDocs.length) return;
+
+  for (const chunk of chunkArray(staleDocs, 400)) {
+    const batch = db.batch();
+    chunk.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+  }
 }
 
 async function createNotificationsForUsers(userIds, payload) {
@@ -60,9 +83,13 @@ async function createNotificationsForUsers(userIds, payload) {
     });
     await batch.commit();
   }
+
+  await Promise.all(ids.map((userId) => pruneUserNotifications(userId)));
 }
 
 module.exports = {
+  MAX_NOTIFICATIONS_PER_USER,
+  pruneUserNotifications,
   serializeNotification,
   createNotification,
   createNotificationsForUsers

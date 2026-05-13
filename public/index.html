@@ -1405,14 +1405,15 @@ function renderNotifications() {
 
   subtitle.textContent = APP.unreadNotifications ? `${APP.unreadNotifications} n�o lida(s)` : 'Tudo lido';
   list.innerHTML = APP.notifications.map(notification => `
-    <button class="notification-item ${notification.isRead ? '' : 'unread'}" type="button" onclick="openNotificationById('${notification.id}')">
+    <div class="notification-item ${notification.isRead ? '' : 'unread'}" role="button" tabindex="0" onclick="openNotificationById('${notification.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openNotificationById('${notification.id}');}">
+      <button class="notification-remove-btn" type="button" onclick="removeNotification('${notification.id}', event)" aria-label="Apagar notificacao">&times;</button>
       <div class="notification-item-icon">${notification.type === 'simulator_feedback' ? 'FB' : 'FA'}</div>
       <div class="notification-item-content">
         <div class="notification-item-title">${escapeHtml(notification.title)}</div>
         <div class="notification-item-message">${escapeHtml(notification.message)}</div>
         <div class="notification-item-date">${formatNotificationDate(notification.createdAt)}</div>
       </div>
-    </button>
+    </div>
   `).join('');
 }
 
@@ -1426,7 +1427,7 @@ async function fetchNotifications(showToastOnNew = false) {
 
   try {
     const previousUnread = APP.unreadNotifications || 0;
-    const res = await apiFetch('/notifications?limit=20');
+    const res = await apiFetch('/notifications?limit=12');
     APP.notifications = res.data || [];
     APP.unreadNotifications = res.unreadCount || 0;
     renderNotifications();
@@ -1436,6 +1437,31 @@ async function fetchNotifications(showToastOnNew = false) {
     }
   } catch (err) {
     console.warn('Erro ao carregar notifica��es:', err.message);
+  }
+}
+
+async function removeNotification(notificationId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  const previous = APP.notifications.map(item => ({ ...item }));
+  const target = APP.notifications.find(item => item.id === notificationId);
+
+  APP.notifications = APP.notifications.filter(item => item.id !== notificationId);
+  if (target && !target.isRead) {
+    APP.unreadNotifications = Math.max(0, APP.unreadNotifications - 1);
+  }
+  renderNotifications();
+
+  try {
+    await apiFetch(`/notifications/${notificationId}`, { method: 'DELETE' });
+  } catch (err) {
+    APP.notifications = previous;
+    APP.unreadNotifications = previous.filter(item => !item.isRead).length;
+    renderNotifications();
+    showNotif(err.message || 'Erro ao apagar notificacao', 'error');
   }
 }
 
@@ -1970,9 +1996,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
-
-
 
 
 
