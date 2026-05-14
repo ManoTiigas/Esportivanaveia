@@ -3,6 +3,7 @@ const router = express.Router();
 const { db, getNextId } = require('../db');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 const { deleteRefsInChunks, normalizeId, toInt, toNumber } = require('../utils/firestore');
+const { normalizeBoolean, normalizeInteger, rejectUnknownFields, sanitizePlainText, sanitizeRichHtml } = require('../utils/inputSecurity');
 
 function mapModule(id, moduleData) {
   return {
@@ -201,7 +202,16 @@ router.get('/', authMiddleware, async (req, res) => {
 
 router.post('/', adminMiddleware, async (req, res) => {
   try {
-    const { phaseId, title, description, content, orderIndex = 0 } = req.body;
+    const fieldError = rejectUnknownFields(req.body, ['phaseId', 'title', 'description', 'content', 'orderIndex']);
+    if (fieldError) {
+      return res.status(400).json({ success: false, message: fieldError });
+    }
+
+    const { phaseId } = req.body;
+    const title = sanitizePlainText(req.body.title, { maxLength: 160, allowEmpty: false });
+    const description = sanitizePlainText(req.body.description, { maxLength: 500, allowEmpty: true }) || '';
+    const content = sanitizeRichHtml(req.body.content, { maxLength: 20000, allowEmpty: true }) || '';
+    const orderIndex = normalizeInteger(req.body.orderIndex, { min: 0, max: 10000, fallback: 0 });
     if (!phaseId || !title) {
       return res.status(400).json({ success: false, message: 'phaseId e title sao obrigatorios' });
     }
@@ -233,21 +243,29 @@ router.post('/', adminMiddleware, async (req, res) => {
 
 router.put('/:id', adminMiddleware, async (req, res) => {
   try {
-    const { title, description, content, isActive, phaseId, orderIndex, videoUrl, pdfUrl } = req.body;
+    const fieldError = rejectUnknownFields(req.body, ['title', 'description', 'content', 'isActive', 'phaseId', 'orderIndex']);
+    if (fieldError) {
+      return res.status(400).json({ success: false, message: fieldError });
+    }
+
+    const { isActive, phaseId, orderIndex } = req.body;
     const moduleRef = db.collection('modules').doc(req.params.id);
     const moduleDoc = await moduleRef.get();
     if (!moduleDoc.exists) return res.status(404).json({ success: false, message: 'Modulo nao encontrado' });
 
     const fields = {};
-    if (title !== undefined) fields.title = title;
-    if (description !== undefined) fields.description = description;
-    if (content !== undefined) fields.content = content;
-    if (isActive !== undefined) fields.is_active = !!isActive;
+    if (req.body.title !== undefined) {
+      const safeTitle = sanitizePlainText(req.body.title, { maxLength: 160, allowEmpty: false });
+      if (!safeTitle) {
+        return res.status(400).json({ success: false, message: 'title nao pode ser vazio' });
+      }
+      fields.title = safeTitle;
+    }
+    if (req.body.description !== undefined) fields.description = sanitizePlainText(req.body.description, { maxLength: 500, allowEmpty: true }) || '';
+    if (req.body.content !== undefined) fields.content = sanitizeRichHtml(req.body.content, { maxLength: 20000, allowEmpty: true }) || '';
+    if (isActive !== undefined) fields.is_active = normalizeBoolean(isActive, true);
     if (phaseId !== undefined) fields.phase_id = toInt(phaseId);
-    if (orderIndex !== undefined) fields.order_index = toNumber(orderIndex);
-    if (videoUrl !== undefined) fields.video_url = videoUrl || null;
-    if (pdfUrl !== undefined) fields.pdf_url = pdfUrl || null;
-
+    if (orderIndex !== undefined) fields.order_index = toNumber(normalizeInteger(orderIndex, { min: 0, max: 10000, fallback: 0 }));
     if (!Object.keys(fields).length) {
       return res.status(400).json({ success: false, message: 'Nenhum campo para atualizar' });
     }
@@ -325,4 +343,3 @@ router.post('/:id/toggle', adminMiddleware, async (req, res) => {
 });
 
 module.exports = router;
-

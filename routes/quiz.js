@@ -4,6 +4,7 @@ const { db, getNextId } = require('../db');
 const { adminMiddleware, authMiddleware } = require('../middleware/auth');
 const { recalculateRanking } = require('../services/rankingService');
 const { normalizeId, toInt, toNumber } = require('../utils/firestore');
+const { normalizeInteger, rejectUnknownFields, sanitizePlainText } = require('../utils/inputSecurity');
 
 const router = express.Router();
 
@@ -64,6 +65,14 @@ router.get('/questions', authMiddleware, async (req, res) => {
 
 router.post('/questions', adminMiddleware, async (req, res) => {
   try {
+    const fieldError = rejectUnknownFields(req.body, [
+      'moduleId', 'question', 'optionA', 'optionB', 'optionC', 'optionD', 'optionE',
+      'correctOption', 'explanation', 'points', 'orderIndex',
+    ]);
+    if (fieldError) {
+      return res.status(400).json({ success: false, message: fieldError });
+    }
+
     const {
       moduleId,
       question,
@@ -78,7 +87,15 @@ router.post('/questions', adminMiddleware, async (req, res) => {
       orderIndex = 0,
     } = req.body;
 
-    if (!moduleId || !question || !optionA || !optionB || !optionC || !optionD || !correctOption) {
+    const safeQuestion = sanitizePlainText(question, { maxLength: 500, allowEmpty: false });
+    const safeOptionA = sanitizePlainText(optionA, { maxLength: 240, allowEmpty: false });
+    const safeOptionB = sanitizePlainText(optionB, { maxLength: 240, allowEmpty: false });
+    const safeOptionC = sanitizePlainText(optionC, { maxLength: 240, allowEmpty: false });
+    const safeOptionD = sanitizePlainText(optionD, { maxLength: 240, allowEmpty: false });
+    const safeOptionE = sanitizePlainText(optionE, { maxLength: 240, allowEmpty: true });
+    const safeExplanation = sanitizePlainText(explanation, { maxLength: 1000, allowEmpty: true }) || '';
+
+    if (!moduleId || !safeQuestion || !safeOptionA || !safeOptionB || !safeOptionC || !safeOptionD || !correctOption) {
       return res.status(400).json({ success: false, message: 'Campos obrigatorios faltando' });
     }
 
@@ -101,16 +118,16 @@ router.post('/questions', adminMiddleware, async (req, res) => {
     const newQuestionId = await getNextId('quiz_questions');
     await db.collection('quiz_questions').doc(String(newQuestionId)).set({
       module_id: toInt(moduleId),
-      question,
-      option_a: optionA,
-      option_b: optionB,
-      option_c: optionC,
-      option_d: optionD,
-      option_e: optionE || null,
+      question: safeQuestion,
+      option_a: safeOptionA,
+      option_b: safeOptionB,
+      option_c: safeOptionC,
+      option_d: safeOptionD,
+      option_e: safeOptionE || null,
       correct_option: normalizedCorrectOption,
-      explanation: explanation || '',
-      points: toNumber(points, 10),
-      order_index: normalizedOrderIndex,
+      explanation: safeExplanation,
+      points: normalizeInteger(points, { min: 0, max: 1000, fallback: 10 }),
+      order_index: normalizeInteger(normalizedOrderIndex, { min: 1, max: 100000, fallback: 1 }),
       created_at: new Date().toISOString(),
     });
 
@@ -132,6 +149,11 @@ router.delete('/questions/:id', adminMiddleware, async (req, res) => {
 
 router.post('/submit', authMiddleware, async (req, res) => {
   try {
+    const fieldError = rejectUnknownFields(req.body, ['moduleId', 'answers']);
+    if (fieldError) {
+      return res.status(400).json({ success: false, message: fieldError });
+    }
+
     const { moduleId, answers } = req.body;
     if (!moduleId) {
       return res.status(400).json({ success: false, message: 'moduleId e obrigatorio' });

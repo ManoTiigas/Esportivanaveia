@@ -756,18 +756,50 @@ function esc(s) {
 
 // Usa o mesmo token do site principal (jwt_token)
 function token() { return sessionStorage.getItem('jwt_token'); }
+let _authFailureHandled = false;
+
+function handleAuthFailure(message) {
+  if (_authFailureHandled) return;
+  _authFailureHandled = true;
+  sessionStorage.removeItem('jwt_token');
+  sessionStorage.setItem('auth_notice', message || 'Sua sessao expirou. Faca login novamente.');
+  alert(message || 'Sua sessao expirou. Faca login novamente.');
+  window.location.href = '/index.html';
+}
 
 async function api(path, opts = {}) {
-  const res = await fetch(`${API}${path}`, {
-    ...opts,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token()}`,
-      ...(opts.headers || {})
-    }
-  });
-  const data = await res.json();
+  if (!token()) {
+    handleAuthFailure('Sua sessao nao foi encontrada. Faca login novamente.');
+    throw new Error('Sessao nao encontrada');
+  }
+  let res;
+  try {
+    res = await fetch(`${API}${path}`, {
+      ...opts,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token()}`,
+        ...(opts.headers || {})
+      }
+    });
+  } catch (err) {
+    throw new Error('Falha de conexao com a API. Abra o painel pelo servidor Node em http://localhost:3001 e confirme que o backend esta rodando.');
+  }
+  let data = {};
+  try {
+    data = await res.json();
+  } catch (err) {
+    data = {};
+  }
   if (!res.ok) throw new Error(data.message || 'Erro na requisição');
+  if (res.status === 401) {
+    handleAuthFailure(data.message || 'Sua sessao expirou ou o token e invalido.');
+    throw new Error(data.message || 'Token invalido ou expirado');
+  }
+  if (res.status === 403) {
+    handleAuthFailure(data.message || 'Seu usuario nao tem permissao para acessar o painel admin.');
+    throw new Error(data.message || 'Acesso negado');
+  }
   return data;
 }
 
@@ -787,6 +819,30 @@ function callAction(fn, a1, a2, el) {
   else if (a2 !== undefined && a2 !== '') window[fn](a1, a2);
   else if (a1 !== undefined && a1 !== '') window[fn](a1);
   else                               window[fn]();
+}
+
+const _apiBaseAdmin = api;
+api = async function(path, opts = {}) {
+  if (!token()) {
+    handleAuthFailure('Sua sessao nao foi encontrada. Faca login novamente.');
+    throw new Error('Sessao nao encontrada');
+  }
+
+  try {
+    return await _apiBaseAdmin(path, opts);
+  } catch (err) {
+    const message = String(err?.message || '');
+
+    if (message.includes('Token nao fornecido') || message.includes('Token invalido ou expirado')) {
+      handleAuthFailure(message || 'Sua sessao expirou. Faca login novamente.');
+    }
+
+    if (message.includes('Acesso negado')) {
+      handleAuthFailure(message || 'Seu usuario nao tem permissao para acessar o painel admin.');
+    }
+
+    throw err;
+  }
 }
 
 function setupDispatch() {
@@ -1887,7 +1943,16 @@ async function toggleFase(id) {
     showToast('Status da fase atualizado!');
     await carregarFases();
     renderFasesTabela();
-  } catch(e) { showToast('Erro: ' + e.message, true); }
+  } catch(e) {
+    const detalhe = e.details ? ` ${e.details}` : '';
+    showToast((e.message || 'Erro no upload') + detalhe, true);
+    console.error('Diagnostico do upload:', {
+      message: e.message,
+      details: e.details || '',
+      errorCode: e.errorCode || '',
+      status: e.status || null
+    });
+  }
 }
 
 async function deletarFase(id, nome) {
@@ -2222,12 +2287,205 @@ irPagina = function(pag) {
 // ════════════════════════════════════════════
 // carregarTudo — atualizado para incluir fases
 // ════════════════════════════════════════════
+function normalizarCsvValor(valor) {
+  if (valor === null || valor === undefined || valor === '') return '—';
+  return String(valor);
+}
+
+function formatarDataCsv(valor) {
+  if (!valor) return '—';
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return String(valor);
+  return data.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function baixarCsv(nomeArquivo, colunas, linhas) {
+  const csv = [colunas, ...linhas]
+    .map(row => row.map(valor => `"${normalizarCsvValor(valor).replace(/"/g, '""')}"`).join(';'))
+    .join('\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = nomeArquivo;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function obterPaginaAtivaAdmin() {
+  return document.querySelector('.page.ativo')?.id?.replace('page-', '') || 'ranking';
+}
+
+function obterRankingFiltrado() {
+  const busca = (document.getElementById('rank-search')?.value || '').toLowerCase();
+  return RANKING.filter(item => (item.name || item.nome || '').toLowerCase().includes(busca));
+}
+
+function obterOperadoresFiltrados() {
+  const busca = (document.getElementById('op-search')?.value || '').toLowerCase();
+  const status = document.getElementById('op-filter')?.value || '';
+
+  return OPERADORES.filter(op => {
+    const nome = (op.name || op.nome || '').toLowerCase();
+    const email = (op.email || '').toLowerCase();
+    const statusAtual = op.isActive === false ? 'bloqueado' : 'ativo';
+
+    return (nome.includes(busca) || email.includes(busca)) &&
+      (!status || statusAtual === status);
+  });
+}
+
+function obterResultadosFiltrados() {
+  const busca = (document.getElementById('res-search')?.value || '').toLowerCase();
+  const moduloId = document.getElementById('res-mod')?.value || '';
+
+  return RESULTADOS.filter(item =>
+    ((item.nome || '').toLowerCase().includes(busca) || (item.email || '').toLowerCase().includes(busca)) &&
+    (!moduloId || String(item.modId) === moduloId)
+  );
+}
+
+function criarExportacaoRanking() {
+  const lista = obterRankingFiltrado();
+  return {
+    nomeArquivo: `ranking-${new Date().toISOString().slice(0, 10)}.csv`,
+    colunas: ['Posicao', 'Nome', 'E-mail', 'Pontos Quiz', 'Pontos Simulador', 'Total'],
+    linhas: lista.map((item, index) => {
+      const nome = item.name || item.nome || '—';
+      const operador = OPERADORES.find(op => String(op.id) === String(item.userId) || (op.name || op.nome) === nome);
+      return [
+        index + 1,
+        nome,
+        operador?.email || item.email || '—',
+        Number(item.quizPoints || 0).toFixed(1),
+        Number(item.simulatorPoints || 0).toFixed(1),
+        Number(item.totalPoints || 0).toFixed(1)
+      ];
+    })
+  };
+}
+
+function criarExportacaoOperadores() {
+  const lista = obterOperadoresFiltrados();
+  return {
+    nomeArquivo: `operadores-${new Date().toISOString().slice(0, 10)}.csv`,
+    colunas: ['Nome', 'E-mail', 'Perfil', 'Status', 'Pontuacao Total', 'Criado Em'],
+    linhas: lista.map(op => [
+      op.name || op.nome || '—',
+      op.email || '—',
+      op.role || 'OPERATOR',
+      op.isActive === false ? 'bloqueado' : 'ativo',
+      Number(op.totalPoints || 0).toFixed(1),
+      formatarDataCsv(op.createdAt)
+    ])
+  };
+}
+
+function criarExportacaoResultados() {
+  const lista = obterResultadosFiltrados();
+  return {
+    nomeArquivo: `resultados-${new Date().toISOString().slice(0, 10)}.csv`,
+    colunas: ['Operador', 'E-mail', 'Modulo', 'Pontos Quiz', 'Pontos Simulador', 'Data'],
+    linhas: lista.map(item => [
+      item.nome || '—',
+      item.email || '—',
+      item.mod || '—',
+      Number(item.pts || 0).toFixed(1),
+      Number(item.sim || 0).toFixed(1),
+      item.data || '—'
+    ])
+  };
+}
+
+function criarExportacaoRespostas() {
+  const lista = Array.isArray(TENTATIVAS) ? TENTATIVAS.slice() : [];
+  return {
+    nomeArquivo: `respostas-simuladores-${new Date().toISOString().slice(0, 10)}.csv`,
+    colunas: ['Operador', 'Simulador', 'Modulo', 'Pontuacao', 'Feedback', 'Concluido Em'],
+    linhas: lista.map(item => [
+      item.user_name || '—',
+      item.sim_title || '—',
+      item.module_title || '—',
+      `${Number(item.score || 0)} / 20`,
+      item.feedback || '—',
+      formatarDataCsv(item.completed_at)
+    ])
+  };
+}
+
+function garantirBotoesCsv() {
+  const seletores = [
+    '#page-ranking .toolbar .btn.btn-secondary',
+    '#page-operadores .toolbar .btn.btn-secondary:last-of-type',
+    '#page-resultados .toolbar .btn.btn-secondary'
+  ];
+
+  seletores.forEach(seletor => {
+    const botao = document.querySelector(seletor);
+    if (botao) botao.dataset.fn = 'exportarCSV';
+  });
+
+  const toolbarRespostas = document.querySelector('#page-respostas .toolbar');
+  if (toolbarRespostas && !toolbarRespostas.querySelector('[data-fn="exportarCSV"]')) {
+    toolbarRespostas.insertAdjacentHTML('beforeend',
+      '<button class="btn btn-secondary btn-sm" data-fn="exportarCSV">CSV</button>'
+    );
+  }
+
+  const botaoLegado = document.getElementById('btn-export');
+  if (botaoLegado) botaoLegado.remove();
+}
+
+function exportarCSV() {
+  garantirBotoesCsv();
+
+  const pagina = obterPaginaAtivaAdmin();
+  const exportadores = {
+    ranking: criarExportacaoRanking,
+    operadores: criarExportacaoOperadores,
+    resultados: criarExportacaoResultados,
+    respostas: criarExportacaoRespostas
+  };
+
+  const montarExportacao = exportadores[pagina];
+  if (!montarExportacao) {
+    showToast('Esta tela nÃ£o possui exportaÃ§Ã£o CSV.', true);
+    return;
+  }
+
+  const { nomeArquivo, colunas, linhas } = montarExportacao();
+  if (!linhas.length) {
+    showToast('NÃ£o hÃ¡ dados para exportar nesta tela.', true);
+    return;
+  }
+
+  baixarCsv(nomeArquivo, colunas, linhas);
+  showToast('CSV exportado!');
+}
+
+const _irPaginaCsvAprimorado = irPagina;
+irPagina = function(pag) {
+  _irPaginaCsvAprimorado(pag);
+  garantirBotoesCsv();
+};
+
+garantirBotoesCsv();
+
 const _carregarTudoOrig = carregarTudo;
 carregarTudo = async function() {
   await _carregarTudoOrig();
   await carregarFases();
   renderFasesTabela();
   renderModulosTabela();
+  garantirBotoesCsv();
   // Popula select de módulos nas questões
   const selQ = document.getElementById('quiz-filtro-mod');
   if (selQ) {
@@ -2378,8 +2636,18 @@ async function uploadComProgresso(file, url, barId, pctId, progressId) {
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(JSON.parse(xhr.responseText));
       } else {
-        try { reject(new Error(JSON.parse(xhr.responseText).message)); }
-        catch { reject(new Error('Erro no upload')); }
+        try {
+          const payload = JSON.parse(xhr.responseText);
+          const err = new Error(payload.message || 'Erro no upload');
+          err.details = payload.details || '';
+          err.errorCode = payload.errorCode || '';
+          err.status = xhr.status;
+          reject(err);
+        } catch {
+          const err = new Error('Erro no upload');
+          err.status = xhr.status;
+          reject(err);
+        }
       }
     });
 

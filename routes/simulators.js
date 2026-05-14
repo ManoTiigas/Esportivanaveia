@@ -4,6 +4,7 @@ const { db, getNextId } = require('../db');
 const { adminMiddleware, authMiddleware } = require('../middleware/auth');
 const { createNotification } = require('../utils/notifications');
 const { deleteRefsInChunks, normalizeId, toInt, toNumber } = require('../utils/firestore');
+const { normalizeBoolean, normalizeConversation, normalizeInteger, rejectUnknownFields, sanitizePlainText } = require('../utils/inputSecurity');
 const { recalculateRanking } = require('../services/rankingService');
 
 const router = express.Router();
@@ -65,7 +66,15 @@ router.get('/', authMiddleware, async (req, res) => {
 
 router.post('/submit', authMiddleware, async (req, res) => {
   try {
-    const { simulatorId, moduleId, score, feedback, conversation } = req.body;
+    const fieldError = rejectUnknownFields(req.body, ['simulatorId', 'moduleId', 'score', 'feedback', 'conversation']);
+    if (fieldError) {
+      return res.status(400).json({ success: false, message: fieldError });
+    }
+
+    const { simulatorId, moduleId } = req.body;
+    const safeScore = normalizeInteger(req.body.score, { min: 0, max: 20, fallback: 0 });
+    const feedback = sanitizePlainText(req.body.feedback, { maxLength: 1000, allowEmpty: true }) || '';
+    const conversation = normalizeConversation(req.body.conversation, { maxMessages: 60, maxTextLength: 1200 });
     if (!simulatorId) {
       return res.status(400).json({ success: false, message: 'simulatorId e obrigatorio' });
     }
@@ -82,9 +91,9 @@ router.post('/submit', authMiddleware, async (req, res) => {
     await db.collection('simulator_attempts').doc(String(attemptId)).set({
       user_id: userId,
       simulator_id: normalizeId(simulatorId),
-      score: toNumber(score),
-      feedback: feedback || '',
-      conversation: JSON.stringify(conversation || []),
+      score: safeScore,
+      feedback,
+      conversation: JSON.stringify(conversation),
       completed_at: new Date().toISOString(),
     });
 
@@ -101,7 +110,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
         module_id: moduleIdInt,
         phase_id: phaseId,
         simulator_completed: true,
-        simulator_best_score: Math.max(currentBestScore, toNumber(score)),
+        simulator_best_score: Math.max(currentBestScore, safeScore),
       }, { merge: true });
     }
 
@@ -201,7 +210,15 @@ router.get('/admin/list', adminMiddleware, async (req, res) => {
 
 router.post('/admin/create', adminMiddleware, async (req, res) => {
   try {
-    const { moduleId, title, description, scenario } = req.body;
+    const fieldError = rejectUnknownFields(req.body, ['moduleId', 'title', 'description', 'scenario']);
+    if (fieldError) {
+      return res.status(400).json({ success: false, message: fieldError });
+    }
+
+    const { moduleId } = req.body;
+    const title = sanitizePlainText(req.body.title, { maxLength: 160, allowEmpty: false });
+    const description = sanitizePlainText(req.body.description, { maxLength: 500, allowEmpty: true }) || '';
+    const scenario = sanitizePlainText(req.body.scenario, { maxLength: 4000, allowEmpty: false });
     if (!moduleId || !title || !scenario) {
       return res.status(400).json({ success: false, message: 'moduleId, title e scenario sao obrigatorios' });
     }
@@ -242,7 +259,12 @@ router.get('/admin/:id/questions', adminMiddleware, async (req, res) => {
 
 router.post('/admin/:id/questions', adminMiddleware, async (req, res) => {
   try {
-    const { question } = req.body;
+    const fieldError = rejectUnknownFields(req.body, ['question']);
+    if (fieldError) {
+      return res.status(400).json({ success: false, message: fieldError });
+    }
+
+    const question = sanitizePlainText(req.body.question, { maxLength: 500, allowEmpty: false });
     if (!question) {
       return res.status(400).json({ success: false, message: 'Pergunta e obrigatoria' });
     }
@@ -280,13 +302,26 @@ router.delete('/admin/questions/:id', adminMiddleware, async (req, res) => {
 
 router.put('/admin/:id', adminMiddleware, async (req, res) => {
   try {
-    const { title, description, scenario, isActive } = req.body;
+    const fieldError = rejectUnknownFields(req.body, ['title', 'description', 'scenario', 'isActive']);
+    if (fieldError) {
+      return res.status(400).json({ success: false, message: fieldError });
+    }
+
+    const { isActive } = req.body;
     const fields = {};
 
-    if (title !== undefined) fields.title = title;
-    if (description !== undefined) fields.description = description || '';
-    if (scenario !== undefined) fields.scenario = scenario;
-    if (isActive !== undefined) fields.is_active = !!isActive;
+    if (req.body.title !== undefined) {
+      const safeTitle = sanitizePlainText(req.body.title, { maxLength: 160, allowEmpty: false });
+      if (!safeTitle) return res.status(400).json({ success: false, message: 'title nao pode ser vazio' });
+      fields.title = safeTitle;
+    }
+    if (req.body.description !== undefined) fields.description = sanitizePlainText(req.body.description, { maxLength: 500, allowEmpty: true }) || '';
+    if (req.body.scenario !== undefined) {
+      const safeScenario = sanitizePlainText(req.body.scenario, { maxLength: 4000, allowEmpty: false });
+      if (!safeScenario) return res.status(400).json({ success: false, message: 'scenario nao pode ser vazio' });
+      fields.scenario = safeScenario;
+    }
+    if (isActive !== undefined) fields.is_active = normalizeBoolean(isActive, true);
 
     if (!Object.keys(fields).length) {
       return res.status(400).json({ success: false, message: 'Nenhum campo para atualizar' });
@@ -379,8 +414,13 @@ router.get('/admin/attempts', adminMiddleware, async (req, res) => {
 
 router.post('/admin/evaluate/:id', adminMiddleware, async (req, res) => {
   try {
-    const nextScore = toNumber(req.body.score);
-    const feedback = req.body.feedback;
+    const fieldError = rejectUnknownFields(req.body, ['score', 'feedback']);
+    if (fieldError) {
+      return res.status(400).json({ success: false, message: fieldError });
+    }
+
+    const nextScore = normalizeInteger(req.body.score, { min: 0, max: 20, fallback: 0 });
+    const feedback = sanitizePlainText(req.body.feedback, { maxLength: 1000, allowEmpty: true }) || '';
     const attemptRef = db.collection('simulator_attempts').doc(req.params.id);
     const attemptDoc = await attemptRef.get();
 

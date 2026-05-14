@@ -1,5 +1,6 @@
 module.exports = [
   { path: '/auth', router: require('./auth') },
+  { path: '/health', router: require('./health') },
   { path: '/phases', router: require('./phases') },
   { path: '/modules', router: require('./modules') },
   { path: '/quiz', router: require('./quiz') },

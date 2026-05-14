@@ -21,17 +21,23 @@ if (!admin.apps.length) {
   }
 
   const resolvedProjectId = process.env.FIREBASE_PROJECT_ID || projectId;
-  const storageBucket =
-    process.env.FIREBASE_STORAGE_BUCKET ||
-    (resolvedProjectId ? `${resolvedProjectId}.appspot.com` : undefined);
+  const storageBucket = String(process.env.FIREBASE_STORAGE_BUCKET || '').trim();
+
+  if (!storageBucket) {
+    console.warn(
+      'FIREBASE_STORAGE_BUCKET nao definido. Uploads para o Firebase Storage podem falhar ate que o bucket real seja configurado no .env.'
+    );
+  }
 
   admin.initializeApp({
     credential,
     projectId: resolvedProjectId,
-    storageBucket,
+    storageBucket: storageBucket || undefined,
   });
 
   console.log('Firebase Admin inicializado!');
+  console.log('Firebase projectId:', resolvedProjectId);
+  console.log('Firebase storageBucket:', storageBucket || '(nao definido)');
 }
 
 const db = admin.firestore();

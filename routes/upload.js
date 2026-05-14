@@ -70,6 +70,55 @@ function getUploadErrorMessage(err) {
   return 'Erro no upload. Tente novamente.';
 }
 
+function getUploadErrorCode(err, fieldName) {
+  const msg = String(err?.message || '').toLowerCase();
+
+  if (err.code === 'LIMIT_FILE_SIZE') return `${fieldName}_too_large`;
+  if (msg.includes('tipo de arquivo nao permitido')) return `${fieldName}_type_not_allowed`;
+  if (msg.includes('mime invalido')) return `${fieldName}_invalid_mime`;
+  if (msg.includes('extensao')) return `${fieldName}_invalid_extension`;
+  if (msg.includes('assinatura de video invalida')) return 'video_invalid_signature';
+  if (msg.includes('assinatura pdf invalida') || msg.includes('arquivo corrompido')) return 'pdf_invalid_signature';
+  if (msg.includes('potencialmente executavel')) return `${fieldName}_unsafe_content`;
+  if (msg.includes('conteudo vazio')) return `${fieldName}_empty_file`;
+  if (isStorageConfigError(err)) return 'storage_config_error';
+  return `${fieldName}_upload_failed`;
+}
+
+function getUploadErrorDetails(err, fieldName) {
+  const msg = String(err?.message || '').toLowerCase();
+
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return fieldName === 'video'
+      ? 'Reduza o arquivo ou exporte novamente em menor resolucao/bitrate.'
+      : 'Reduza o arquivo antes de tentar novamente.';
+  }
+  if (msg.includes('tipo de arquivo nao permitido')) {
+    return fieldName === 'video'
+      ? 'Use um arquivo MP4, MOV, WEBM, OGG ou AVI valido.'
+      : 'Use um arquivo PDF valido.';
+  }
+  if (msg.includes('mime invalido')) {
+    return 'O navegador informou um tipo de arquivo diferente do esperado para esse upload.';
+  }
+  if (msg.includes('assinatura de video invalida')) {
+    return 'A extensao parece ser de video, mas o conteudo interno nao bate com um container suportado.';
+  }
+  if (msg.includes('assinatura pdf invalida') || msg.includes('arquivo corrompido')) {
+    return 'O arquivo nao parece ser um PDF valido ou foi exportado/copiado de forma incompleta.';
+  }
+  if (msg.includes('potencialmente executavel')) {
+    return 'O arquivo contem recursos bloqueados por seguranca e nao pode ser salvo no sistema.';
+  }
+  if (msg.includes('conteudo vazio')) {
+    return 'O arquivo chegou vazio ao servidor.';
+  }
+  if (isStorageConfigError(err)) {
+    return 'Confira FIREBASE_STORAGE_BUCKET, credenciais do servico e permissoes do bucket no backend.';
+  }
+  return 'Se o problema persistir, verifique o formato real do arquivo e os logs do servidor.';
+}
+
 function getModuleUploadLimit(fieldName) {
   if (fieldName === 'video') return uploadLimits.videoBytes;
   if (fieldName === 'pdf') return uploadLimits.pdfBytes;
@@ -205,6 +254,8 @@ async function attachFileToModule(req, res, fieldName, targetField) {
     return res.status(400).json({
       success: false,
       message: getUploadErrorMessage(err),
+      errorCode: getUploadErrorCode(err, fieldName),
+      details: getUploadErrorDetails(err, fieldName),
     });
   }
 }

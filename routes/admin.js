@@ -6,6 +6,7 @@ const { db, getNextId } = require('../db');
 const { adminMiddleware } = require('../middleware/auth');
 const { getAvatarInitials, serializePublicUser } = require('../services/userService');
 const { normalizeId, toInt, toNumber } = require('../utils/firestore');
+const { normalizeBoolean, normalizeHexColor, rejectUnknownFields, sanitizePlainText } = require('../utils/inputSecurity');
 const { validatePassword } = require('../utils/validation');
 
 const VALID_ROLES = ['ADMIN', 'OPERATOR'];
@@ -104,7 +105,12 @@ router.get('/recent-completions', adminMiddleware, async (req, res) => {
 // POST /api/admin/users
 router.post('/users', adminMiddleware, async (req, res) => {
   try {
-    const { name, email, password, role = 'OPERATOR', avatarColor = '#00C2FF' } = req.body;
+    const fieldError = rejectUnknownFields(req.body, ['name', 'email', 'password', 'role', 'avatarColor']);
+    if (fieldError)
+      return res.status(400).json({ success: false, message: fieldError });
+
+    const { email, password, role = 'OPERATOR', avatarColor = '#00C2FF' } = req.body;
+    const name = sanitizePlainText(req.body.name, { maxLength: 120, allowEmpty: false });
 
     if (!name || !email || !password)
       return res.status(400).json({ success: false, message: 'Nome, e-mail e senha são obrigatórios' });
@@ -136,7 +142,7 @@ router.post('/users', adminMiddleware, async (req, res) => {
       role:     roleUpper,
       is_active:       true,
       avatar_initials: initials,
-      avatar_color:    avatarColor,
+      avatar_color:    normalizeHexColor(avatarColor),
       profile_photo_url: null,
       profile_photo_path: null,
       total_points:    0,
@@ -167,6 +173,10 @@ router.post('/users', adminMiddleware, async (req, res) => {
 // PUT /api/admin/users/:id
 router.put('/users/:id', adminMiddleware, async (req, res) => {
   try {
+    const fieldError = rejectUnknownFields(req.body, ['name', 'password', 'avatarColor', 'isActive', 'status']);
+    if (fieldError)
+      return res.status(400).json({ success: false, message: fieldError });
+
     const userId = normalizeId(req.params.id);
     const { name, password, avatarColor, isActive, status } = req.body;
 
@@ -178,7 +188,7 @@ router.put('/users/:id', adminMiddleware, async (req, res) => {
     const fields = {};
 
     if (name !== undefined) {
-      const trimmedName = String(name).trim();
+      const trimmedName = sanitizePlainText(name, { maxLength: 120, allowEmpty: false });
       if (!trimmedName)
         return res.status(400).json({ success: false, message: 'Nome é obrigatório' });
 
@@ -186,11 +196,11 @@ router.put('/users/:id', adminMiddleware, async (req, res) => {
       fields.avatar_initials = getAvatarInitials(trimmedName);
     }
 
-    if (avatarColor !== undefined) fields.avatar_color = avatarColor || '#00C2FF';
+    if (avatarColor !== undefined) fields.avatar_color = normalizeHexColor(avatarColor);
 
     if (isActive !== undefined || status !== undefined) {
       const nextIsActive = isActive !== undefined
-        ? !!isActive
+        ? normalizeBoolean(isActive, true)
         : String(status).toLowerCase() !== 'bloqueado';
 
       if (userId === normalizeId(req.user.id) && !nextIsActive) {
