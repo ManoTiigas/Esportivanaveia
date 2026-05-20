@@ -60,9 +60,16 @@
         <div class="admin-ava" id="adm-ava">A</div>
         <div class="admin-info">
           <div class="name" id="adm-nome">Administrador</div>
-          <div class="role">administrator</div>
+          <div class="role">Admin</div>
         </div>
-        <button class="btn-logout" id="btn-logout" title="Sair">⏻</button>
+        <div class="admin-card-actions">
+          <button class="admin-icon-btn admin-icon-btn-profile" type="button" title="Meu perfil" aria-label="Meu perfil" data-fn="abrirModal" data-a1="modal-meu-perfil">
+            <i class="bi bi-gear"></i>
+          </button>
+          <button class="admin-icon-btn admin-icon-btn-logout" id="btn-logout" title="Sair" aria-label="Sair">
+            <i class="bi bi-power"></i>
+          </button>
+        </div>
       </div>
     </div>
   </aside>
@@ -435,6 +442,82 @@
 <!-- ══════════════════════════════════════════════
      MODAL: NOVO OPERADOR
 ══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-meu-perfil">
+  <div class="modal profile-modal">
+    <div class="modal-head">
+      <h3>Conta</h3>
+      <button class="modal-close" data-fn="fecharModal" data-a1="modal-meu-perfil">✕</button>
+    </div>
+    <div class="profile-modal-section">
+      <div class="profile-modal-photo-row">
+        <div id="perfil-admin-avatar" class="admin-ava profile-modal-avatar"></div>
+        <div class="profile-modal-photo-content">
+          <div class="profile-modal-label">Foto de Perfil</div>
+          <div class="profile-modal-actions">
+            <input type="file" id="perfil-admin-photo-input" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none" data-cfn="uploadAdminProfilePhoto" data-uses-el="1">
+            <button class="btn btn-primary btn-sm" type="button" data-fn="clickAdminProfilePhotoInput">Upload Image</button>
+            <button class="btn btn-secondary btn-sm" type="button" id="perfil-admin-remove-photo-btn" data-fn="removeAdminProfilePhoto" style="display:none">Remove</button>
+          </div>
+          <div class="profile-modal-help">Suporta PNG, JPEG ate 5MB.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-modal-section">
+      <div class="profile-modal-grid">
+        <div class="mfield">
+          <label>Primeiro Nome</label>
+          <input type="text" id="perfil-admin-first-name" placeholder="Nome" />
+        </div>
+        <div class="mfield">
+          <label>Último Nome</label>
+          <input type="text" id="perfil-admin-last-name" placeholder="Sobrenome" />
+        </div>
+      </div>
+
+      <div class="profile-modal-grid email-grid">
+        <div class="mfield">
+          <label>Email</label>
+          <input type="email" id="perfil-admin-email-input" placeholder="email@dominio.com" disabled />
+        </div>
+      </div>
+      <div class="profile-modal-help">Usado para acessar sua conta.</div>
+    </div>
+
+    <div class="profile-modal-section">
+      <div class="profile-modal-password-head">
+        <div>
+          <div class="profile-modal-section-title">Senha</div>
+          <div class="profile-modal-help">Entre com sua senha em vez de codigos temporarios.</div>
+        </div>
+        <button class="btn btn-secondary" type="button" data-fn="toggleSenhaAdmin">Alterar a senha</button>
+      </div>
+
+      <div id="perfil-admin-password-fields" class="profile-modal-password-fields" style="display:none">
+        <div class="mfield">
+          <label>Senha atual</label>
+          <input type="password" id="perfil-admin-senha-atual" placeholder="••••••••" />
+        </div>
+        <div class="profile-modal-grid">
+          <div class="mfield">
+            <label>Nova senha</label>
+            <input type="password" id="perfil-admin-senha-nova" placeholder="••••••••" />
+          </div>
+          <div class="mfield">
+            <label>Confirmar nova senha</label>
+            <input type="password" id="perfil-admin-senha-confirmar" placeholder="••••••••" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer profile-modal-footer">
+      <button class="btn btn-secondary" data-fn="fecharModal" data-a1="modal-meu-perfil">Cancel</button>
+      <button class="btn btn-primary" data-fn="salvarMeuPerfil">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-novo-op">
   <div class="modal">
     <div class="modal-head">
@@ -720,6 +803,7 @@
 </div>
 
 
+<div class="user-profile-hover-card" id="user-profile-hover-card" aria-hidden="true"></div>
 <script>
 // ════════════════════════════════════════════
 // CONFIG
@@ -731,6 +815,8 @@ let OPERADORES = [];
 let RANKING    = [];
 let RESULTADOS = [];
 let MODULOS    = [];
+let DASHBOARD_SUMMARY = null;
+let ADMIN_ME   = null;
 
 // ════════════════════════════════════════════
 // HELPERS
@@ -752,6 +838,178 @@ function esc(s) {
     .replace(/>/g,'&gt;')
     .replace(/\"/g,'&quot;')
     .replace(/'/g,'&#39;');
+}
+
+function buildUserProfileTrigger(user, label, extraClass = '') {
+  const userId = esc(user?.id || '');
+  const text = esc(label || user?.name || 'Usuario');
+  const className = ['user-profile-trigger', extraClass].filter(Boolean).join(' ');
+  return `<span class="${className}" data-user-profile-id="${userId}">${text}</span>`;
+}
+
+const USER_PROFILE_CACHE = new Map();
+let activeProfileTrigger = null;
+let activeProfileCardUserId = null;
+let profileCardShowTimer = null;
+let profileCardHideTimer = null;
+
+async function fetchUserProfileCard(userId) {
+  if (!userId) throw new Error('Usuario invalido');
+  if (!USER_PROFILE_CACHE.has(userId)) {
+    USER_PROFILE_CACHE.set(userId, api(`/users/profile-card/${userId}`).then(res => res.data));
+  }
+  return USER_PROFILE_CACHE.get(userId);
+}
+
+function getUserRoleLabel(role) {
+  return role === 'ADMIN' ? 'Administrador' : 'Operador';
+}
+
+function avatarMarkupForHover(user) {
+  const nome = user?.name || user?.email || 'U';
+  const photoUrl = user?.profilePhotoUrl || '';
+  if (photoUrl) {
+    return `<div class="user-profile-hover-avatar has-photo"><img src="${photoUrl}" alt="Foto de perfil" class="admin-avatar-photo"></div>`;
+  }
+  return `<div class="user-profile-hover-avatar" style="background:${esc(user?.avatarColor || grad(nome))}">${esc((user?.avatarInitials || nome.slice(0, 2)).toUpperCase())}</div>`;
+}
+
+function renderUserProfileCard(user) {
+  const card = document.getElementById('user-profile-hover-card');
+  if (!card) return;
+
+  card.innerHTML = `
+    <div class="user-profile-hover-backdrop"></div>
+    <div class="user-profile-hover-shell">
+      <div class="user-profile-hover-top">
+        ${avatarMarkupForHover(user)}
+        <div class="user-profile-hover-meta">
+          <div class="user-profile-hover-name">${esc(user.name || 'Usuario')}</div>
+          <div class="user-profile-hover-email">${esc(user.email || 'Sem e-mail')}</div>
+          <div class="user-profile-hover-badges">
+            <span class="user-profile-hover-badge">${esc(getUserRoleLabel(user.role))}</span>
+            <span class="user-profile-hover-badge accent">Top ${user.rankingPosition || '—'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="user-profile-hover-stats">
+        <div class="user-profile-hover-stat">
+          <span class="user-profile-hover-stat-label">Ranking</span>
+          <strong>${user.rankingPosition || '—'}º</strong>
+        </div>
+        <div class="user-profile-hover-stat">
+          <span class="user-profile-hover-stat-label">Pontos</span>
+          <strong>${(user.totalPoints || 0).toFixed(1)}</strong>
+        </div>
+        <div class="user-profile-hover-stat">
+          <span class="user-profile-hover-stat-label">Aulas vistas</span>
+          <strong>${user.lessonsViewed || 0}</strong>
+        </div>
+        <div class="user-profile-hover-stat">
+          <span class="user-profile-hover-stat-label">Horas vistas</span>
+          <strong>${(user.hoursViewed || 0).toFixed(1)}h</strong>
+        </div>
+      </div>
+    </div>`;
+}
+
+function positionUserProfileCard(triggerEl) {
+  const card = document.getElementById('user-profile-hover-card');
+  if (!card || !triggerEl) return;
+
+  card.style.visibility = 'hidden';
+  card.classList.add('open');
+
+  const triggerRect = triggerEl.getBoundingClientRect();
+  const cardRect = card.getBoundingClientRect();
+  const top = Math.min(window.innerHeight - cardRect.height - 16, triggerRect.bottom + 10);
+  const left = Math.min(
+    window.innerWidth - cardRect.width - 16,
+    Math.max(16, triggerRect.left + (triggerRect.width / 2) - (cardRect.width / 2))
+  );
+
+  card.style.top = `${Math.max(16, top)}px`;
+  card.style.left = `${left}px`;
+  card.style.visibility = 'visible';
+}
+
+function hideUserProfileCard() {
+  if (profileCardShowTimer) clearTimeout(profileCardShowTimer);
+  profileCardShowTimer = null;
+  if (profileCardHideTimer) clearTimeout(profileCardHideTimer);
+  profileCardHideTimer = null;
+  activeProfileTrigger = null;
+  activeProfileCardUserId = null;
+  const card = document.getElementById('user-profile-hover-card');
+  if (card) {
+    card.classList.remove('open');
+    card.style.visibility = 'hidden';
+  }
+}
+
+function scheduleHideUserProfileCard() {
+  if (profileCardHideTimer) clearTimeout(profileCardHideTimer);
+  profileCardHideTimer = setTimeout(() => hideUserProfileCard(), 140);
+}
+
+async function showUserProfileCard(triggerEl) {
+  const userId = triggerEl?.dataset?.userProfileId;
+  if (!userId) return;
+
+  if (profileCardHideTimer) clearTimeout(profileCardHideTimer);
+  activeProfileTrigger = triggerEl;
+  activeProfileCardUserId = userId;
+
+  const card = document.getElementById('user-profile-hover-card');
+  if (card) {
+    card.innerHTML = '<div class="user-profile-hover-loading">Carregando perfil...</div>';
+    card.classList.add('open');
+    positionUserProfileCard(triggerEl);
+  }
+
+  try {
+    const user = await fetchUserProfileCard(userId);
+    if (activeProfileCardUserId !== userId) return;
+    renderUserProfileCard(user);
+    positionUserProfileCard(triggerEl);
+  } catch (error) {
+    if (activeProfileCardUserId !== userId) return;
+    if (card) {
+      card.innerHTML = '<div class="user-profile-hover-loading">Nao foi possivel carregar este perfil.</div>';
+      positionUserProfileCard(triggerEl);
+    }
+  }
+}
+
+function setupUserProfileHoverCard() {
+  const card = document.getElementById('user-profile-hover-card');
+  if (!card) return;
+
+  document.addEventListener('mouseover', (event) => {
+    const trigger = event.target.closest('.user-profile-trigger');
+    if (!trigger) return;
+    if (profileCardShowTimer) clearTimeout(profileCardShowTimer);
+    profileCardShowTimer = setTimeout(() => showUserProfileCard(trigger), 110);
+  });
+
+  document.addEventListener('mouseout', (event) => {
+    const trigger = event.target.closest('.user-profile-trigger');
+    if (!trigger) return;
+    if (event.relatedTarget?.closest('.user-profile-trigger') === trigger) return;
+    if (event.relatedTarget?.closest('#user-profile-hover-card')) return;
+    scheduleHideUserProfileCard();
+  });
+
+  card.addEventListener('mouseenter', () => {
+    if (profileCardHideTimer) clearTimeout(profileCardHideTimer);
+  });
+
+  card.addEventListener('mouseleave', () => {
+    scheduleHideUserProfileCard();
+  });
+
+  window.addEventListener('scroll', hideUserProfileCard, { passive: true });
+  window.addEventListener('resize', hideUserProfileCard);
 }
 
 // Usa o mesmo token do site principal (jwt_token)
@@ -808,6 +1066,7 @@ async function api(path, opts = {}) {
 // ════════════════════════════════════════════
 function clickVideoInput() { document.getElementById('nm-video-file').click(); }
 function clickPdfInput()   { document.getElementById('nm-pdf-file').click(); }
+function clickAdminProfilePhotoInput() { document.getElementById('perfil-admin-photo-input')?.click(); }
 function abrirModalModuloById(id) {
   abrirModalModulo(MODULOS.find(x => String(x.id) === String(id)) || null);
 }
@@ -869,12 +1128,58 @@ function setupDispatch() {
 // ════════════════════════════════════════════
 // ENTRAR NO APP (sem login próprio — usa token do index.html)
 // ════════════════════════════════════════════
+function applyAdminAvatar(el, user, size = 32) {
+  if (!el || !user) return;
+  const nome = user.name || user.email || 'A';
+  const photoUrl = user.profilePhotoUrl || user.profile_photo_url || '';
+
+  el.style.width = size + 'px';
+  el.style.height = size + 'px';
+
+  if (photoUrl) {
+    el.classList.add('has-photo');
+    el.style.background = 'transparent';
+    el.innerHTML = `<img src="${photoUrl}" alt="Foto de perfil" class="admin-avatar-photo">`;
+    return;
+  }
+
+  el.classList.remove('has-photo');
+  el.innerHTML = '';
+  el.textContent = nome[0].toUpperCase();
+  el.style.background = 'linear-gradient(135deg, var(--azul), var(--roxo))';
+}
+
+function updateAdminIdentity(user) {
+  ADMIN_ME = user;
+  const nome = user.name || user.email.split('@')[0];
+  document.getElementById('adm-nome').textContent = nome;
+  applyAdminAvatar(document.getElementById('adm-ava'), user, 32);
+
+  const [firstName = '', ...rest] = String(user.name || '').trim().split(/\s+/).filter(Boolean);
+  const lastName = rest.join(' ');
+  const modalFirstName = document.getElementById('perfil-admin-first-name');
+  const modalLastName = document.getElementById('perfil-admin-last-name');
+  const modalEmail = document.getElementById('perfil-admin-email-input');
+  const removeBtn = document.getElementById('perfil-admin-remove-photo-btn');
+  if (modalFirstName) modalFirstName.value = firstName;
+  if (modalLastName) modalLastName.value = lastName;
+  if (modalEmail) modalEmail.value = user.email || '';
+  if (removeBtn) removeBtn.style.display = (user.profilePhotoUrl || user.profile_photo_url) ? 'inline-flex' : 'none';
+  applyAdminAvatar(document.getElementById('perfil-admin-avatar'), user, 64);
+}
+
+async function refreshAdminMe() {
+  const data = await api('/auth/me');
+  updateAdminIdentity(data.data);
+}
+
 async function entrarNoApp(user) {
   document.getElementById('app').style.display = 'block';
 
   bindInlineDomEvents();
   setupInlineEventDelegation();
   setupDispatch();
+  setupUserProfileHoverCard();
 
   document.querySelectorAll('.nav-item[data-page-target]').forEach(n => {
     n.addEventListener('click', () => irPagina(n.dataset.pageTarget));
@@ -882,9 +1187,7 @@ async function entrarNoApp(user) {
 
   document.getElementById('btn-logout').addEventListener('click', logout);
 
-  const nome = user.name || user.email.split('@')[0];
-  document.getElementById('adm-nome').textContent = nome;
-  document.getElementById('adm-ava').textContent  = nome[0].toUpperCase();
+  updateAdminIdentity(user);
 
   atualizarHora();
   await carregarTudo();
@@ -896,21 +1199,122 @@ function logout() {
   window.location.href = '/index.html';
 }
 
+async function salvarMeuPerfil() {
+  if (!ADMIN_ME?.id) return;
+  const firstName = document.getElementById('perfil-admin-first-name').value.trim();
+  const lastName = document.getElementById('perfil-admin-last-name').value.trim();
+  const nome = [firstName, lastName].filter(Boolean).join(' ');
+  const currentPassword = document.getElementById('perfil-admin-senha-atual').value;
+  const newPassword = document.getElementById('perfil-admin-senha-nova').value;
+  const confirmPassword = document.getElementById('perfil-admin-senha-confirmar').value;
+  const shouldChangePassword = currentPassword || newPassword || confirmPassword;
+  if (!nome) return showToast('Informe seu nome', true);
+
+  try {
+    await api(`/admin/users/${ADMIN_ME.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name: nome })
+    });
+
+    if (shouldChangePassword) {
+      await api('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+      });
+    }
+
+    await refreshAdminMe();
+    resetMeuPerfilModal();
+    showToast('Perfil atualizado!');
+  } catch (e) {
+    showToast('Erro: ' + e.message, true);
+  }
+}
+
+function toggleSenhaAdmin() {
+  const box = document.getElementById('perfil-admin-password-fields');
+  if (!box) return;
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+async function alterarMinhaSenha() {
+  const currentPassword = document.getElementById('perfil-admin-senha-atual').value;
+  const newPassword = document.getElementById('perfil-admin-senha-nova').value;
+  const confirmPassword = document.getElementById('perfil-admin-senha-confirmar').value;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return showToast('Preencha todos os campos de senha', true);
+  }
+
+  try {
+    await api('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+    });
+    document.getElementById('perfil-admin-senha-atual').value = '';
+    document.getElementById('perfil-admin-senha-nova').value = '';
+    document.getElementById('perfil-admin-senha-confirmar').value = '';
+    showToast('Senha alterada com sucesso!');
+  } catch (e) {
+    showToast('Erro: ' + e.message, true);
+  }
+}
+
+async function uploadAdminProfilePhoto(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+
+  try {
+    const form = new FormData();
+    form.append('photo', file);
+    const res = await fetch('/api/upload/profile-photo', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token() },
+      body: form
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'Erro ao enviar foto');
+    await refreshAdminMe();
+    showToast('Foto de perfil atualizada!');
+  } catch (e) {
+    showToast('Erro: ' + e.message, true);
+  } finally {
+    input.value = '';
+  }
+}
+
+async function removeAdminProfilePhoto() {
+  try {
+    const res = await fetch('/api/upload/profile-photo', {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + token() }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'Erro ao remover foto');
+    await refreshAdminMe();
+    showToast('Foto de perfil removida!');
+  } catch (e) {
+    showToast('Erro: ' + e.message, true);
+  }
+}
+
 // ════════════════════════════════════════════
 // CARREGAR DADOS DA API
 // ════════════════════════════════════════════
 async function carregarTudo() {
   try {
-    const [rankRes, usersRes, modsRes, conclusoesRes] = await Promise.all([
+    const [rankRes, usersRes, modsRes, conclusoesRes, dashboardSummaryRes] = await Promise.all([
       api('/ranking?limit=50'),
       api('/admin/users'),
       api('/modules'),
-      api('/admin/recent-completions')
+      api('/admin/recent-completions'),
+      api('/admin/dashboard-summary')
     ]);
 
     RANKING    = rankRes.data       || [];
     OPERADORES = usersRes.data      || [];
     MODULOS    = modsRes.data       || [];
+    DASHBOARD_SUMMARY = dashboardSummaryRes.data || null;
 
     // Busca resultados de quiz (tentativas)
     await carregarResultados();
@@ -918,8 +1322,9 @@ async function carregarTudo() {
     atualizarMetricasDash();
     renderTop5();
     renderClassificacoes();
+    renderDashboardProgress();
     renderRanking(RANKING);
-    renderOperadores(OPERADORES);
+    renderOperadores(getOperadoresOnly());
     if (typeof renderUsuariosTabela === 'function') renderUsuariosTabela();
     renderResultados(RESULTADOS);
     preencherFiltroModulos();
@@ -992,6 +1397,15 @@ async function carregarResultados() {
 // ════════════════════════════════════════════
 // MÉTRICAS DO DASHBOARD
 // ════════════════════════════════════════════
+carregarResultados = async function() {
+  try {
+    const res = await api('/admin/module-results');
+    RESULTADOS = res.data || [];
+  } catch (err) {
+    RESULTADOS = [];
+  }
+}
+
 function atualizarMetricasDash() {
   const operadores = OPERADORES.filter(u => u.role !== 'ADMIN');
   const total      = operadores.length;
@@ -1316,6 +1730,38 @@ function renderClassificacoes() {
 // ════════════════════════════════════════════
 // HORA
 // ════════════════════════════════════════════
+function renderDashboardProgress() {
+  const progressBox = document.querySelector('.classif-bars + div > div');
+  if (!progressBox) return;
+
+  const totalOperators = Number(DASHBOARD_SUMMARY?.totalOperators || 0);
+  const completedOperators = Number(DASHBOARD_SUMMARY?.completedOperators || 0);
+  const completionPercent = Number(DASHBOARD_SUMMARY?.completionPercent || 0);
+  const phaseTitle = DASHBOARD_SUMMARY?.phaseTitle || 'Fase 1';
+
+  progressBox.innerHTML = `
+    <strong style="color:var(--txt);display:block;margin-bottom:3px">Progresso geral</strong>
+    ${completedOperators} de ${totalOperators} operadores concluÃ­ram a ${phaseTitle} â€”
+    <strong style="color:var(--azul)">${completionPercent}%</strong> de conclusÃ£o
+  `;
+}
+
+renderDashboardProgress = function() {
+  const progressBox = document.querySelector('.classif-bars + div > div');
+  if (!progressBox) return;
+
+  const totalOperators = Number(DASHBOARD_SUMMARY?.totalOperators || 0);
+  const completedOperators = Number(DASHBOARD_SUMMARY?.completedOperators || 0);
+  const completionPercent = Number(DASHBOARD_SUMMARY?.completionPercent || 0);
+  const phaseTitle = DASHBOARD_SUMMARY?.phaseTitle || 'Fase 1';
+
+  progressBox.innerHTML = `
+    <strong style="color:var(--txt);display:block;margin-bottom:3px">Progresso geral</strong>
+    ${completedOperators} de ${totalOperators} operadores concluiram a ${phaseTitle} -
+    <strong style="color:var(--azul)">${completionPercent}%</strong> de conclusao
+  `;
+}
+
 function atualizarHora() {
   const h = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   document.getElementById('dash-hora').textContent = `Atualizado às ${h}`;
@@ -1482,7 +1928,7 @@ function renderRanking(lista) {
       <div class="rank-pos ${POS_CL[i]||''}">${POS_EMO[i]||(i+1)}</div>
       <div class="rank-ava" style="background:${grad(nome)}">${nome[0]}</div>
       <div class="rank-info">
-        <div class="rank-name">${esc(nome)}</div>
+        <div class="rank-name">${buildUserProfileTrigger(r, nome)}</div>
         <div class="rank-sub">Quiz ${qPts}pts · Sim ${sPts}pts · <span class="classif ${CL_MAP[classif]||'classif-bom'}">${classif}</span></div>
       </div>
       <div class="rank-score">${pts} pts</div>
@@ -1499,6 +1945,10 @@ function filtrarRanking(q = '') {
 // OPERADORES
 // ════════════════════════════════════════════
 let _editandoId = null;
+
+function getOperadoresOnly() {
+  return (OPERADORES || []).filter(op => op.role === 'OPERATOR');
+}
 
 function renderOperadores(lista) {
   const tbody = document.getElementById('operadores-tbody');
@@ -1519,7 +1969,7 @@ function renderOperadores(lista) {
         <div style="display:flex;align-items:center;gap:10px">
           <div class="ava" style="background:${grad(nome)}">${nome[0]}</div>
           <div>
-            <strong>${esc(nome)}</strong>
+            <strong>${buildUserProfileTrigger(op, nome)}</strong>
             ${isAdmin ? ' <span class="badge badge-admin">ADMIN</span>' : ''}
           </div>
         </div>
@@ -1546,7 +1996,7 @@ function renderOperadores(lista) {
 function filtrarOperadores() {
   const q      = document.getElementById('op-search').value.toLowerCase();
   const filtro = document.getElementById('op-filter').value;
-  renderOperadores(OPERADORES.filter(op => {
+  renderOperadores(getOperadoresOnly().filter(op => {
     const nome = (op.name||op.nome||'').toLowerCase();
     const email = (op.email||'').toLowerCase();
     return (nome.includes(q) || email.includes(q)) &&
@@ -1797,11 +2247,22 @@ function resetConversaModal() {
   document.getElementById('aval-attempt-id').value = '';
 }
 
+function resetMeuPerfilModal() {
+  ['perfil-admin-senha-atual', 'perfil-admin-senha-nova', 'perfil-admin-senha-confirmar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const passwordBox = document.getElementById('perfil-admin-password-fields');
+  if (passwordBox) passwordBox.style.display = 'none';
+  if (ADMIN_ME) updateAdminIdentity(ADMIN_ME);
+}
+
 function prepareModal(id) {
   if (id === 'modal-novo-op') resetNovoOperadorModal();
   if (id === 'modal-nova-fase') resetNovaFaseModal();
   if (id === 'modal-nova-questao') resetNovaQuestaoModal();
   if (id === 'modal-novo-sim') resetNovoSimModal();
+  if (id === 'modal-meu-perfil') resetMeuPerfilModal();
 }
 
 function cleanupModal(id) {
@@ -1812,6 +2273,7 @@ function cleanupModal(id) {
   if (id === 'modal-nova-questao') resetNovaQuestaoModal();
   if (id === 'modal-novo-sim') resetNovoSimModal();
   if (id === 'modal-conversa') resetConversaModal();
+  if (id === 'modal-meu-perfil') resetMeuPerfilModal();
 }
 
 function abrirModal(id)  {
@@ -2202,7 +2664,7 @@ async function criarOperadorModal() {
     document.getElementById('nop-senha').value = '';
     const usersRes = await api('/admin/users');
     OPERADORES = usersRes.data || [];
-    renderOperadores(OPERADORES);
+    renderOperadores(getOperadoresOnly());
     renderUsuariosTabela();
     showToast('Operador criado com sucesso!');
   } catch(e) {
@@ -2239,7 +2701,7 @@ async function criarUsuario() {
     const usersRes = await api('/admin/users');
     OPERADORES = usersRes.data || [];
     renderUsuariosTabela();
-    renderOperadores(OPERADORES);
+    renderOperadores(getOperadoresOnly());
   } catch(e) {
     msg.style.color = 'var(--vermelho)';
     msg.textContent = '⚠ ' + e.message;
@@ -2333,7 +2795,7 @@ function obterOperadoresFiltrados() {
   const busca = (document.getElementById('op-search')?.value || '').toLowerCase();
   const status = document.getElementById('op-filter')?.value || '';
 
-  return OPERADORES.filter(op => {
+  return getOperadoresOnly().filter(op => {
     const nome = (op.name || op.nome || '').toLowerCase();
     const email = (op.email || '').toLowerCase();
     const statusAtual = op.isActive === false ? 'bloqueado' : 'ativo';
@@ -2374,7 +2836,7 @@ function criarExportacaoRanking() {
 }
 
 function criarExportacaoOperadores() {
-  const lista = obterOperadoresFiltrados();
+  const lista = obterOperadoresFiltrados().filter(op => op.role === 'OPERATOR');
   return {
     nomeArquivo: `operadores-${new Date().toISOString().slice(0, 10)}.csv`,
     colunas: ['Nome', 'E-mail', 'Perfil', 'Status', 'Pontuacao Total', 'Criado Em'],
@@ -2504,7 +2966,7 @@ function atualizarPaginaAtual() {
   } else if (pag === 'ranking') {
     carregarTudo().then(() => renderRanking(RANKING));
   } else if (pag === 'operadores') {
-    carregarTudo().then(() => renderOperadores(OPERADORES));
+    carregarTudo().then(() => renderOperadores(getOperadoresOnly()));
   } else if (pag === 'simuladores') {
     carregarSimuladores();
   } else if (pag === 'respostas') {

@@ -29,6 +29,7 @@ router.get('/', authMiddleware, async (req, res) => {
       const user = userDocs[index].exists ? userDocs[index].data() : {};
 
       return {
+        id: item.id,
         position: item.rank_position || 0,
         name: user.name || '',
         avatarInitials: user.avatar_initials || '',

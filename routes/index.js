@@ -6,6 +6,7 @@ module.exports = [
   { path: '/quiz', router: require('./quiz') },
   { path: '/simulators', router: require('./simulators') },
   { path: '/ranking', router: require('./ranking') },
+  { path: '/users', router: require('./users') },
   { path: '/admin', router: require('./admin') },
   { path: '/upload', router: require('./upload') },
   { path: '/notifications', router: require('./notifications') },

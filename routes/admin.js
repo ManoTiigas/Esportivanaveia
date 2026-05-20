@@ -12,6 +12,82 @@ const { validatePassword } = require('../utils/validation');
 const VALID_ROLES = ['ADMIN', 'OPERATOR'];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+async function getDashboardSummary() {
+  const [usersSnap, phasesSnap, modulesSnap, progressSnap] = await Promise.all([
+    db.collection('users').where('role', '==', 'OPERATOR').get(),
+    db.collection('phases').get(),
+    db.collection('modules').get(),
+    db.collection('user_progress').get(),
+  ]);
+
+  const activeOperators = usersSnap.docs.filter((doc) => doc.data().is_active !== false);
+  const totalOperators = activeOperators.length;
+
+  const sortedPhases = phasesSnap.docs
+    .map((doc) => ({
+      id: doc.id,
+      title: String(doc.data().title || '').trim(),
+      orderIndex: toInt(doc.data().order_index),
+    }))
+    .sort((left, right) => {
+      if (left.orderIndex !== right.orderIndex) return left.orderIndex - right.orderIndex;
+      return Number(left.id) - Number(right.id);
+    });
+
+  const firstPhase = sortedPhases[0] || null;
+  const firstPhaseLabel = firstPhase
+    ? (firstPhase.title || `Fase ${firstPhase.orderIndex || 1}`)
+    : 'Fase 1';
+  if (!firstPhase) {
+    return {
+      totalOperators,
+      phaseTitle: firstPhaseLabel,
+      completedOperators: 0,
+      completionPercent: 0,
+    };
+  }
+
+  const phaseModuleIds = modulesSnap.docs
+    .filter((doc) => toInt(doc.data().phase_id) === toInt(firstPhase.id))
+    .map((doc) => normalizeId(doc.id));
+
+  if (!phaseModuleIds.length) {
+    return {
+      totalOperators,
+      phaseTitle: firstPhaseLabel,
+      completedOperators: 0,
+      completionPercent: 0,
+    };
+  }
+
+  const requiredModules = new Set(phaseModuleIds);
+  const completedByUser = progressSnap.docs.reduce((acc, doc) => {
+    const progress = doc.data() || {};
+    const userId = normalizeId(progress.user_id);
+    const moduleId = normalizeId(progress.module_id);
+
+    if (!requiredModules.has(moduleId) || progress.simulator_completed !== true) {
+      return acc;
+    }
+
+    if (!acc[userId]) acc[userId] = new Set();
+    acc[userId].add(moduleId);
+    return acc;
+  }, {});
+
+  const completedOperators = activeOperators.filter((doc) => {
+    const userId = normalizeId(doc.id);
+    return completedByUser[userId] && completedByUser[userId].size === requiredModules.size;
+  }).length;
+
+  return {
+    totalOperators,
+    phaseTitle: firstPhaseLabel,
+    completedOperators,
+    completionPercent: totalOperators > 0 ? Math.round((completedOperators / totalOperators) * 100) : 0,
+  };
+}
+
 // GET /api/admin/users?limit=50&cursor=<created_at ISO do último item>
 router.get('/users', adminMiddleware, async (req, res) => {
   try {
@@ -99,6 +175,115 @@ router.get('/recent-completions', adminMiddleware, async (req, res) => {
   } catch (err) {
     console.error('Erro ao buscar conclusões:', err);
     res.status(500).json({ success: false, message: 'Erro ao buscar conclusões' });
+  }
+});
+
+router.get('/dashboard-summary', adminMiddleware, async (req, res) => {
+  try {
+    const data = await getDashboardSummary();
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error('Erro ao calcular resumo do dashboard:', err);
+    return res.status(500).json({ success: false, message: 'Erro ao calcular resumo do dashboard' });
+  }
+});
+
+router.get('/module-results', adminMiddleware, async (req, res) => {
+  try {
+    const [usersSnap, modulesSnap, progressSnap, quizAttemptsSnap, simulatorAttemptsSnap, simulatorsSnap] = await Promise.all([
+      db.collection('users').where('role', '==', 'OPERATOR').get(),
+      db.collection('modules').get(),
+      db.collection('user_progress').where('simulator_completed', '==', true).get(),
+      db.collection('quiz_attempts').get(),
+      db.collection('simulator_attempts').get(),
+      db.collection('simulators').get(),
+    ]);
+
+    const usersById = usersSnap.docs.reduce((acc, doc) => {
+      acc[normalizeId(doc.id)] = { id: doc.id, ...doc.data() };
+      return acc;
+    }, {});
+
+    const modulesById = modulesSnap.docs.reduce((acc, doc) => {
+      acc[normalizeId(doc.id)] = { id: doc.id, ...doc.data() };
+      return acc;
+    }, {});
+
+    const simulatorToModuleId = simulatorsSnap.docs.reduce((acc, doc) => {
+      acc[normalizeId(doc.id)] = normalizeId(doc.data().module_id);
+      return acc;
+    }, {});
+
+    const bestQuizByUserModule = quizAttemptsSnap.docs.reduce((acc, doc) => {
+      const data = doc.data() || {};
+      const key = `${normalizeId(data.user_id)}_${normalizeId(data.module_id)}`;
+      const score = toNumber(data.score);
+      const current = acc[key];
+      if (!current || score > current.score) {
+        acc[key] = {
+          score,
+          completedAt: data.completed_at || null,
+        };
+      }
+      return acc;
+    }, {});
+
+    const bestSimulatorByUserModule = simulatorAttemptsSnap.docs.reduce((acc, doc) => {
+      const data = doc.data() || {};
+      const moduleId = simulatorToModuleId[normalizeId(data.simulator_id)];
+      if (!moduleId) return acc;
+
+      const key = `${normalizeId(data.user_id)}_${moduleId}`;
+      const score = toNumber(data.score);
+      const current = acc[key];
+      if (!current || score > current.score) {
+        acc[key] = {
+          score,
+          completedAt: data.completed_at || null,
+        };
+      }
+      return acc;
+    }, {});
+
+    const results = progressSnap.docs
+      .map((doc) => {
+        const progress = doc.data() || {};
+        const userId = normalizeId(progress.user_id);
+        const moduleId = normalizeId(progress.module_id);
+        const user = usersById[userId];
+        const module = modulesById[moduleId];
+
+        if (!user || !module) return null;
+
+        const key = `${userId}_${moduleId}`;
+        const quiz = bestQuizByUserModule[key] || { score: 0, completedAt: null };
+        const simulator = bestSimulatorByUserModule[key] || {
+          score: toNumber(progress.simulator_best_score),
+          completedAt: null,
+        };
+
+        return {
+          userId,
+          nome: user.name || '',
+          email: user.email || '',
+          mod: module.title || '',
+          modId: module.id,
+          pts: quiz.score,
+          sim: simulator.score,
+          data: simulator.completedAt || quiz.completedAt || null,
+        };
+      })
+      .filter(Boolean)
+      .sort((left, right) => {
+        const leftDate = left.data ? new Date(left.data).getTime() : 0;
+        const rightDate = right.data ? new Date(right.data).getTime() : 0;
+        return rightDate - leftDate;
+      });
+
+    return res.json({ success: true, data: results });
+  } catch (err) {
+    console.error('Erro ao buscar resultados por modulo:', err);
+    return res.status(500).json({ success: false, message: 'Erro ao buscar resultados por modulo' });
   }
 });
 

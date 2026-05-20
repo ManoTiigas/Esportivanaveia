@@ -7,6 +7,7 @@ const appConfig = require('../config/app');
 const { db } = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 const { getUserByEmail, getUserById, serializePublicUser } = require('../services/userService');
+const { rejectUnknownFields, sanitizePlainText } = require('../utils/inputSecurity');
 const { validatePassword } = require('../utils/validation');
 
 const router = express.Router();
@@ -77,6 +78,26 @@ router.get('/me', authMiddleware, async (req, res) => {
     }
 
     return res.json({ success: true, data: serializePublicUser(user) });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Erro interno' });
+  }
+});
+
+router.put('/me', authMiddleware, async (req, res) => {
+  try {
+    const fieldError = rejectUnknownFields(req.body, ['name']);
+    if (fieldError) {
+      return res.status(400).json({ success: false, message: fieldError });
+    }
+
+    const name = sanitizePlainText(req.body.name, { maxLength: 120, allowEmpty: false });
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'Nome invalido' });
+    }
+
+    await db.collection('users').doc(String(req.user.id)).update({ name });
+    const updatedUser = await getUserById(req.user.id);
+    return res.json({ success: true, data: serializePublicUser(updatedUser) });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Erro interno' });
   }

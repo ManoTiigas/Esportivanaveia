@@ -75,9 +75,6 @@
           <div class="menu-item" onclick="showView('ranking-full');closeProfileMenu()">
             <span class="menu-icon">🏆</span> Ranking
           </div>
-          <div class="menu-item" onclick="showView('change-password');closeProfileMenu()">
-            <span class="menu-icon">🔑</span> Alterar Senha
-          </div>
           <div class="menu-item danger" onclick="doLogout()">
             <span class="menu-icon">🚪</span> Sair
           </div>
@@ -100,7 +97,24 @@
 
         <section class="dashboard-hero">
           <div class="hero-stage hero-stage-banner">
-            <img src="banner.svg" alt="Esportiva Na Veia" class="hero-banner-svg">
+            <div class="hero-carousel" id="hero-carousel" aria-label="Banners da Esportiva na Veia">
+              <div class="hero-carousel-track">
+                <div class="hero-carousel-slide active">
+                  <img src="capa-01.svg" alt="Banner Esportiva na Veia 1" class="hero-banner-svg">
+                </div>
+                <div class="hero-carousel-slide">
+                  <img src="capa-02.svg" alt="Banner Esportiva na Veia 2" class="hero-banner-svg">
+                </div>
+                <div class="hero-carousel-slide">
+                  <img src="capa-03.svg" alt="Banner Esportiva na Veia 3" class="hero-banner-svg">
+                </div>
+              </div>
+              <div class="hero-carousel-dots" aria-label="Seleção de banner">
+                <button class="hero-carousel-dot active" type="button" aria-label="Exibir banner 1"></button>
+                <button class="hero-carousel-dot" type="button" aria-label="Exibir banner 2"></button>
+                <button class="hero-carousel-dot" type="button" aria-label="Exibir banner 3"></button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -170,32 +184,87 @@
     <!-- PROFILE VIEW -->
     <div id="view-profile" class="view">
       <div class="profile-page">
-        <div class="profile-title">👤 Perfil</div>
+        <div class="profile-title">Perfil</div>
         <div class="profile-grid">
-          <div class="profile-card">
-            <div class="profile-card-title">Informações</div>
-            <div class="profile-avatar-large" id="profile-avatar-large" style="background:#9B59B6">DA</div>
-            <div class="profile-photo-actions">
-              <input type="file" id="profile-photo-input" accept="image/png,image/jpeg,image/webp,image/gif" hidden onchange="uploadProfilePhoto(this)">
-              <button class="profile-photo-btn profile-photo-btn-primary" type="button" onclick="document.getElementById('profile-photo-input').click()">
-                <span class="profile-photo-btn-icon">↑</span>
-                <span>Alterar foto</span>
-              </button>
-              <button class="profile-photo-btn profile-photo-btn-danger" type="button" id="profile-photo-remove-btn" onclick="removeProfilePhoto()" style="display:none">
-                <span class="profile-photo-btn-icon">×</span>
-                <span>Remover foto</span>
-              </button>
-            </div>
-            <div class="profile-user-name" id="profile-user-name">da</div>
-            <div class="profile-user-role" id="profile-user-role">Operador · Fase 1</div>
-            <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">
-              <div style="display:flex;justify-content:space-between;font-size:13px;padding:10px;background:var(--bg2);border-radius:8px">
-                <span style="color:var(--text2)">E-mail</span>
-                <span id="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fd999cbd9c8d928e899c8ed39e9290">[email&#160;protected]</a></span>
+          <div class="profile-card profile-account-card wide">
+            <div class="profile-account-section">
+              <div class="profile-account-photo-row">
+                <div class="profile-avatar-large profile-account-avatar" id="profile-avatar-large" style="background:#9B59B6">DA</div>
+                <div class="profile-account-photo-content">
+                  <div class="profile-account-label">Informações da conta</div>
+                  <div class="profile-account-main-row">
+                    <div class="profile-account-identity">
+                      <div class="profile-user-name profile-user-name-inline" id="profile-user-name">da</div>
+                      <div class="profile-user-role profile-user-role-inline" id="profile-user-role">Operador - Fase 1</div>
+                    </div>
+                    <div class="profile-photo-actions profile-account-actions">
+                      <input type="file" id="profile-photo-input" accept="image/png,image/jpeg,image/webp,image/gif" hidden onchange="uploadProfilePhoto(this)">
+                      <button class="profile-photo-btn profile-photo-btn-primary" type="button" onclick="document.getElementById('profile-photo-input').click()">
+                        <span>Upload Image</span>
+                      </button>
+                      <button class="profile-photo-btn profile-photo-btn-danger" type="button" id="profile-photo-remove-btn" onclick="removeProfilePhoto()" style="display:none">
+                        <span class="profile-photo-btn-icon">×</span>
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="profile-account-help">Suporta PNG, JPEG e WebP ate 5MB.</div>
+                </div>
               </div>
-              <div style="display:flex;justify-content:space-between;font-size:13px;padding:10px;background:var(--bg2);border-radius:8px">
-                <span style="color:var(--text2)">Função</span>
-                <span id="profile-role-display">Operador</span>
+            </div>
+
+            <div class="profile-account-section">
+              <div class="profile-account-grid">
+                <div class="profile-field">
+                  <label>Primeiro Nome</label>
+                  <input type="text" id="profile-first-name" class="profile-form-input" placeholder="Nome">
+                </div>
+                <div class="profile-field">
+                  <label>Ultimo Nome</label>
+                  <input type="text" id="profile-last-name" class="profile-form-input" placeholder="Sobrenome">
+                </div>
+              </div>
+
+              <div class="profile-account-grid profile-account-email-grid">
+                <div class="profile-field">
+                  <label>Email</label>
+                  <input type="email" id="profile-email-input" class="profile-form-input" placeholder="email@dominio.com" disabled>
+                </div>
+              </div>
+              <div class="profile-account-help">Usado para acessar sua conta.</div>
+            </div>
+
+            <div class="profile-account-section">
+              <div class="profile-account-password-head">
+                <div>
+                  <div class="profile-account-section-title">Senha</div>
+                  <div class="profile-account-help">Altere sua senha sem sair do perfil.</div>
+                </div>
+                <button class="profile-photo-btn profile-photo-btn-secondary" type="button" onclick="toggleProfilePasswordFields()">Change Password</button>
+              </div>
+
+              <div id="profile-password-fields" class="profile-account-password-fields" style="display:none">
+                <div class="profile-field">
+                  <label>Senha Atual</label>
+                  <input type="password" class="profile-form-input" placeholder="••••••••" id="pwd-current">
+                </div>
+                <div class="profile-account-grid">
+                  <div class="profile-field">
+                    <label>Nova Senha</label>
+                    <input type="password" class="profile-form-input" placeholder="••••••••" id="pwd-new">
+                  </div>
+                  <div class="profile-field">
+                    <label>Confirmar Nova Senha</label>
+                    <input type="password" class="profile-form-input" placeholder="••••••••" id="pwd-confirm">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-account-footer">
+              <div class="profile-account-footer-actions">
+                <button class="profile-photo-btn profile-photo-btn-secondary" type="button" onclick="resetProfileForm()">Cancel</button>
+                <button class="profile-photo-btn profile-photo-btn-primary" type="button" onclick="saveProfile()">Save</button>
               </div>
             </div>
           </div>
@@ -208,7 +277,7 @@
               <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em">pontos totais</div>
             </div>
           </div>
-          <div class="profile-card wide">
+          <div class="profile-card profile-performance-card">
             <div class="profile-card-title">Desempenho por Categoria</div>
             <div class="perf-list" id="performance-list">
               <div style="padding:16px 0;color:var(--text3);font-size:14px">
@@ -255,23 +324,14 @@
     <!-- CHANGE PASSWORD VIEW -->
     <div id="view-change-password" class="view">
       <div class="profile-page">
-        <div class="profile-title">🔑 Alterar Senha</div>
-        <div class="profile-card" style="max-width:480px">
-          <div class="profile-card-title">Nova Senha</div>
-          <div class="pwd-form">
-            <div>
-              <label class="admin-label">Senha Atual</label>
-              <input type="password" class="form-input" placeholder="••••••••" id="pwd-current">
-            </div>
-            <div>
-              <label class="admin-label">Nova Senha</label>
-              <input type="password" class="form-input" placeholder="••••••••" id="pwd-new">
-            </div>
-            <div>
-              <label class="admin-label">Confirmar Nova Senha</label>
-              <input type="password" class="form-input" placeholder="••••••••" id="pwd-confirm">
-            </div>
-            <button class="btn-accent" style="width:fit-content;margin-top:8px" onclick="changePassword()">Salvar Nova Senha</button>
+        <div class="profile-title">Senha</div>
+        <div class="profile-card" style="max-width:720px">
+          <div class="profile-card-title">Edite sua senha no perfil</div>
+          <div style="color:var(--text2);font-size:14px;line-height:1.6">
+            Esta area foi integrada ao seu perfil.
+          </div>
+          <div style="margin-top:18px">
+            <button class="profile-photo-btn profile-photo-btn-primary" type="button" onclick="openProfilePasswordEditor()">Abrir perfil</button>
           </div>
         </div>
       </div>
@@ -652,8 +712,9 @@ function updateUserUI() {
   setAvatarElement(document.getElementById('profile-avatar-large'), { initials, color, photoUrl });
   document.getElementById('profile-user-name').textContent   = u.name;
   document.getElementById('profile-user-role').textContent   = u.role === 'ADMIN' ? 'Administrador' : 'Operador - Fase 1';
-  document.getElementById('profile-role-display').textContent = u.role === 'ADMIN' ? 'Administrador' : 'Operador';
-  document.getElementById('profile-email').textContent       = u.email;
+  const emailInput = document.getElementById('profile-email-input');
+  if (emailInput) emailInput.value = u.email;
+  syncProfileForm(u);
   document.getElementById('stat-points').textContent         = (u.totalPoints ?? 0).toFixed(1);
   document.getElementById('profile-photo-remove-btn').style.display = photoUrl ? 'inline-flex' : 'none';
   if (notificationsWrap) {
@@ -677,6 +738,13 @@ function avatarMarkup({ initials, color, photoUrl }, className = 'avatar', sizeS
   return `<div class="${className}" style="background:${color || '#00C2FF'};${sizeStyle}">${safeInitials}</div>`;
 }
 
+function buildUserProfileTrigger(user, label, extraClass = '') {
+  const userId = escapeHtml(user?.id || '');
+  const text = escapeHtml(label || user?.name || 'Usuario');
+  const className = ['user-profile-trigger', extraClass].filter(Boolean).join(' ');
+  return `<span class="${className}" data-user-profile-id="${userId}">${text}</span>`;
+}
+
 function setAvatarElement(el, { initials, color, photoUrl }) {
   if (!el) return;
   if (photoUrl) {
@@ -691,6 +759,170 @@ function setAvatarElement(el, { initials, color, photoUrl }) {
   el.innerHTML = '';
   el.textContent = initials || '??';
   el.style.background = color || '#00C2FF';
+}
+
+const USER_PROFILE_CACHE = new Map();
+let activeProfileTrigger = null;
+let activeProfileCardUserId = null;
+let profileCardShowTimer = null;
+let profileCardHideTimer = null;
+
+async function fetchUserProfileCard(userId) {
+  if (!userId) throw new Error('Usuario invalido');
+  if (!USER_PROFILE_CACHE.has(userId)) {
+    USER_PROFILE_CACHE.set(userId, apiFetch(`/users/profile-card/${userId}`).then(res => res.data));
+  }
+  return USER_PROFILE_CACHE.get(userId);
+}
+
+function getUserRoleLabel(role) {
+  return role === 'ADMIN' ? 'Administrador' : 'Operador';
+}
+
+function renderUserProfileCard(user) {
+  const card = document.getElementById('user-profile-hover-card');
+  if (!card) return;
+
+  const avatar = avatarMarkup({
+    initials: user.avatarInitials || user.name.slice(0, 2).toUpperCase(),
+    color: user.avatarColor || '#00C2FF',
+    photoUrl: user.profilePhotoUrl || '',
+  }, 'user-profile-hover-avatar');
+
+  card.innerHTML = `
+    <div class="user-profile-hover-backdrop"></div>
+    <div class="user-profile-hover-shell">
+      <div class="user-profile-hover-top">
+        ${avatar}
+        <div class="user-profile-hover-meta">
+          <div class="user-profile-hover-name">${escapeHtml(user.name || 'Usuario')}</div>
+          <div class="user-profile-hover-email">${escapeHtml(user.email || 'Sem e-mail')}</div>
+          <div class="user-profile-hover-badges">
+            <span class="user-profile-hover-badge">${escapeHtml(getUserRoleLabel(user.role))}</span>
+            <span class="user-profile-hover-badge accent">Top ${user.rankingPosition || '—'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="user-profile-hover-stats">
+        <div class="user-profile-hover-stat">
+          <span class="user-profile-hover-stat-label">Ranking</span>
+          <strong>${user.rankingPosition || '—'}º</strong>
+        </div>
+        <div class="user-profile-hover-stat">
+          <span class="user-profile-hover-stat-label">Pontos</span>
+          <strong>${(user.totalPoints || 0).toFixed(1)}</strong>
+        </div>
+        <div class="user-profile-hover-stat">
+          <span class="user-profile-hover-stat-label">Aulas vistas</span>
+          <strong>${user.lessonsViewed || 0}</strong>
+        </div>
+        <div class="user-profile-hover-stat">
+          <span class="user-profile-hover-stat-label">Horas vistas</span>
+          <strong>${(user.hoursViewed || 0).toFixed(1)}h</strong>
+        </div>
+      </div>
+    </div>`;
+}
+
+function positionUserProfileCard(triggerEl) {
+  const card = document.getElementById('user-profile-hover-card');
+  if (!card || !triggerEl) return;
+
+  card.style.visibility = 'hidden';
+  card.classList.add('open');
+
+  const triggerRect = triggerEl.getBoundingClientRect();
+  const cardRect = card.getBoundingClientRect();
+  const top = Math.min(window.innerHeight - cardRect.height - 16, triggerRect.bottom + 10);
+  const left = Math.min(
+    window.innerWidth - cardRect.width - 16,
+    Math.max(16, triggerRect.left + (triggerRect.width / 2) - (cardRect.width / 2))
+  );
+
+  card.style.top = `${Math.max(16, top)}px`;
+  card.style.left = `${left}px`;
+  card.style.visibility = 'visible';
+}
+
+function hideUserProfileCard() {
+  if (profileCardShowTimer) clearTimeout(profileCardShowTimer);
+  profileCardShowTimer = null;
+  if (profileCardHideTimer) clearTimeout(profileCardHideTimer);
+  profileCardHideTimer = null;
+  activeProfileTrigger = null;
+  activeProfileCardUserId = null;
+  const card = document.getElementById('user-profile-hover-card');
+  if (card) {
+    card.classList.remove('open');
+    card.style.visibility = 'hidden';
+  }
+}
+
+function scheduleHideUserProfileCard() {
+  if (profileCardHideTimer) clearTimeout(profileCardHideTimer);
+  profileCardHideTimer = setTimeout(() => {
+    hideUserProfileCard();
+  }, 140);
+}
+
+async function showUserProfileCard(triggerEl) {
+  const userId = triggerEl?.dataset?.userProfileId;
+  if (!userId) return;
+
+  if (profileCardHideTimer) clearTimeout(profileCardHideTimer);
+  activeProfileTrigger = triggerEl;
+  activeProfileCardUserId = userId;
+
+  const card = document.getElementById('user-profile-hover-card');
+  if (card) {
+    card.innerHTML = '<div class="user-profile-hover-loading">Carregando perfil...</div>';
+    card.classList.add('open');
+    positionUserProfileCard(triggerEl);
+  }
+
+  try {
+    const user = await fetchUserProfileCard(userId);
+    if (activeProfileCardUserId !== userId) return;
+    renderUserProfileCard(user);
+    positionUserProfileCard(triggerEl);
+  } catch (error) {
+    if (activeProfileCardUserId !== userId) return;
+    if (card) {
+      card.innerHTML = '<div class="user-profile-hover-loading">Nao foi possivel carregar este perfil.</div>';
+      positionUserProfileCard(triggerEl);
+    }
+  }
+}
+
+function setupUserProfileHoverCard() {
+  const card = document.getElementById('user-profile-hover-card');
+  if (!card) return;
+
+  document.addEventListener('mouseover', (event) => {
+    const trigger = event.target.closest('.user-profile-trigger');
+    if (!trigger) return;
+    if (profileCardShowTimer) clearTimeout(profileCardShowTimer);
+    profileCardShowTimer = setTimeout(() => showUserProfileCard(trigger), 110);
+  });
+
+  document.addEventListener('mouseout', (event) => {
+    const trigger = event.target.closest('.user-profile-trigger');
+    if (!trigger) return;
+    if (event.relatedTarget?.closest('.user-profile-trigger') === trigger) return;
+    if (event.relatedTarget?.closest('#user-profile-hover-card')) return;
+    scheduleHideUserProfileCard();
+  });
+
+  card.addEventListener('mouseenter', () => {
+    if (profileCardHideTimer) clearTimeout(profileCardHideTimer);
+  });
+
+  card.addEventListener('mouseleave', () => {
+    scheduleHideUserProfileCard();
+  });
+
+  window.addEventListener('scroll', hideUserProfileCard, { passive: true });
+  window.addEventListener('resize', hideUserProfileCard);
 }
 
 async function uploadProfilePhoto(input) {
@@ -720,6 +952,84 @@ async function removeProfilePhoto() {
     showNotif('Foto de perfil removida.', 'success');
   } catch (err) {
     showNotif(err.message || 'Erro ao remover foto de perfil', 'error');
+  }
+}
+
+function syncProfileForm(user = APP.currentUser) {
+  if (!user) return;
+  const [firstName = '', ...rest] = String(user.name || '').trim().split(/\s+/).filter(Boolean);
+  const lastName = rest.join(' ');
+  const firstNameInput = document.getElementById('profile-first-name');
+  const lastNameInput = document.getElementById('profile-last-name');
+  const emailInput = document.getElementById('profile-email-input');
+  if (firstNameInput) firstNameInput.value = firstName;
+  if (lastNameInput) lastNameInput.value = lastName;
+  if (emailInput) emailInput.value = user.email || '';
+}
+
+function clearProfilePasswordFields() {
+  ['pwd-current', 'pwd-new', 'pwd-confirm'].forEach((id) => {
+    const input = document.getElementById(id);
+    if (input) input.value = '';
+  });
+}
+
+function resetProfileForm() {
+  syncProfileForm(APP.currentUser);
+  clearProfilePasswordFields();
+  const passwordFields = document.getElementById('profile-password-fields');
+  if (passwordFields) passwordFields.style.display = 'none';
+}
+
+function toggleProfilePasswordFields(forceOpen = null) {
+  const box = document.getElementById('profile-password-fields');
+  if (!box) return;
+  const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : box.style.display === 'none';
+  box.style.display = shouldOpen ? 'block' : 'none';
+}
+
+function openProfilePasswordEditor() {
+  showView('profile');
+  toggleProfilePasswordFields(true);
+  closeProfileMenu();
+  const passwordBlock = document.getElementById('profile-password-fields');
+  if (passwordBlock) passwordBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function saveProfile() {
+  const firstName = document.getElementById('profile-first-name').value.trim();
+  const lastName = document.getElementById('profile-last-name').value.trim();
+  const fullName = [firstName, lastName].filter(Boolean).join(' ');
+  const currentPassword = document.getElementById('pwd-current').value;
+  const newPassword = document.getElementById('pwd-new').value;
+  const confirmPassword = document.getElementById('pwd-confirm').value;
+  const shouldChangePassword = currentPassword || newPassword || confirmPassword;
+
+  if (!fullName) {
+    showNotif('Informe seu nome.', 'error');
+    return;
+  }
+
+  try {
+    await apiFetch('/auth/me', {
+      method: 'PUT',
+      body: JSON.stringify({ name: fullName })
+    });
+
+    if (shouldChangePassword) {
+      await apiFetch('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+      });
+    }
+
+    const me = await apiFetch('/auth/me');
+    APP.currentUser = me.data;
+    updateUserUI();
+    resetProfileForm();
+    showNotif('Perfil atualizado com sucesso!', 'success');
+  } catch (err) {
+    showNotif(err.message || 'Erro ao atualizar perfil', 'error');
   }
 }
 
@@ -790,7 +1100,7 @@ async function renderPodium() {
             }, 'podium-avatar', `width:${sz}px;height:${sz}px;font-size:${fs}px;border:3px solid ${colors[pos]};${isFirst?'box-shadow:0 0 24px rgba(245,158,11,0.4)':''}`)}
             <div class="podium-rank-badge" style="background:${colors[pos]}">${u.position}</div>
           </div>
-          <div class="podium-name">${u.name.split(' ')[0]}</div>
+          <div class="podium-name">${buildUserProfileTrigger(u, u.name.split(' ')[0])}</div>
           <div class="podium-points" style="color:${colors[pos]};font-size:${isFirst?26:20}px">${(u.totalPoints||0).toFixed(1)}</div>
           <div class="podium-pts-label">pts</div>
           <div class="podium-base" style="height:${heights[pos]}px;background:${bgAlpha[pos]}">${u.position}</div>
@@ -1616,6 +1926,9 @@ async function renderProfile() {
     const me      = meRes.data;
     const myRank  = rankRes.data.find(r => r.name === me.name);
 
+    APP.currentUser = me;
+    updateUserUI();
+
     document.getElementById('profile-rank-pos').textContent   = myRank ? `${myRank.position}°` : '—';
     document.getElementById('profile-rank-pos').style.color   =
       myRank?.position === 1 ? 'var(--gold)' : myRank?.position === 2 ? 'var(--silver)' : 'var(--bronze)';
@@ -1662,7 +1975,7 @@ async function renderRankingFull() {
               photoUrl: u.profilePhotoUrl || ''
             }, 'avatar', 'width:36px;height:36px;font-size:13px')}
             <div>
-              <div style="font-weight:600;font-size:14px">${u.name} ${u.name===APP.currentUser?.name?'(você)':''}</div>
+              <div style="font-weight:600;font-size:14px">${buildUserProfileTrigger(u, `${u.name}${u.name===APP.currentUser?.name?' (você)':''}`)}</div>
               <div style="font-size:12px;color:var(--text3)">Operador</div>
             </div>
           </div>
@@ -1679,24 +1992,8 @@ async function renderRankingFull() {
 // CHANGE PASSWORD
 // ============================
 async function changePassword() {
-  const current = document.getElementById('pwd-current').value;
-  const newPwd  = document.getElementById('pwd-new').value;
-  const confirm = document.getElementById('pwd-confirm').value;
-
-  if (!current || !newPwd || !confirm) { showNotif('Preencha todos os campos', 'error'); return; }
-  if (newPwd !== confirm)              { showNotif('As senhas não coincidem', 'error'); return; }
-  if (newPwd.length < 6)              { showNotif('Senha deve ter ao menos 6 caracteres', 'error'); return; }
-
-  try {
-    await apiFetch('/auth/change-password', {
-      method: 'POST',
-      body: JSON.stringify({ currentPassword: current, newPassword: newPwd, confirmPassword: confirm })
-    });
-    ['pwd-current','pwd-new','pwd-confirm'].forEach(id => document.getElementById(id).value = '');
-    showNotif('Senha alterada com sucesso!', 'success');
-  } catch (err) {
-    showNotif(err.message || 'Erro ao alterar senha', 'error');
-  }
+  toggleProfilePasswordFields(true);
+  showView('profile');
 }
 
 // ============================
@@ -1762,7 +2059,7 @@ async function renderAdminUsers() {
           ${u.avatarInitials||'??'}
         </div>
         <div class="module-admin-info">
-          <div class="module-admin-title">${u.name}</div>
+          <div class="module-admin-title">${buildUserProfileTrigger(u, u.name)}</div>
           <div class="module-admin-meta">${u.email} · ${u.role==='ADMIN'?'Administrador':'Operador'} · ${(u.totalPoints??0).toFixed(1)} pts</div>
         </div>
         <div class="module-admin-actions">
@@ -1860,6 +2157,54 @@ function showNotif(msg, type = 'success') {
   setTimeout(() => el.remove(), 3500);
 }
 
+function initHeroCarousel() {
+  const carousel = document.getElementById('hero-carousel');
+  if (!carousel) return;
+
+  const slides = Array.from(carousel.querySelectorAll('.hero-carousel-slide'));
+  const dots = Array.from(carousel.querySelectorAll('.hero-carousel-dot'));
+  const slideCount = slides.length;
+
+  if (!slideCount) return;
+
+  let currentIndex = 0;
+  let autoPlayId = null;
+
+  function renderSlide(index) {
+    currentIndex = (index + slideCount) % slideCount;
+    slides.forEach((slide, slideIndex) => {
+      slide.classList.toggle('active', slideIndex === currentIndex);
+    });
+    dots.forEach((dot, dotIndex) => {
+      dot.classList.toggle('active', dotIndex === currentIndex);
+    });
+  }
+
+  function startAutoPlay() {
+    stopAutoPlay();
+    autoPlayId = window.setInterval(() => {
+      renderSlide(currentIndex + 1);
+    }, 4500);
+  }
+
+  function stopAutoPlay() {
+    if (autoPlayId) {
+      window.clearInterval(autoPlayId);
+      autoPlayId = null;
+    }
+  }
+
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => {
+      renderSlide(index);
+      startAutoPlay();
+    });
+  });
+
+  renderSlide(0);
+  startAutoPlay();
+}
+
 
 // ============================
 // INIT — auto-login if token exists
@@ -1868,6 +2213,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('login-pwd').addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
   });
+
+  initHeroCarousel();
+  setupUserProfileHoverCard();
 
   const token = sessionStorage.getItem('jwt_token');
   if (token) {
@@ -1887,6 +2235,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+<div class="user-profile-hover-card" id="user-profile-hover-card" aria-hidden="true"></div>
 <div class="notification-modal" id="notification-modal">
   <div class="notification-modal-card">
     <button class="notification-modal-close" type="button" onclick="closeNotificationModal()">�</button>
@@ -1996,14 +2345,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
