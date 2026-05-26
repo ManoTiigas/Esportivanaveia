@@ -370,6 +370,7 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: inherit;
 }
 .profile-name { font-size: 14px; font-weight: 500; }
 .profile-caret { color: var(--text2); font-size: 10px; transition: transform 0.2s; }
@@ -678,6 +679,8 @@ body {
   font-weight: 700;
   color: #000;
   border: 3px solid transparent;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 .podium-item.first .podium-avatar {
   width: 80px; height: 80px;

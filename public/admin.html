@@ -622,7 +622,7 @@
 
       <!-- VÍDEO -->
       <div class="mfield">
-        <label>📹 Vídeo (.mp4, .webm, .mov — máx 500MB)</label>
+        <label>📹 Vídeo (.mp4, .webm, .mov — máx 60MB)</label>
         <div id="nm-video-preview" style="display:none;margin-bottom:10px">
           <video id="nm-video-player" controls style="width:100%;border-radius:8px;background:#000;max-height:200px"></video>
           <button class="btn btn-danger btn-sm" style="margin-top:6px;width:100%" data-fn="removerMidia" data-a1="video">🗑 Remover vídeo</button>
@@ -643,7 +643,7 @@
 
       <!-- PDF -->
       <div class="mfield">
-        <label>📄 PDF (máx 500MB)</label>
+        <label>📄 PDF (máx 15MB)</label>
         <div id="nm-pdf-preview" style="display:none;margin-bottom:10px">
           <div style="background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px">
             <span style="font-size:24px">📄</span>
@@ -845,6 +845,20 @@ function buildUserProfileTrigger(user, label, extraClass = '') {
   const text = esc(label || user?.name || 'Usuario');
   const className = ['user-profile-trigger', extraClass].filter(Boolean).join(' ');
   return `<span class="${className}" data-user-profile-id="${userId}">${text}</span>`;
+}
+
+function avatarMarkup(user, className = 'admin-ava', size = 32, fallbackName = '') {
+  const nome = fallbackName || user?.name || user?.nome || user?.email || 'U';
+  const initials = (user?.avatarInitials || user?.avatar_initials || nome.slice(0, 2) || 'U').toUpperCase();
+  const photoUrl = user?.profilePhotoUrl || user?.profile_photo_url || '';
+  const bg = user?.avatarColor || user?.avatar_color || grad(nome);
+  const style = `width:${size}px;height:${size}px;`;
+
+  if (photoUrl) {
+    return `<div class="${className} has-photo" style="${style}"><img src="${photoUrl}" alt="Foto de perfil" class="admin-avatar-photo"></div>`;
+  }
+
+  return `<div class="${className}" style="${style}background:${esc(bg)}">${esc(initials)}</div>`;
 }
 
 const USER_PROFILE_CACHE = new Map();
@@ -1356,7 +1370,7 @@ function renderConclusoes(lista) {
     return `<tr>
       <td>
         <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:28px;height:28px;border-radius:50%;background:${c.avatarColor||'#00C2FF'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${c.avatarInitials||nome[0]}</div>
+          ${avatarMarkup(c, 'ava', 28, nome)}
           <strong>${esc(nome)}</strong>
         </div>
       </td>
@@ -1441,7 +1455,7 @@ function renderTop5() {
   container.innerHTML = top5.map((r, i) => `
     <div class="rank-row">
       <div class="rank-pos ${POS_CL[i]||''}">${POS_EMO[i] || (i+1)}</div>
-      <div class="rank-ava" style="background:${grad(r.name||r.nome)}">${(r.name||r.nome||'?')[0]}</div>
+      ${avatarMarkup(r, 'rank-ava', 34, r.name || r.nome || '?')}
       <div class="rank-info">
         <div class="rank-name">${esc(r.name||r.nome)}</div>
         <div class="rank-sub">${(r.totalPoints||0).toFixed(1)} pts · ${r.modulesCompleted||0} módulos</div>
@@ -1650,7 +1664,7 @@ function renderRespostas() {
     return `<tr>
       <td>
         <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:28px;height:28px;border-radius:50%;background:${t.avatar_color||'#00C2FF'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${t.avatar_initials||'?'}</div>
+          ${avatarMarkup(t, 'ava', 28, t.name || t.user_name || '?')}
           <strong>${esc(t.user_name)}</strong>
         </div>
       </td>
@@ -1926,7 +1940,7 @@ function renderRanking(lista) {
     return `
     <div class="rank-row">
       <div class="rank-pos ${POS_CL[i]||''}">${POS_EMO[i]||(i+1)}</div>
-      <div class="rank-ava" style="background:${grad(nome)}">${nome[0]}</div>
+      ${avatarMarkup(r, 'rank-ava', 34, nome)}
       <div class="rank-info">
         <div class="rank-name">${buildUserProfileTrigger(r, nome)}</div>
         <div class="rank-sub">Quiz ${qPts}pts · Sim ${sPts}pts · <span class="classif ${CL_MAP[classif]||'classif-bom'}">${classif}</span></div>
@@ -1967,7 +1981,7 @@ function renderOperadores(lista) {
     <tr>
       <td>
         <div style="display:flex;align-items:center;gap:10px">
-          <div class="ava" style="background:${grad(nome)}">${nome[0]}</div>
+          ${avatarMarkup(op, 'ava', 32, nome)}
           <div>
             <strong>${buildUserProfileTrigger(op, nome)}</strong>
             ${isAdmin ? ' <span class="badge badge-admin">ADMIN</span>' : ''}
@@ -2074,7 +2088,7 @@ function renderResultados(lista) {
     return `<tr>
       <td>
         <div style="display:flex;align-items:center;gap:9px">
-          <div class="ava" style="background:${grad(r.nome)};width:28px;height:28px;font-size:11px">${(r.nome||'?')[0]}</div>
+          ${avatarMarkup(r, 'ava', 28, r.nome)}
           <div><strong>${esc(r.nome)}</strong><div style="font-size:11px;color:var(--txt2)">${esc(r.email)}</div></div>
         </div>
       </td>
@@ -2629,7 +2643,7 @@ function renderUsuariosTabela() {
     return `<tr>
       <td>
         <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:28px;height:28px;border-radius:50%;background:${u.avatarColor||grad(nome)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">${(u.avatarInitials||nome[0]).toUpperCase()}</div>
+          ${avatarMarkup(u, 'ava', 28, nome)}
           <span style="font-size:13px">${esc(nome)}</span>
         </div>
       </td>
@@ -3036,6 +3050,15 @@ function isVercelRuntime() {
   return window.location.origin.includes('.vercel.app') || host.includes('vercel.app');
 }
 
+function isLikelyVercelUploadLimit(xhr, file) {
+  const vercelId = xhr.getResponseHeader('x-vercel-id');
+  const serverHeader = xhr.getResponseHeader('server') || '';
+  const fileSize = Number(file?.size || 0);
+  return Boolean(vercelId)
+    || /vercel/i.test(serverHeader)
+    || fileSize > Math.floor(4.5 * 1024 * 1024);
+}
+
 function getClientUploadLimitBytes(tipo) {
   if (tipo === 'video') return isVercelRuntime() ? Math.floor(4.5 * 1024 * 1024) : 60 * 1024 * 1024;
   if (tipo === 'pdf') return isVercelRuntime() ? Math.floor(4.5 * 1024 * 1024) : 15 * 1024 * 1024;
@@ -3134,7 +3157,11 @@ async function uploadComProgresso(file, url, barId, pctId, progressId) {
         resolve(JSON.parse(xhr.responseText));
       } else {
         if (xhr.status === 413) {
-          const err = new Error(getUploadLimitMessage(campo));
+          const err = new Error(
+            isLikelyVercelUploadLimit(xhr, file)
+              ? `Upload recusado pelo ambiente atual. Na Vercel, o limite pratico por arquivo e de cerca de 4.5MB. Para videos maiores, use um servidor Node proprio ou upload direto no Storage.`
+              : getUploadLimitMessage(campo)
+          );
           err.status = xhr.status;
           err.errorCode = 'payload_too_large';
           reject(err);

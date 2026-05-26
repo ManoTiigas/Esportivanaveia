@@ -399,6 +399,7 @@ router.get('/admin/attempts', adminMiddleware, async (req, res) => {
         user_name: userDoc.data().name,
         avatar_initials: userDoc.data().avatar_initials,
         avatar_color: userDoc.data().avatar_color,
+        profile_photo_url: userDoc.data().profile_photo_url || null,
         sim_title: simulatorDoc.data().title,
         scenario: simulatorDoc.data().scenario,
         module_title: moduleDoc.exists ? moduleDoc.data().title || '' : '',

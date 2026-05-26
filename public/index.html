@@ -1080,12 +1080,14 @@ async function renderPodium() {
     const medals  = ['👑', '', ''];
 
     // Podium order: 2nd left, 1st center, 3rd right
-    const podiumOrder = top3.length >= 3
-      ? [{ u: top3[1], cls: 'second' }, { u: top3[0], cls: 'first' }, { u: top3[2], cls: 'third' }]
-      : [{ u: top3[0], cls: 'first' }];
+    const podiumOrder = [];
+    if (top3[1]) podiumOrder.push({ u: top3[1], cls: 'second' });
+    if (top3[0]) podiumOrder.push({ u: top3[0], cls: 'first' });
+    if (top3[2]) podiumOrder.push({ u: top3[2], cls: 'third' });
 
     podium.innerHTML = podiumOrder.map(({ u, cls }) => {
-      const pos     = (u.position || 1) - 1;
+      const fallbackPosition = cls === 'first' ? 1 : cls === 'second' ? 2 : 3;
+      const pos     = ((u.position || fallbackPosition) - 1);
       const isFirst = cls === 'first';
       const sz      = isFirst ? 80 : 64;
       const fs      = isFirst ? 24 : 20;
@@ -1098,12 +1100,12 @@ async function renderPodium() {
               color: u.avatarColor || '#00C2FF',
               photoUrl: u.profilePhotoUrl || ''
             }, 'podium-avatar', `width:${sz}px;height:${sz}px;font-size:${fs}px;border:3px solid ${colors[pos]};${isFirst?'box-shadow:0 0 24px rgba(245,158,11,0.4)':''}`)}
-            <div class="podium-rank-badge" style="background:${colors[pos]}">${u.position}</div>
+            <div class="podium-rank-badge" style="background:${colors[pos]}">${u.position || fallbackPosition}</div>
           </div>
           <div class="podium-name">${buildUserProfileTrigger(u, u.name.split(' ')[0])}</div>
           <div class="podium-points" style="color:${colors[pos]};font-size:${isFirst?26:20}px">${(u.totalPoints||0).toFixed(1)}</div>
           <div class="podium-pts-label">pts</div>
-          <div class="podium-base" style="height:${heights[pos]}px;background:${bgAlpha[pos]}">${u.position}</div>
+          <div class="podium-base" style="height:${heights[pos]}px;background:${bgAlpha[pos]}">${u.position || fallbackPosition}</div>
         </div>`;
     }).join('');
   } catch (err) {
