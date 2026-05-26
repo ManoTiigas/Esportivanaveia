@@ -159,8 +159,31 @@ router.post('/submit', authMiddleware, async (req, res) => {
       return res.status(400).json({ success: false, message: 'moduleId e obrigatorio' });
     }
 
+    const userId = normalizeId(req.user.id);
+    const moduleIdInt = toInt(moduleId);
+    const existingAttemptSnapshot = await db.collection('quiz_attempts')
+      .where('user_id', '==', userId)
+      .where('module_id', '==', moduleIdInt)
+      .limit(1)
+      .get();
+
+    if (!existingAttemptSnapshot.empty) {
+      const existingAttempt = existingAttemptSnapshot.docs[0].data() || {};
+      return res.status(409).json({
+        success: false,
+        message: 'Quiz ja concluido. Cada modulo permite apenas uma tentativa.',
+        data: {
+          score: toNumber(existingAttempt.score),
+          correct: toInt(existingAttempt.correct_answers),
+          total: toInt(existingAttempt.total_questions),
+          pointsEarned: 0,
+          alreadyCompleted: true,
+        },
+      });
+    }
+
     const snapshot = await db.collection('quiz_questions')
-      .where('module_id', '==', toInt(moduleId))
+      .where('module_id', '==', moduleIdInt)
       .get();
 
     const questions = snapshot.docs
@@ -191,17 +214,34 @@ router.post('/submit', authMiddleware, async (req, res) => {
 
     const totalQuestions = questions.length;
     const percentage = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
-    const userId = normalizeId(req.user.id);
-    const attemptId = await getNextId('quiz_attempts');
+    const attemptId = `${userId}_${moduleIdInt}`;
+    const attemptRef = db.collection('quiz_attempts').doc(attemptId);
 
-    await db.collection('quiz_attempts').doc(String(attemptId)).set({
-      user_id: userId,
-      module_id: toInt(moduleId),
-      score: totalPoints,
-      total_questions: totalQuestions,
-      correct_answers: correctAnswers,
-      completed_at: new Date().toISOString(),
-    });
+    try {
+      await attemptRef.create({
+        user_id: userId,
+        module_id: moduleIdInt,
+        score: totalPoints,
+        total_questions: totalQuestions,
+        correct_answers: correctAnswers,
+        completed_at: new Date().toISOString(),
+      });
+    } catch (writeError) {
+      const alreadyExists = writeError && (
+        writeError.code === 6
+        || writeError.code === 'already-exists'
+        || /already exists/i.test(String(writeError.message || ''))
+      );
+
+      if (alreadyExists) {
+        return res.status(409).json({
+          success: false,
+          message: 'Quiz ja concluido. Cada modulo permite apenas uma tentativa.',
+        });
+      }
+
+      throw writeError;
+    }
 
     const batch = db.batch();
     questions.forEach((question) => {
@@ -209,7 +249,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
       const isCorrect = selectedOption === question.correct_option;
 
       batch.set(db.collection('quiz_answers').doc(`${attemptId}_${question.id}`), {
-        attempt_id: String(attemptId),
+        attempt_id: attemptId,
         question_id: question.id,
         selected_option: selectedOption,
         is_correct: isCorrect,
@@ -221,7 +261,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
     const phaseId = moduleDoc.exists ? moduleDoc.data().phase_id : 1;
     await db.collection('user_progress').doc(`${userId}_${moduleId}`).set({
       user_id: userId,
-      module_id: toInt(moduleId),
+      module_id: moduleIdInt,
       phase_id: phaseId,
       quiz_completed: true,
     }, { merge: true });

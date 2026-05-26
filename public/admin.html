@@ -1344,9 +1344,9 @@ function renderConclusoes(lista) {
   }
   tb.innerHTML = lista.map(c => {
     const total = (c.quizScore || 0) + (c.simScore || 0);
-    const classif = total >= 15
+    const classif = total >= 36
       ? '<span class="classif classif-ex">Excelente</span>'
-      : total >= 8
+      : total >= 21
         ? '<span class="classif classif-bom">Bom</span>'
         : '<span class="classif classif-rev">Precisa revisar</span>';
     const dt = c.completedAt
@@ -1707,9 +1707,9 @@ async function salvarAvaliacao() {
 // títulos já definidos no irPagina principal
 function renderClassificacoes() {
   const scores = RANKING.map(r => r.totalPoints || 0);
-  const ex  = scores.filter(s => s >= 80).length;
-  const bom = scores.filter(s => s >= 50 && s < 80).length;
-  const rev = scores.filter(s => s > 0 && s < 50).length;
+  const ex  = scores.filter(s => s >= 36 && s <= 51).length;
+  const bom = scores.filter(s => s >= 21 && s <= 35).length;
+  const rev = scores.filter(s => s >= 0 && s <= 20).length;
   const total = scores.length || 1;
 
   const rows = document.querySelectorAll('.classif-row');
@@ -1905,9 +1905,9 @@ const POS_EMO = ['🥇','🥈','🥉'];
 const CL_MAP  = { 'Excelente':'classif-ex', 'Bom':'classif-bom', 'Precisa revisar':'classif-rev' };
 
 function classifLabel(pts) {
-  if (pts >= 80) return 'Excelente';
-  if (pts >= 50) return 'Bom';
-  if (pts > 0)   return 'Precisa revisar';
+  if (pts >= 36) return 'Excelente';
+  if (pts >= 21) return 'Bom';
+  if (pts >= 0)  return 'Precisa revisar';
   return 'Sem dados';
 }
 
@@ -3031,8 +3031,37 @@ function fecharModalModulo() {
   _pdfPendente      = null;
 }
 
+function isVercelRuntime() {
+  const host = window.location.hostname || '';
+  return window.location.origin.includes('.vercel.app') || host.includes('vercel.app');
+}
+
+function getClientUploadLimitBytes(tipo) {
+  if (tipo === 'video') return isVercelRuntime() ? Math.floor(4.5 * 1024 * 1024) : 60 * 1024 * 1024;
+  if (tipo === 'pdf') return isVercelRuntime() ? Math.floor(4.5 * 1024 * 1024) : 15 * 1024 * 1024;
+  return 5 * 1024 * 1024;
+}
+
+function formatBytesMb(bytes) {
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.0', '')}MB`;
+}
+
+function getUploadLimitMessage(tipo) {
+  const limite = getClientUploadLimitBytes(tipo);
+  if (isVercelRuntime() && (tipo === 'video' || tipo === 'pdf')) {
+    return `Este ambiente na Vercel aceita uploads de ate ${formatBytesMb(limite)} por arquivo. Para arquivos maiores, use um servidor Node proprio ou upload direto no Storage.`;
+  }
+  return `${tipo === 'video' ? 'Video' : 'PDF'} muito grande. Limite: ${formatBytesMb(limite)}.`;
+}
+
 function previewVideo(input) {
   if (!input.files[0]) return;
+  if (input.files[0].size > getClientUploadLimitBytes('video')) {
+    input.value = '';
+    _videoPendente = null;
+    showToast(getUploadLimitMessage('video'), true);
+    return;
+  }
   _videoPendente = input.files[0];
   const label = document.getElementById('nm-video-label');
   label.classList.add('has-file');
@@ -3041,6 +3070,12 @@ function previewVideo(input) {
 
 function previewPdf(input) {
   if (!input.files[0]) return;
+  if (input.files[0].size > getClientUploadLimitBytes('pdf')) {
+    input.value = '';
+    _pdfPendente = null;
+    showToast(getUploadLimitMessage('pdf'), true);
+    return;
+  }
   _pdfPendente = input.files[0];
   const label = document.getElementById('nm-pdf-label');
   label.classList.add('has-file');
@@ -3098,6 +3133,13 @@ async function uploadComProgresso(file, url, barId, pctId, progressId) {
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(JSON.parse(xhr.responseText));
       } else {
+        if (xhr.status === 413) {
+          const err = new Error(getUploadLimitMessage(campo));
+          err.status = xhr.status;
+          err.errorCode = 'payload_too_large';
+          reject(err);
+          return;
+        }
         try {
           const payload = JSON.parse(xhr.responseText);
           const err = new Error(payload.message || 'Erro no upload');

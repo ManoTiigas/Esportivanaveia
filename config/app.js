@@ -18,8 +18,8 @@ module.exports = {
   },
   server: {
     port: Number(process.env.PORT) || DEFAULT_PORT,
-    jsonLimit: '1mb',
-    urlencodedLimit: '1mb',
+    jsonLimit: '70mb',
+    urlencodedLimit: '70mb',
   },
   auth: {
     jwtSecret: process.env.JWT_SECRET,

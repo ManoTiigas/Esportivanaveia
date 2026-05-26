@@ -1293,6 +1293,11 @@ function switchTab(name, btn) {
     btn = document.querySelector('[data-tab=content]');
   }
 
+  if (name === 'quiz' && APP.currentModule?.quizCompleted) {
+    showNotif('Este quiz ja foi concluido. Cada modulo permite apenas uma tentativa.', 'error');
+    return;
+  }
+
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   if (btn) btn.classList.add('active');
@@ -1305,15 +1310,27 @@ function updateModuleStudyMode(module) {
   const simulatorTab = document.querySelector('[data-tab=simulator]');
   const nextButtonWrap = document.querySelector('.btn-next-section');
   const isStudyOnly = module?.isCompleted === true;
+  const isQuizCompleted = module?.quizCompleted === true;
 
-  [quizTab, simulatorTab].forEach(btn => {
-    if (!btn) return;
-    btn.style.display = isStudyOnly ? 'none' : 'inline-flex';
-    btn.disabled = isStudyOnly;
-    btn.style.opacity = isStudyOnly ? '0.45' : '1';
-    btn.style.pointerEvents = isStudyOnly ? 'none' : 'auto';
-    btn.title = isStudyOnly ? 'Modulo concluido: apenas o conteudo permanece disponivel.' : '';
-  });
+  if (quizTab) {
+    quizTab.style.display = isStudyOnly || isQuizCompleted ? 'none' : 'inline-flex';
+    quizTab.disabled = isStudyOnly || isQuizCompleted;
+    quizTab.style.opacity = isStudyOnly || isQuizCompleted ? '0.45' : '1';
+    quizTab.style.pointerEvents = isStudyOnly || isQuizCompleted ? 'none' : 'auto';
+    quizTab.title = isStudyOnly
+      ? 'Modulo concluido: apenas o conteudo permanece disponivel.'
+      : isQuizCompleted
+        ? 'Quiz ja concluido: cada modulo permite apenas uma tentativa.'
+        : '';
+  }
+
+  if (simulatorTab) {
+    simulatorTab.style.display = isStudyOnly ? 'none' : 'inline-flex';
+    simulatorTab.disabled = isStudyOnly;
+    simulatorTab.style.opacity = isStudyOnly ? '0.45' : '1';
+    simulatorTab.style.pointerEvents = isStudyOnly ? 'none' : 'auto';
+    simulatorTab.title = isStudyOnly ? 'Modulo concluido: apenas o conteudo permanece disponivel.' : '';
+  }
 
   if (nextButtonWrap) {
     nextButtonWrap.style.display = isStudyOnly ? 'none' : 'flex';
@@ -1326,6 +1343,15 @@ function updateModuleStudyMode(module) {
 async function loadQuiz(moduleId) {
   APP.quizState = { questions: [], current: 0, selected: null, answered: false, score: 0, correct: 0, answers: {} };
   const qa = document.getElementById('quiz-area');
+
+  if (APP.currentModule?.quizCompleted) {
+    qa.innerHTML = `<div style="text-align:center;padding:60px;color:var(--text2)">
+      <div style="font-size:48px;margin-bottom:16px">🔒</div>
+      <div style="font-size:18px;font-weight:600">Quiz já concluído</div>
+      <div style="font-size:14px;margin-top:8px">Cada módulo permite apenas uma tentativa no quiz.</div></div>`;
+    return;
+  }
+
   qa.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3)">Carregando quiz...</div>`;
 
   try {
@@ -1424,11 +1450,23 @@ async function submitQuiz() {
       body: JSON.stringify({ moduleId: APP.currentModule.id, answers: APP.quizState.answers })
     });
     showQuizResult(data.data);
+    APP.currentModule = { ...APP.currentModule, quizCompleted: true };
+    updateModuleStudyMode(APP.currentModule);
 
     const me = await apiFetch('/auth/me');
     APP.currentUser = me.data;
     updateUserUI();
   } catch (err) {
+    if (err?.message && /apenas uma tentativa|ja concluido/i.test(err.message)) {
+      APP.currentModule = { ...APP.currentModule, quizCompleted: true };
+      updateModuleStudyMode(APP.currentModule);
+      qa.innerHTML = `<div style="text-align:center;padding:60px;color:var(--text2)">
+        <div style="font-size:48px;margin-bottom:16px">🔒</div>
+        <div style="font-size:18px;font-weight:600">Quiz já concluído</div>
+        <div style="font-size:14px;margin-top:8px">Cada módulo permite apenas uma tentativa no quiz.</div></div>`;
+      return;
+    }
+
     qa.innerHTML = `<div style="padding:60px;text-align:center;color:var(--red)">
       <div style="font-size:48px;margin-bottom:16px">❌</div>Erro ao salvar resultado.</div>`;
   }
@@ -1472,7 +1510,6 @@ function showQuizResult(res) {
             </div>`).join('')}
         </div>` : ''}
       <div style="display:flex;gap:12px;justify-content:center">
-        <button class="btn-accent" onclick="loadQuiz(${APP.currentModule.id})">Refazer Quiz</button>
         <button class="btn-accent" style="background:linear-gradient(135deg,var(--accent2),#5B21B6)"
           onclick="switchTab('simulator',document.querySelector('[data-tab=simulator]'))">Ir ao Simulador →</button>
       </div>
@@ -1631,6 +1668,7 @@ function sendMessage() {
 }
 
 async function endSimulator() {
+  const completedModuleId = APP.currentModule?.id;
   APP.simState.finished = true;
   const inp = document.getElementById('chat-input');
   const btn = document.querySelector('.btn-send');
@@ -1651,7 +1689,14 @@ async function endSimulator() {
     const me = await apiFetch('/auth/me');
     APP.currentUser = me.data;
     updateUserUI();
-    await refreshCurrentPhaseModules(true);
+    await refreshCurrentPhaseModules();
+
+    const completedModule = APP._currentModules?.find(m => String(m.id) === String(completedModuleId));
+    if (completedModule) {
+      APP.currentModule = completedModule;
+      renderModuleList(APP._currentModules || []);
+      loadModule(completedModule);
+    }
   } catch (err) {
     console.warn('Erro ao salvar simulador:', err.message);
   }
@@ -1664,13 +1709,25 @@ async function endSimulator() {
     <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:8px">Simulação Concluída!</div>
     <div style="font-size:14px;color:var(--text2);margin:12px 0 20px">
       Você respondeu todas as ${total} perguntas.<br>
-      O admin irá avaliar seu desempenho em breve.
+      O admin irá avaliar seu desempenho em breve.<br>
+      Você será levado de volta ao início do módulo.
     </div>
     <div style="display:flex;align-items:center;gap:10px;justify-content:center;padding:12px 16px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;color:#EF4444;font-size:13px">
       🔒 Aguardando avaliação do admin
     </div>`;
 
   showNotif('Simulador concluído! Aguardando avaliação.', 'success');
+
+  setTimeout(() => {
+    const currentModule = APP._currentModules?.find(m => String(m.id) === String(completedModuleId)) || APP.currentModule;
+    if (!currentModule) return;
+
+    APP.currentModule = currentModule;
+    renderModuleList(APP._currentModules || []);
+    switchTab('content', document.querySelector('[data-tab=content]'));
+    loadModule(currentModule);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 2200);
 }
 
 // ============================
