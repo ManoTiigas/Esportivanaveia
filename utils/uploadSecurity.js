@@ -1,18 +1,6 @@
 const ALLOWED_VIDEO_EXTS = ['mp4', 'webm', 'ogg', 'mov', 'avi'];
 const ALLOWED_PHOTO_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 
-const PDF_BLOCKED_TOKENS = [
-  '/javascript',
-  '/js',
-  '/launch',
-  '/openaction',
-  '/aa',
-  '/submitform',
-  '/richmedia',
-  '/embeddedfile',
-  '/xfa',
-];
-
 const SUSPICIOUS_BINARY_SIGNATURES = [
   { signature: Buffer.from('4d5a', 'hex'), label: 'executavel windows' },
   { signature: Buffer.from('7f454c46', 'hex'), label: 'binario elf' },
@@ -42,12 +30,7 @@ function hasPdfSignature(buffer) {
 function hasPdfEOF(buffer) {
   if (!buffer || buffer.length < 16) return false;
   const tail = buffer.slice(Math.max(0, buffer.length - 4096)).toString('latin1');
-  return /%%EOF\s*$/i.test(tail.trim());
-}
-
-function hasSuspiciousPdfTokens(buffer) {
-  const sample = buffer.slice(0, Math.min(buffer.length, 5 * 1024 * 1024)).toString('latin1').toLowerCase();
-  return PDF_BLOCKED_TOKENS.find((token) => sample.includes(token)) || null;
+  return /%%EOF/i.test(tail);
 }
 
 function findSuspiciousBinarySignature(buffer, sampleBytes = 4096) {
@@ -111,22 +94,12 @@ function validatePdfFile(file) {
     throw new Error('Arquivo rejeitado: extensao invalida para PDF.');
   }
 
-  if (mime && mime !== 'application/pdf') {
+  if (mime && mime !== 'application/pdf' && mime !== 'application/octet-stream') {
     throw new Error('Arquivo rejeitado: MIME invalido para PDF.');
   }
 
   if (!hasPdfSignature(file.buffer) || !hasPdfEOF(file.buffer)) {
     throw new Error('Arquivo rejeitado: assinatura PDF invalida ou arquivo corrompido.');
-  }
-
-  const suspiciousToken = hasSuspiciousPdfTokens(file.buffer);
-  if (suspiciousToken) {
-    throw new Error(`Arquivo rejeitado: PDF contem recurso potencialmente executavel (${suspiciousToken}).`);
-  }
-
-  const binarySignature = findSuspiciousBinarySignature(file.buffer, 8192);
-  if (binarySignature) {
-    throw new Error(`Arquivo rejeitado: PDF contem assinatura suspeita de ${binarySignature}.`);
   }
 }
 

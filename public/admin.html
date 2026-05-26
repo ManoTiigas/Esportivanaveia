@@ -2410,7 +2410,10 @@ async function criarFase() {
     renderFasesTabela();
     renderModulosTabela();
     showToast('Fase criada com sucesso!');
-  } catch(e) { showToast('Erro: ' + e.message, true); }
+  } catch(e) {
+    const detalhe = e.details ? ` ${e.details}` : '';
+    showToast('Erro: ' + e.message + detalhe, true);
+  }
 }
 
 async function toggleFase(id) {
